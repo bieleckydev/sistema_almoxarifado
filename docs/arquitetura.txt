@@ -1,0 +1,366 @@
+Estratégia de Arquitetura Multiplataforma: Core Agnóstico & Apresentação Especializada
+Especificação Técnica de Engenharia de Software
+1. Resumo Executivo e Objetivos
+O objetivo deste documento é detalhar a arquitetura de software projetada para suportar a evolução do produto em duas fases distintas, garantindo máxima reutilização de código de negócio sem comprometer a qualidade de experiência do usuário (UX) em cada plataforma.
+
+Experiência Nativa Sem Compromissos: Evitar a abordagem de "site encapsulado" (WebView/PWA mascarado). A aplicação Web oferecerá uma experiência desktop/mobile browser de alta performance, enquanto a aplicação Mobile utilizará componentes nativos via React Native/Expo, respeitando as diretrizes de design do iOS (Human Interface Guidelines) e Android (Material Design).
+Estratégia de Entrega em Fases:
+Fase 1 (Web First): Construção da aplicação Web prioritária, estabelecendo a base arquitetural desacoplada ("Core Agnóstico") no próprio projeto.
+Fase 2 (Mobile com Expo/React Native): Extração do Core e construção do aplicativo mobile nativo, alcançando um reaproveitamento superior a 70% do código de negócio (regra de negócio, validações, gerenciamento de estado, consumo de APIs e persistência de dados).
+
+
+2. Princípio Arquitetural: Separação de Preocupações (Core vs. Presentation)
+A premissa fundamental desta arquitetura é a isolação estrita entre a inteligência da aplicação (Core) e a camada visual/plataforma (Presentation).
+
+Camada
+Responsabilidades
+Tecnologias / Módulos
+Core Agnóstico
+Regras de negócio, modelos de dados, schemas de validação, integração HTTP/REST/GraphQL, gerenciamento de estado assíncrono e síncrono, adaptadores de storage, formatadores.
+TypeScript, Zod, Axios/Fetch, TanStack Query, Zustand, Date-fns.
+Apresentação Web
+Renderização DOM, rotas do navegador, layout responsivo, animações web, acessibilidade web.
+React 18+, Next.js (App Router), Tailwind CSS, Lucide Icons, Radix UI.
+Apresentação Mobile
+Renderização de views nativas (iOS/Android), navegação por pilhas/abas nativas, gesto-driven UI, suporte a hardware local.
+React Native, Expo, NativeWind / StyleSheet, React Native Reanimated, React Navigation.
+
+Regras de Ouro e Proibições Estritas no Core
+Proibição de APIs de Navegador Directas: O Core nunca deve fazer referência a objetos globais como window, document, localStorage, sessionStorage ou navigator.
+Proibição de Tags HTML e Componentes de UI: Nenhuma sintaxe JSX/TSX contendo tags HTML (<div>, <span>, <input>) ou componentes do React Native (<View>, <Text>) é permitida dentro da camada Core.
+Abstração por Injeção/Adaptação: Qualquer recurso dependente do ambiente (como armazenamento persistente ou notificações) deve ser consumido através de Interfaces/Contratos TypeScript com implementações injetadas pela camada de apresentação.
+
+
+3. Estrutura de Diretórios Recomendada
+Fase 1: Modularização Interna (Monolito Modular / Single Repo)
+Na primeira fase, a estrutura do código reside em um único repositório, mas mantém uma separação rígida de diretórios para facilitar a posterior migração.src/
+
+├── core/                        # CORE AGNÓSTICO (Isolado de UI e DOM)
+
+│   ├── api/                     # Clientes HTTP, interceptores genéricos
+
+│   ├── domain/                  # Entidades, tipos e Schemas Zod
+
+│   ├── hooks/                   # Custom Hooks de dados e estado (TanStack Query)
+
+│   ├── services/                # Regras de negócio e chamadas de API
+
+│   ├── store/                   # Estado global agnóstico (Zustand)
+
+│   ├── storage/                 # Interfaces e contratos de storage
+
+│   └── utils/                   # Formatadores e helpers puros
+
+│
+
+├── web/                         # CAMADA DE APRESENTAÇÃO WEB
+
+│   ├── app/                     # Next.js App Router (Páginas e Rotas)
+
+│   ├── components/              # Componentes de UI Web (Tailwind + HTML)
+
+│   ├── adapters/                # Implementação concreta do Storage (LocalStorage)
+
+│   └── hooks/                   # Hooks exclusivos para UI Web
+Fase 2: Evolução para Monorepo (Turborepo)
+Na Fase 2, o diretório core é promovido a um pacote interno reutilizável compartilhado entre as aplicações Web e Mobile./
+
+├── apps/
+
+│   ├── web/                     # Aplicação Next.js
+
+│   │   ├── package.json
+
+│   │   └── src/
+
+│   └── mobile/                  # Aplicação Expo / React Native
+
+│       ├── package.json
+
+│       └── src/
+
+│
+
+├── packages/
+
+│   ├── core/                    # Pacote Compartilhado @app/core
+
+│   │   ├── src/
+
+│   │   │   ├── api/
+
+│   │   │   ├── domain/
+
+│   │   │   ├── hooks/
+
+│   │   │   ├── services/
+
+│   │   │   └── storage/
+
+│   │   ├── package.json
+
+│   │   └── tsconfig.json
+
+│   └── config/                  # Configurações compartilhadas (ESLint, TS)
+
+│
+
+├── package.json
+
+└── turbo.json                   # Pipeline de build do Turborepo
+
+
+4. Padrão de Implementação Prática
+Abaixo estão exemplificados os arquivos demonstrando a reusabilidade total das camadas de negócio entre Web e Mobile.
+A. Service/API Agnóstico (core/services/user.service.ts)
+import { api } from '../api/client';
+
+import { User, UserSchema } from '../domain/user.schema';
+
+export const UserService = {
+
+  getUserProfile: async (userId: string): Promise<User> => {
+
+    const response = await api.get(`/users/${userId}`);
+
+    // Validação em tempo de execução com Zod
+
+    return UserSchema.parse(response.data);
+
+  },
+
+  
+
+  updateUserName: async (userId: string, name: string): Promise<User> => {
+
+    const response = await api.patch(`/users/${userId}`, { name });
+
+    return UserSchema.parse(response.data);
+
+  }
+
+};
+B. Custom Hook Agnóstico (core/hooks/useUserProfile.ts)
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { UserService } from '../services/user.service';
+
+export const USER_PROFILE_KEY = 'user-profile';
+
+export function useUserProfile(userId: string) {
+
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+
+    queryKey: [USER_PROFILE_KEY, userId],
+
+    queryFn: () => UserService.getUserProfile(userId),
+
+    enabled: Boolean(userId),
+
+  });
+
+  const updateMutation = useMutation({
+
+    mutationFn: (newName: string) => UserService.updateUserName(userId, newName),
+
+    onSuccess: (updatedUser) => {
+
+      queryClient.setQueryData([USER_PROFILE_KEY, userId], updatedUser);
+
+    },
+
+  });
+
+  return {
+
+    user: query.data,
+
+    isLoading: query.isLoading,
+
+    isError: query.isError,
+
+    updateName: updateMutation.mutateAsync,
+
+    isUpdating: updateMutation.isPending,
+
+  };
+
+}
+C. Consumo na Web (web/components/UserProfileCard.tsx)
+'use client';
+
+import React from 'react';
+
+import { useUserProfile } from '@/core/hooks/useUserProfile';
+
+export const UserProfileCard = ({ userId }: { userId: string }) => {
+
+  const { user, isLoading, updateName } = useUserProfile(userId);
+
+  if (isLoading) return <div className="animate-pulse p-4 bg-gray-100 rounded-md">Carregando...</div>;
+
+  if (!user) return null;
+
+  return (
+
+    <div className="p-6 bg-white shadow-lg rounded-xl border border-gray-200">
+
+      <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+
+      <p className="text-sm text-gray-500">{user.email}</p>
+
+      <button
+
+        onClick={() => updateName('Novo Nome Web')}
+
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+
+      >
+
+        Atualizar Nome
+
+      </button>
+
+    </div>
+
+  );
+
+};
+D. Consumo no Mobile (mobile/components/UserProfileCard.tsx)
+import React from 'react';
+
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+
+import { useUserProfile } from '@app/core/hooks/useUserProfile';
+
+export const UserProfileCard = ({ userId }: { userId: string }) => {
+
+  const { user, isLoading, updateName } = useUserProfile(userId);
+
+  if (isLoading) {
+
+    return <ActivityIndicator size="large" color="#2563EB" />;
+
+  }
+
+  if (!user) return null;
+
+  return (
+
+    <View style={styles.card}>
+
+      <Text style={styles.title}>{user.name}</Text>
+
+      <Text style={styles.subtitle}>{user.email}</Text>
+
+      <TouchableOpacity
+
+        style={styles.button}
+
+        onPress={() => updateName('Novo Nome Mobile')}
+
+        activeOpacity={0.8}
+
+      >
+
+        <Text style={styles.buttonText}>Atualizar Nome</Text>
+
+      </TouchableOpacity>
+
+    </View>
+
+  );
+
+};
+
+const styles = StyleSheet.create({
+
+  card: { padding: 24, backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0' },
+
+  title: { fontSize: 20, fontWeight: 'bold', color: '#0F172A' },
+
+  subtitle: { fontSize: 14, color: '#64748B', marginTop: 4 },
+
+  button: { marginTop: 16, backgroundColor: '#2563EB', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+
+  buttonText: { color: '#FFFFFF', fontWeight: '600', fontSize: 14 },
+
+});
+
+
+5. Estratégia de Abstração de Recursos Nativos e Plataforma
+Para garantir que o Core continue agnóstico, recursos específicos do ambiente como armazenamento persistente e gerenciamento de sessões/tokens utilizam o padrão Adapter Pattern.
+Interface de Storage (core/storage/storage.interface.ts)
+export interface IStorageAdapter {
+
+  getItem(key: string): Promise<string | null>;
+
+  setItem(key: string, value: string): Promise<void>;
+
+  removeItem(key: string): Promise<void>;
+
+}
+Implementações Concretas por Plataforma
+Web Adapter (web/adapters/storage.adapter.ts): Utiliza localStorage ou cookies seguros.
+Mobile Adapter (mobile/adapters/storage.adapter.ts): Utiliza expo-secure-store para chaves sensíveis e react-native-mmkv para alta performance.
+Autenticação e Interceptação de Tokens
+O cliente HTTP no Core recebe dinamicamente o adaptador de storage no momento da inicialização da aplicação:t
+// core/api/client.ts
+let storageInstance: IStorageAdapter;
+
+export const configureApiClient = (storageAdapter: IStorageAdapter) => {
+storageInstance = storageAdapter;
+};
+
+api.interceptors.request.use(async (config) => {
+if (storageInstance) {
+const token = await storageInstance.getItem('auth_token');
+if (token) {
+config.headers.Authorization = Bearer ${token};
+}
+}
+return config;
+});
+
+---
+
+### 6. Roadmap de Execução
+
+#### Fase 1: Fundação do Core + Desenvolvimento Web
+
+* **Mês 1: Setup & Core Architecture**
+
+  * Criação da estrutura de pastas `/core` e definição de padrões TypeScript e Zod.
+
+  * Configuração do Axios/Fetch com interceptores desacoplados.
+
+  * Implementação da camada de abstração de Storage e autenticação.
+
+* **Mês 2 e 3: Aplicação Web**
+
+  * Construção da UI Web utilizando Next.js e Tailwind CSS.
+
+  * Implementação de Custom Hooks do TanStack Query integrados às telas Web.
+
+  * Validação das regras de negócio mantendo zero vazamento de dependências de DOM dentro da pasta `/core`.
+
+#### Fase 2: Setup Mobile (Expo) + Consumo do Core + UI Nativa
+
+* **Mês 4: Transição para Monorepo & Setup Mobile**
+
+  * Configuração do **Turborepo** e migração da pasta `/core` para `@app/core`.
+
+  * Inicialização do projeto Mobile com **Expo (Managed Workflow)**.
+
+  * Implementação dos adaptadores nativos (`MMKV` e `SecureStore`).
+
+* **Mês 5 e 6: Desenvolvimento Native UI**
+
+  * Criação das telas nativas importando os hooks e serviços do pacote `@app/core`.
+
+  * Implementação de navegação nativa e animações de alta performance (Reanimated).
+
+  * Homologação e publicação nas lojas App Store e Google Play.
+
