@@ -192,7 +192,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 - [x] **4.1 — Schemas de NFe e Pedido de Compra (`src/core/domain/nfe.schema.ts`)**:
   - Mapeamento dos itens faturados (código do fornecedor, código interno Rhowert, NCM, quantidade faturada, valor unitário).
   - Schema de Pedido de Compra emitido pela contabilidade (itens autorizados e quantidades contratadas).
-- [ ] **4.2 — Algoritmo Puro de Reconciliação (`src/core/services/nfe-reconciliation.service.ts`)**:
+- [x] **4.2 — Algoritmo Puro de Reconciliação (`src/core/services/nfe-reconciliation.service.ts`)**:
   - Cruzamento de itens: `NFe.item` vs `PedidoCompra.item`.
   - Detecção de inconsistências:
     - Quantidade faturada a maior que o pedido.
