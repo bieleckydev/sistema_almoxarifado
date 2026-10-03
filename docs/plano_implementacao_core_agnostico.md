@@ -140,7 +140,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Normalizador de código de produto.
   - Formatador de peso em KG (duas casas decimais) e quantidades inteiras para unidades.
   - Sanitizador de números de NF e chaves de acesso.
-- [ ] **1.5 — Testes Unitários de Schemas (`src/core/domain/__tests__/domain.spec.ts`)**:
+- [x] **1.5 — Testes Unitários de Schemas (`src/core/domain/__tests__/domain.spec.ts`)**:
   - Testar parsing de itens válidos e rejeição de itens sem código ou quantidade negativa.
 
 ---
