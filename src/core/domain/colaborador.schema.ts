@@ -111,4 +111,4 @@ export const ColaboradorFiltrosSchema = z.object({
   limite: z.number().int().min(1).max(100).default(20),
 });
 
-export type ColaboradorFiltros = z.infer<typeof ColaboradorFiltrosSchema>;
+export type ColaboradorFiltros = z.input<typeof ColaboradorFiltrosSchema>;

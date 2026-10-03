@@ -113,7 +113,7 @@ export const ItemFiltrosSchema = z.object({
   limite: z.number().int().min(1).max(100).default(20),
 });
 
-export type ItemFiltros = z.infer<typeof ItemFiltrosSchema>;
+export type ItemFiltros = z.input<typeof ItemFiltrosSchema>;
 
 /**
  * Utilitário de conversão de embalagens em unidades base.
