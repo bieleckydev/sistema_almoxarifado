@@ -210,7 +210,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 > **Objetivo:** Prover suporte a operações ultra-rápidas no celular/desktop através de estado global agnóstico (Zustand), persistência configurável e preparação para leitor de código de barras.
 
 #### Micro-tarefas da Fase 5:
-- [ ] **5.1 — Store de Baixa Rápida / "Carrinho de Retirada" (`src/core/store/useBaixaRapidaStore.ts`)**:
+- [x] **5.1 — Store de Baixa Rápida / "Carrinho de Retirada" (`src/core/store/useBaixaRapidaStore.ts`)**:
   - Armazenamento em memória do operador selecionado e lista de itens adicionados para baixa simultânea.
   - Permite ao almoxarife escanear múltiplos itens antes de confirmar a entrega final.
 - [ ] **5.2 — Adaptador de Persistência em Memória/Cache (`src/core/storage/memory-storage.adapter.ts`)**:
