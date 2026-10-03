@@ -124,7 +124,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 > **Objetivo:** Estabelecer o vocabulário ubíquo do almoxarifado em schemas Zod puros, com validações de dados rigorosas e sem dependências de UI.
 
 #### Micro-tarefas da Fase 1:
-- [ ] **1.1 — Enums e Tipos Globais (`src/core/domain/types.ts`)**:
+- [x] **1.1 — Enums e Tipos Globais (`src/core/domain/types.ts`)**:
   - Definir `TipoItem` (`PRODUTIVO_MATERIA_PRIMA`, `IMPRODUTIVO_CONSUMIVEL`, `ACABADO`).
   - Definir `UnidadeMedida` (`KG`, `UNIDADE`, `METRO`, `PACOTE`, `PECA`, `LITRO`).
   - Definir `TipoMovimentacao` (`ENTRADA_COMPRA`, `ENTRADA_PRODUCAO`, `SAIDA_CONSUMO_INTERNO`, `SAIDA_EXPEDICAO`, `AJUSTE_INVENTARIO_POSITIVO`, `AJUSTE_INVENTARIO_NEGATIVO`).
