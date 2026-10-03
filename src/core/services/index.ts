@@ -4,5 +4,6 @@ export * from './inventario.service';
 export * from './fechamento-mensal.service';
 export * from './nfe-reconciliation.service';
 export * from './nfe-entrada.service';
+export * from './nfe-archive.service';
 export * from './user.service';
 export * from './firebase';
