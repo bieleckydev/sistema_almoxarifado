@@ -162,7 +162,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Orquestração de baixa rápida em lote (para quando o colaborador retira broca + disco flap + bico de contato de uma só vez).
 - [x] **2.4 — Contrato de Repositório de Estoque (`src/core/storage/estoque.repository.interface.ts`)**:
   - Interface com métodos assíncronos: `buscarPorCodigo`, `listarComFiltros`, `registrarMovimentacao`, `consultarExtratoItem`.
-- [ ] **2.5 — Custom Hooks Agnósticos (`src/core/hooks/useMovimentacao.ts`)**:
+- [x] **2.5 — Custom Hooks Agnósticos (`src/core/hooks/useMovimentacao.ts`)**:
   - Hooks com TanStack Query para mutação de entrada e saída rápida com invalidação de cache atômica.
 
 ---
