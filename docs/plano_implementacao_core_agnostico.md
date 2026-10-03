@@ -189,7 +189,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 > **Objetivo:** Solucionar o fluxo da contabilidade descrito na proposta: comparar itens da NFe contra o pedido de compra, validar divergências e gerar entradas de estoque sem digitação redundante.
 
 #### Micro-tarefas da Fase 4:
-- [ ] **4.1 — Schemas de NFe e Pedido de Compra (`src/core/domain/nfe.schema.ts`)**:
+- [x] **4.1 — Schemas de NFe e Pedido de Compra (`src/core/domain/nfe.schema.ts`)**:
   - Mapeamento dos itens faturados (código do fornecedor, código interno Rhowert, NCM, quantidade faturada, valor unitário).
   - Schema de Pedido de Compra emitido pela contabilidade (itens autorizados e quantidades contratadas).
 - [ ] **4.2 — Algoritmo Puro de Reconciliação (`src/core/services/nfe-reconciliation.service.ts`)**:
