@@ -1,10 +1,10 @@
 import { Item, ItemFiltros } from '../domain/item.schema';
-import { Colaborador } from '../domain/colaborador.schema';
+import { Colaborador, ColaboradorFiltros } from '../domain/colaborador.schema';
 import { Movimentacao, MovimentacaoFiltros } from '../domain/movimentacao.schema';
 
 /**
- * Contrato agnóstico de repositório de dados de estoque.
- * Pode ser implementado via Firestore, REST API, banco relacional ou memória (testes).
+ * Contrato de repositório de dados de estoque (Port da Arquitetura Hexagonal).
+ * Desacopla as regras de negócio das fontes de persistência (Firestore, API REST, SQLite ou Memória).
  */
 export interface IEstoqueRepository {
   /**
@@ -18,14 +18,14 @@ export interface IEstoqueRepository {
   buscarPorCodigo(codigo: string): Promise<Item | null>;
 
   /**
-   * Lista itens aplicando critérios de busca e paginação.
+   * Lista itens aplicando critérios de busca, filtros de tipo/status e paginação.
    */
-  listarComFiltros(filtros: ItemFiltros): Promise<{ itens: Item[]; total: number }>;
+  listarComFiltros(filtros?: ItemFiltros): Promise<{ itens: Item[]; total: number }>;
 
   /**
-   * Busca um colaborador pela matrícula ou ID único.
+   * Salva ou atualiza um item no repositório.
    */
-  buscarColaboradorPorId(id: string): Promise<Colaborador | null>;
+  salvarItem(item: Item): Promise<Item>;
 
   /**
    * Atualiza o saldo físico de um item no armazenamento persistente.
@@ -33,12 +33,32 @@ export interface IEstoqueRepository {
   atualizarSaldoItem(itemId: string, novoSaldo: number): Promise<void>;
 
   /**
+   * Busca um colaborador pela matrícula ou ID único.
+   */
+  buscarColaboradorPorId(id: string): Promise<Colaborador | null>;
+
+  /**
+   * Lista colaboradores com filtros opcionais.
+   */
+  listarColaboradores(filtros?: ColaboradorFiltros): Promise<{ colaboradores: Colaborador[]; total: number }>;
+
+  /**
+   * Salva ou atualiza um colaborador no repositório.
+   */
+  salvarColaborador(colaborador: Colaborador): Promise<Colaborador>;
+
+  /**
    * Registra uma movimentação física e adiciona à trilha de auditoria.
    */
   registrarMovimentacao(movimentacao: Movimentacao): Promise<Movimentacao>;
 
   /**
-   * Consulta o histórico e extrato de movimentações de um item específico.
+   * Consulta o histórico e extrato de movimentações de um item ou período específico.
    */
   consultarExtratoItem(itemId: string, filtros?: MovimentacaoFiltros): Promise<Movimentacao[]>;
+
+  /**
+   * Lista todas as movimentações recentes com suporte a paginação e filtros.
+   */
+  listarMovimentacoes(filtros?: MovimentacaoFiltros): Promise<{ movimentacoes: Movimentacao[]; total: number }>;
 }
