@@ -217,7 +217,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Implementação de fallback do `IStorageAdapter` para execução de testes unitários ou ambientes offline sem storage de navegador.
 - [x] **5.3 — Interceptadores e Injeção de Dependência (`src/core/api/client.ts`)**:
   - Configuração de interceptadores HTTP com injeção do token de autenticação via adaptador.
-- [ ] **5.4 — Suite de Testes de Integração do Core (`src/core/__tests__/fluxo-completo.spec.ts`)**:
+- [x] **5.4 — Suite de Testes de Integração do Core (`src/core/__tests__/fluxo-completo.spec.ts`)**:
   - Teste ponta a ponta sem UI: Criação de item -> Entrada por NFe -> Baixa por colaborador -> Conferência de inventário -> Apuração de saldo final.
 
 ---

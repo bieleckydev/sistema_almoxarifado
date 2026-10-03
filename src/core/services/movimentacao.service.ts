@@ -371,4 +371,11 @@ export class MovimentacaoService {
     const entradaService = new NFeEntradaService(this.repository);
     return entradaService.efetivarEntrada(notaFiscal, options);
   }
+
+  /**
+   * Alias semântico para executarBaixaLote.
+   */
+  async executarBaixaEmLote(dados: RegistrarBaixaLoteInput): Promise<Movimentacao[]> {
+    return this.executarBaixaLote(dados);
+  }
 }
