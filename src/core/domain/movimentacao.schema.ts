@@ -163,4 +163,4 @@ export const MovimentacaoFiltrosSchema = z.object({
   limite: z.number().int().min(1).max(100).default(20),
 });
 
-export type MovimentacaoFiltros = z.infer<typeof MovimentacaoFiltrosSchema>;
+export type MovimentacaoFiltros = z.input<typeof MovimentacaoFiltrosSchema>;

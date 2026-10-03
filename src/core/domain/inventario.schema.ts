@@ -192,3 +192,52 @@ export function calcularMetricasSessao(
     acuraciaPercentual,
   };
 }
+
+/**
+ * Item consolidado no fechamento mensal de estoque.
+ * Registra o saldo inicial do mês (vindo do mês anterior), a movimentação do mês e o saldo final.
+ */
+export const FechamentoMensalItemSchema = z.object({
+  itemId: z.string().min(1),
+  codigo: z.string().trim(),
+  descricao: z.string().trim(),
+  unidade: UnidadeMedidaSchema,
+  saldoInicial: z.number(),
+  totalEntradas: z.number().min(0).default(0),
+  totalSaidas: z.number().min(0).default(0),
+  totalAjustes: z.number().default(0),
+  saldoFinal: z.number(),
+});
+
+export type FechamentoMensalItem = z.infer<typeof FechamentoMensalItemSchema>;
+
+/**
+ * Schema consolidado do fechamento periódico/mensal de estoque.
+ * Substitui o transporte manual de saldos entre abas da planilha ESTOQUE 2026.xlsx.
+ */
+export const FechamentoMensalSchema = z.object({
+  id: z.string().min(1),
+  ano: z.number().int().min(2020).max(2100),
+  mes: z.number().int().min(1).max(12),
+  dataFechamento: z.string().datetime(),
+  responsavelId: z.string().min(1),
+  status: z.enum(['ABERTO', 'FECHADO']).default('FECHADO'),
+  itens: z.array(FechamentoMensalItemSchema),
+  observacoes: z.string().trim().optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+export type FechamentoMensal = z.infer<typeof FechamentoMensalSchema>;
+
+/**
+ * Input para acionar a rotina de fechamento mensal de saldo.
+ */
+export const ExecutarFechamentoMensalSchema = z.object({
+  ano: z.number().int().min(2020).max(2100),
+  mes: z.number().int().min(1).max(12),
+  responsavelId: z.string().min(1, 'Identificador do responsável é obrigatório'),
+  observacoes: z.string().trim().optional(),
+});
+
+export type ExecutarFechamentoMensalInput = z.input<typeof ExecutarFechamentoMensalSchema>;
+
