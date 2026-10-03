@@ -134,7 +134,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Modelar código com validação regex (ex.: aceitar `10-XXX`, `90-XXXX`, `100-XXXX`).
   - Regra de conversão de embalagem (fator multiplicador se o item for comprado em pacote e consumido em unidades).
   - Schemas para listagem, criação e atualização de itens.
-- [ ] **1.3 — Schema de Colaboradores e Setores (`src/core/domain/colaborador.schema.ts`)**:
+- [x] **1.3 — Schema de Colaboradores e Setores (`src/core/domain/colaborador.schema.ts`)**:
   - Mapear matrícula (`001` a `999`), nome completo, setor fabril (Ferramentaria, Qualidade, Logística, Cadeira, Montagem, Solda) e cargo.
 - [ ] **1.4 — Formatadores Puros de Domínio (`src/core/utils/formatters.ts`)**:
   - Normalizador de código de produto.
