@@ -157,7 +157,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Função pura `calcularNovoSaldo(saldoAtual: number, movimentacao: Movimentacao): number`.
   - Função pura `determinarStatusEstoque(saldoAtual: number, estoqueSeguranca: number): StatusEstoque`.
   - Validação estrita: impedir saídas que resultem em saldo negativo (ou emitir aviso configurável conforme política da fábrica).
-- [ ] **2.3 — Serviço de Movimentação (`src/core/services/movimentacao.service.ts`)**:
+- [x] **2.3 — Serviço de Movimentação (`src/core/services/movimentacao.service.ts`)**:
   - Validação completa antes da persistência (verificar se colaborador está ativo e se o item existe).
   - Orquestração de baixa rápida em lote (para quando o colaborador retira broca + disco flap + bico de contato de uma só vez).
 - [ ] **2.4 — Contrato de Repositório de Estoque (`src/core/storage/estoque.repository.interface.ts`)**:

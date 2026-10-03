@@ -36,7 +36,7 @@ export const RegistrarEntradaSchema = z.object({
   dataMovimentacao: z.string().datetime().optional(),
 });
 
-export type RegistrarEntradaInput = z.infer<typeof RegistrarEntradaSchema>;
+export type RegistrarEntradaInput = z.input<typeof RegistrarEntradaSchema>;
 
 /**
  * Schema de baixa interna para consumo fabril por colaborador (flap, solda, brocas, EPIs).
@@ -53,7 +53,7 @@ export const RegistrarBaixaInternaSchema = z.object({
   dataMovimentacao: z.string().datetime().optional(),
 });
 
-export type RegistrarBaixaInternaInput = z.infer<typeof RegistrarBaixaInternaSchema>;
+export type RegistrarBaixaInternaInput = z.input<typeof RegistrarBaixaInternaSchema>;
 
 /**
  * Schema de saída de produto acabado para expedição / cliente / filial.
@@ -74,7 +74,7 @@ export const RegistrarSaidaExpedicaoSchema = z.object({
   dataMovimentacao: z.string().datetime().optional(),
 });
 
-export type RegistrarSaidaExpedicaoInput = z.infer<typeof RegistrarSaidaExpedicaoSchema>;
+export type RegistrarSaidaExpedicaoInput = z.input<typeof RegistrarSaidaExpedicaoSchema>;
 
 /**
  * Item individual no lote de baixa rápida (carrinho de retirada do operador).
@@ -103,7 +103,7 @@ export const RegistrarBaixaLoteSchema = z.object({
   dataMovimentacao: z.string().datetime().optional(),
 });
 
-export type RegistrarBaixaLoteInput = z.infer<typeof RegistrarBaixaLoteSchema>;
+export type RegistrarBaixaLoteInput = z.input<typeof RegistrarBaixaLoteSchema>;
 
 /**
  * Schema de ajuste de inventário (correção por contagem física).
@@ -120,7 +120,7 @@ export const RegistrarAjusteInventarioSchema = z.object({
   dataMovimentacao: z.string().datetime().optional(),
 });
 
-export type RegistrarAjusteInventarioInput = z.infer<typeof RegistrarAjusteInventarioSchema>;
+export type RegistrarAjusteInventarioInput = z.input<typeof RegistrarAjusteInventarioSchema>;
 
 /**
  * Entidade consolidada de Movimentação de Estoque com trilha de auditoria de saldo.
