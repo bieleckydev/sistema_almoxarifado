@@ -1,0 +1,277 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  ItemSchema,
+  CreateItemSchema,
+  converterEmbalagemParaUnidade,
+  converterUnidadeParaEmbalagem,
+} from '../item.schema';
+import {
+  ColaboradorSchema,
+  normalizarMatricula,
+} from '../colaborador.schema';
+import {
+  TipoItemSchema,
+  UnidadeMedidaSchema,
+  TipoMovimentacaoSchema,
+  StatusEstoqueSchema,
+  StatusConferenciaNFeSchema,
+} from '../types';
+import {
+  normalizarCodigoItem,
+  formatarPesoKg,
+  formatarQuantidadeInteira,
+  formatarQuantidadePorUnidade,
+  sanitizarNumeroNF,
+  sanitizarChaveAcessoNFe,
+  validarChaveAcessoNFe,
+  formatarChaveAcessoNFe,
+} from '../../utils/formatters';
+
+describe('1.1 — Enums e Schemas de Tipos Globais', () => {
+  it('deve aceitar tipos de itens válidos e rejeitar inválidos', () => {
+    assert.equal(TipoItemSchema.parse('PRODUTIVO_MATERIA_PRIMA'), 'PRODUTIVO_MATERIA_PRIMA');
+    assert.equal(TipoItemSchema.parse('IMPRODUTIVO_CONSUMIVEL'), 'IMPRODUTIVO_CONSUMIVEL');
+    assert.equal(TipoItemSchema.parse('ACABADO'), 'ACABADO');
+    assert.throws(() => TipoItemSchema.parse('OUTRO_TIPO_INVALIDO'));
+  });
+
+  it('deve aceitar unidades de medida válidas e rejeitar inválidas', () => {
+    const unidadesValidas = ['KG', 'UNIDADE', 'METRO', 'PACOTE', 'PECA', 'LITRO'];
+    for (const u of unidadesValidas) {
+      assert.equal(UnidadeMedidaSchema.parse(u), u);
+    }
+    assert.throws(() => UnidadeMedidaSchema.parse('TONELADA'));
+  });
+
+  it('deve validar tipos de movimentação suportados', () => {
+    assert.equal(TipoMovimentacaoSchema.parse('ENTRADA_COMPRA'), 'ENTRADA_COMPRA');
+    assert.equal(TipoMovimentacaoSchema.parse('SAIDA_CONSUMO_INTERNO'), 'SAIDA_CONSUMO_INTERNO');
+    assert.equal(TipoMovimentacaoSchema.parse('SAIDA_EXPEDICAO'), 'SAIDA_EXPEDICAO');
+    assert.throws(() => TipoMovimentacaoSchema.parse('MOVIMENTACAO_INEXISTENTE'));
+  });
+
+  it('deve validar status de estoque e conferencia de NFe', () => {
+    assert.equal(StatusEstoqueSchema.parse('NORMAL'), 'NORMAL');
+    assert.equal(StatusEstoqueSchema.parse('CRITICO_ZERADO'), 'CRITICO_ZERADO');
+    assert.equal(StatusConferenciaNFeSchema.parse('DIVERGENTE'), 'DIVERGENTE');
+    assert.equal(StatusConferenciaNFeSchema.parse('APROVADA'), 'APROVADA');
+  });
+});
+
+describe('1.2 — ItemSchema e Regras de Negócio de Itens', () => {
+  it('deve validar item de matéria-prima com código 10-XXX e unidade KG', () => {
+    const itemMateriaPrima = {
+      id: 'item-001',
+      codigo: '10-3812',
+      descricao: 'TUBO ACO SAE 1020 38.1 X 1.2 MM',
+      tipo: 'PRODUTIVO_MATERIA_PRIMA',
+      unidade: 'KG',
+      estoqueSeguranca: 500,
+      estoqueAtual: 1250.75,
+    };
+
+    const parsed = ItemSchema.parse(itemMateriaPrima);
+    assert.equal(parsed.codigo, '10-3812');
+    assert.equal(parsed.tipo, 'PRODUTIVO_MATERIA_PRIMA');
+    assert.equal(parsed.unidade, 'KG');
+    assert.equal(parsed.estoqueAtual, 1250.75);
+    assert.equal(parsed.ativo, true);
+  });
+
+  it('deve validar item consumível com código 90-XXXX e embalagem de pacote', () => {
+    const itemConsumivel = {
+      id: 'item-002',
+      codigo: '90-1105',
+      descricao: 'DISCO FLAP 4.1/2 GRAO 60',
+      tipo: 'IMPRODUTIVO_CONSUMIVEL',
+      unidade: 'UNIDADE',
+      estoqueSeguranca: 20,
+      estoqueAtual: 45,
+      embalagem: {
+        possuiEmbalagem: true,
+        unidadeCompra: 'PACOTE',
+        unidadeConsumo: 'UNIDADE',
+        fatorConversao: 10,
+        descricaoEmbalagem: 'Pacote com 10 discos',
+      },
+    };
+
+    const parsed = ItemSchema.parse(itemConsumivel);
+    assert.equal(parsed.codigo, '90-1105');
+    assert.equal(parsed.embalagem.fatorConversao, 10);
+    assert.equal(parsed.embalagem.possuiEmbalagem, true);
+  });
+
+  it('deve validar item acabado com código 100-XXXX e cliente de destino', () => {
+    const itemAcabado = {
+      id: 'item-003',
+      codigo: '100-089',
+      descricao: 'SUPORTE GUIDAO SHAMAN PRETO',
+      tipo: 'ACABADO',
+      unidade: 'PECA',
+      estoqueSeguranca: 50,
+      estoqueAtual: 120,
+      clienteDestino: 'Shaman',
+    };
+
+    const parsed = ItemSchema.parse(itemAcabado);
+    assert.equal(parsed.codigo, '100-089');
+    assert.equal(parsed.clienteDestino, 'Shaman');
+  });
+
+  it('deve rejeitar item com código fora dos prefixos homologados', () => {
+    const itemInvalido = {
+      id: 'item-err',
+      codigo: '55-INVALIDO',
+      descricao: 'Item com prefixo não reconhecido',
+      tipo: 'IMPRODUTIVO_CONSUMIVEL',
+      unidade: 'UNIDADE',
+    };
+
+    assert.throws(() => ItemSchema.parse(itemInvalido), /Código de item inválido/);
+  });
+
+  it('deve rejeitar estoque de segurança ou estoque atual negativos', () => {
+    const itemNegativo = {
+      id: 'item-err2',
+      codigo: '90-1234',
+      descricao: 'Broca HSS 6mm',
+      tipo: 'IMPRODUTIVO_CONSUMIVEL',
+      unidade: 'UNIDADE',
+      estoqueSeguranca: -5,
+      estoqueAtual: -10,
+    };
+
+    assert.throws(() => ItemSchema.parse(itemNegativo));
+  });
+
+  it('deve permitir criação via CreateItemSchema com estoque inicial', () => {
+    const novoItem = {
+      codigo: '90-9999',
+      descricao: 'Eletrodo OK 46 2.5mm',
+      tipo: 'IMPRODUTIVO_CONSUMIVEL',
+      unidade: 'KG',
+      estoqueSeguranca: 15,
+      estoqueInicial: 50,
+    };
+
+    const parsed = CreateItemSchema.parse(novoItem);
+    assert.equal(parsed.codigo, '90-9999');
+    assert.equal(parsed.estoqueInicial, 50);
+  });
+
+  it('deve calcular conversão de embalagem para unidade e vice-versa corretamente', () => {
+    // 5 pacotes com 10 unidades cada = 50 unidades
+    const totalUnidades = converterEmbalagemParaUnidade(5, 10);
+    assert.equal(totalUnidades, 50);
+
+    // 45 unidades com fator 10 = 4 pacotes fechados + 5 avulsos
+    const divisao = converterUnidadeParaEmbalagem(45, 10);
+    assert.equal(divisao.embalagensFechadas, 4);
+    assert.equal(divisao.sobraAvulsa, 5);
+
+    // Rejeição de valores negativos
+    assert.throws(() => converterEmbalagemParaUnidade(-1, 10));
+    assert.throws(() => converterUnidadeParaEmbalagem(10, 0));
+  });
+});
+
+describe('1.3 — ColaboradorSchema e Validação de Matrícula', () => {
+  it('deve validar e auto-formatar matrícula numérica para 3 dígitos', () => {
+    const colaborador = {
+      id: 'colab-1',
+      matricula: '1',
+      nome: 'José da Silva',
+      setor: 'SOLDA',
+      funcao: 'Soldador TIG',
+    };
+
+    const parsed = ColaboradorSchema.parse(colaborador);
+    assert.equal(parsed.matricula, '001');
+    assert.equal(parsed.setor, 'SOLDA');
+    assert.equal(parsed.ativo, true);
+  });
+
+  it('deve normalizar matrículas com 2 dígitos para 3 dígitos', () => {
+    assert.equal(normalizarMatricula(42), '042');
+    assert.equal(normalizarMatricula('7'), '007');
+    assert.equal(normalizarMatricula('350'), '350');
+  });
+
+  it('deve rejeitar colaborador com nome muito curto ou matrícula inválida', () => {
+    assert.throws(() => {
+      ColaboradorSchema.parse({
+        id: 'colab-err',
+        matricula: 'ABC',
+        nome: 'Zé',
+        setor: 'QUALIDADE',
+        funcao: 'Inspetor',
+      });
+    });
+  });
+
+  it('deve validar todos os setores fabris homologados', () => {
+    const setores = ['FERRAMENTARIA', 'QUALIDADE', 'LOGISTICA', 'CADEIRA', 'MONTAGEM', 'SOLDA'];
+    for (const setor of setores) {
+      const res = ColaboradorSchema.parse({
+        id: `c-${setor}`,
+        matricula: '100',
+        nome: `Operador ${setor}`,
+        setor,
+        funcao: 'Operador',
+      });
+      assert.equal(res.setor, setor);
+    }
+  });
+});
+
+describe('1.4 — Formatadores Puros de Domínio', () => {
+  it('deve normalizar códigos de produto limpando espaços e barras', () => {
+    assert.equal(normalizarCodigoItem(' 10 - 042 '), '10-042');
+    assert.equal(normalizarCodigoItem('90/1001'), '90-1001');
+    assert.equal(normalizarCodigoItem('100_050'), '100-050');
+    assert.equal(normalizarCodigoItem(''), '');
+  });
+
+  it('deve formatar peso em KG no padrão brasileiro', () => {
+    assert.equal(formatarPesoKg(1250.5), '1.250,50 KG');
+    assert.equal(formatarPesoKg(1250.5, false), '1.250,50');
+    assert.equal(formatarPesoKg(0), '0,00 KG');
+    assert.equal(formatarPesoKg(null), '0,00 KG');
+  });
+
+  it('deve formatar quantidades inteiras', () => {
+    assert.equal(formatarQuantidadeInteira(1500), '1.500');
+    assert.equal(formatarQuantidadeInteira(45.8), '45');
+    assert.equal(formatarQuantidadeInteira(null), '0');
+  });
+
+  it('deve formatar quantidades por unidade de medida', () => {
+    assert.equal(formatarQuantidadePorUnidade(125.75, 'KG'), '125,75 KG');
+    assert.equal(formatarQuantidadePorUnidade(50, 'UNIDADE'), '50 UN');
+    assert.equal(formatarQuantidadePorUnidade(10, 'PACOTE'), '10 PCT');
+    assert.equal(formatarQuantidadePorUnidade(5, 'PECA'), '5 PÇ');
+  });
+
+  it('deve sanitizar números de Nota Fiscal', () => {
+    assert.equal(sanitizarNumeroNF('NF 000.123.456-1'), '1234561');
+    assert.equal(sanitizarNumeroNF('000123'), '123');
+    assert.equal(sanitizarNumeroNF(4567), '4567');
+  });
+
+  it('deve sanitizar, validar e formatar chave de acesso de NFe de 44 dígitos', () => {
+    const chaveValida = '35260100000000000000550010000000011000000010';
+    assert.equal(validarChaveAcessoNFe(chaveValida), true);
+    assert.equal(validarChaveAcessoNFe('12345'), false);
+
+    const chaveFormatada = formatarChaveAcessoNFe(chaveValida);
+    assert.equal(
+      chaveFormatada,
+      '3526 0100 0000 0000 0000 5500 1000 0000 0110 0000 0010'
+    );
+
+    const chaveComMascara = '3526.0100.0000-0000';
+    assert.equal(sanitizarChaveAcessoNFe(chaveComMascara), '3526010000000000');
+  });
+});
