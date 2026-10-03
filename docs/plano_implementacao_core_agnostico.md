@@ -153,7 +153,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Schema de entrada (`itemId`, `quantidade`, `numeroNF`, `fornecedor`, `numeroPedidoRhowert`, `observacoes`).
   - Schema de baixa interna (`itemId`, `quantidade`, `colaboradorId`, `setor`, `observacao`).
   - Schema de saída de expedição (`itemId`, `quantidade`, `clienteDestino`, `numeroNF`, `status`).
-- [ ] **2.2 — Regras Puras de Estoque (`src/core/services/estoque-calculator.ts`)**:
+- [x] **2.2 — Regras Puras de Estoque (`src/core/services/estoque-calculator.ts`)**:
   - Função pura `calcularNovoSaldo(saldoAtual: number, movimentacao: Movimentacao): number`.
   - Função pura `determinarStatusEstoque(saldoAtual: number, estoqueSeguranca: number): StatusEstoque`.
   - Validação estrita: impedir saídas que resultem em saldo negativo (ou emitir aviso configurável conforme política da fábrica).
