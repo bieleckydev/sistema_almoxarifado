@@ -130,7 +130,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Definir `TipoMovimentacao` (`ENTRADA_COMPRA`, `ENTRADA_PRODUCAO`, `SAIDA_CONSUMO_INTERNO`, `SAIDA_EXPEDICAO`, `AJUSTE_INVENTARIO_POSITIVO`, `AJUSTE_INVENTARIO_NEGATIVO`).
   - Definir `StatusEstoque` (`NORMAL`, `ESTOQUE_BAIXO`, `CRITICO_ZERADO`).
   - Definir `StatusConferenciaNFe` (`RECEBIDA`, `EM_CONFERENCIA`, `DIVERGENTE`, `APROVADA`, `ARQUIVADA`).
-- [ ] **1.2 — Schema do Item de Almoxarifado (`src/core/domain/item.schema.ts`)**:
+- [x] **1.2 — Schema do Item de Almoxarifado (`src/core/domain/item.schema.ts`)**:
   - Modelar código com validação regex (ex.: aceitar `10-XXX`, `90-XXXX`, `100-XXXX`).
   - Regra de conversão de embalagem (fator multiplicador se o item for comprado em pacote e consumido em unidades).
   - Schemas para listagem, criação e atualização de itens.
