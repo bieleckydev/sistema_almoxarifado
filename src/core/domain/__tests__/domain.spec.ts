@@ -11,6 +11,14 @@ import {
   normalizarMatricula,
 } from '../colaborador.schema';
 import {
+  RegistrarEntradaSchema,
+  RegistrarBaixaInternaSchema,
+  RegistrarSaidaExpedicaoSchema,
+  RegistrarBaixaLoteSchema,
+  RegistrarAjusteInventarioSchema,
+  MovimentacaoSchema,
+} from '../movimentacao.schema';
+import {
   TipoItemSchema,
   UnidadeMedidaSchema,
   TipoMovimentacaoSchema,
@@ -273,5 +281,106 @@ describe('1.4 — Formatadores Puros de Domínio', () => {
 
     const chaveComMascara = '3526.0100.0000-0000';
     assert.equal(sanitizarChaveAcessoNFe(chaveComMascara), '3526010000000000');
+  });
+});
+
+describe('2.1 — Schemas de Movimentações de Estoque', () => {
+  it('deve validar entrada por compra com NFe e pedido Rhowert', () => {
+    const entrada = {
+      itemId: 'item-10-3812',
+      tipo: 'ENTRADA_COMPRA' as const,
+      quantidade: 500,
+      numeroNF: '12345',
+      fornecedor: 'Aços Tubulares S/A',
+      numeroPedidoRhowert: 'PED-2026-08',
+      valorUnitario: 14.5,
+    };
+
+    const parsed = RegistrarEntradaSchema.parse(entrada);
+    assert.equal(parsed.itemId, 'item-10-3812');
+    assert.equal(parsed.tipo, 'ENTRADA_COMPRA');
+    assert.equal(parsed.quantidade, 500);
+    assert.equal(parsed.numeroPedidoRhowert, 'PED-2026-08');
+  });
+
+  it('deve rejeitar entrada com quantidade negativa ou zero', () => {
+    assert.throws(() => {
+      RegistrarEntradaSchema.parse({
+        itemId: 'item-1',
+        quantidade: 0,
+      });
+    });
+
+    assert.throws(() => {
+      RegistrarEntradaSchema.parse({
+        itemId: 'item-1',
+        quantidade: -50,
+      });
+    });
+  });
+
+  it('deve validar baixa interna para colaborador e setor', () => {
+    const baixa = {
+      itemId: 'item-90-1105',
+      quantidade: 3,
+      colaboradorId: 'colab-001',
+      setor: 'SOLDA' as const,
+      observacao: 'Reposição para cabine 3',
+    };
+
+    const parsed = RegistrarBaixaInternaSchema.parse(baixa);
+    assert.equal(parsed.tipo, 'SAIDA_CONSUMO_INTERNO');
+    assert.equal(parsed.quantidade, 3);
+    assert.equal(parsed.colaboradorId, 'colab-001');
+    assert.equal(parsed.setor, 'SOLDA');
+  });
+
+  it('deve validar saída para expedição com cliente e status', () => {
+    const expedicao = {
+      itemId: 'item-100-089',
+      quantidade: 25,
+      clienteDestino: 'Grajau Motos',
+      numeroNF: '99881',
+      status: 'DESPACHADO' as const,
+    };
+
+    const parsed = RegistrarSaidaExpedicaoSchema.parse(expedicao);
+    assert.equal(parsed.tipo, 'SAIDA_EXPEDICAO');
+    assert.equal(parsed.clienteDestino, 'Grajau Motos');
+    assert.equal(parsed.status, 'DESPACHADO');
+  });
+
+  it('deve validar baixa em lote com múltiplos itens para o mesmo colaborador', () => {
+    const baixaLote = {
+      colaboradorId: 'colab-042',
+      setor: 'FERRAMENTARIA' as const,
+      itens: [
+        { itemId: 'item-90-1105', quantidade: 5 },
+        { itemId: 'item-90-2001', quantidade: 2, observacao: 'Broca 8mm' },
+      ],
+      observacaoGeral: 'Retirada de início de turno',
+    };
+
+    const parsed = RegistrarBaixaLoteSchema.parse(baixaLote);
+    assert.equal(parsed.itens.length, 2);
+    assert.equal(parsed.colaboradorId, 'colab-042');
+  });
+
+  it('deve validar entidade consolidada Movimentacao com auditoria de saldo', () => {
+    const mov = {
+      id: 'mov-1001',
+      itemId: 'item-90-1105',
+      tipo: 'SAIDA_CONSUMO_INTERNO' as const,
+      quantidade: 5,
+      saldoAnterior: 20,
+      saldoResultante: 15,
+      dataMovimentacao: new Date().toISOString(),
+      colaboradorId: 'colab-001',
+      setor: 'SOLDA' as const,
+    };
+
+    const parsed = MovimentacaoSchema.parse(mov);
+    assert.equal(parsed.saldoAnterior, 20);
+    assert.equal(parsed.saldoResultante, 15);
   });
 });
