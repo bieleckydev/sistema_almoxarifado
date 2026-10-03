@@ -218,3 +218,8 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     this.movimentacoes = [];
   }
 }
+
+/**
+ * Alias semântico para MemoryEstoqueRepository
+ */
+export const MemoryEstoqueAdapter = MemoryEstoqueRepository;

@@ -19,6 +19,12 @@ import {
   SaldoInsuficienteError,
 } from './estoque-calculator';
 import { IEstoqueRepository } from '../storage/estoque.repository.interface';
+import { NotaFiscal } from '../domain/nfe.schema';
+import {
+  NFeEntradaService,
+  EfetivarEntradaNFeOptions,
+  ResultadoEfetivacaoNFe,
+} from './nfe-entrada.service';
 
 export class ItemNaoEncontradoError extends Error {
   constructor(public readonly itemId: string) {
@@ -352,5 +358,17 @@ export class MovimentacaoService {
 
     await this.repository.atualizarSaldoItem(item.id, saldoResultante);
     return this.repository.registrarMovimentacao(movimentacao);
+  }
+
+  /**
+   * Efetiva a entrada de mercadorias no estoque a partir de uma Nota Fiscal conferida,
+   * gerando movimentações do tipo ENTRADA_COMPRA e atualizando os saldos dos itens.
+   */
+  async efetivarEntradaNFe(
+    notaFiscal: NotaFiscal,
+    options?: EfetivarEntradaNFeOptions
+  ): Promise<ResultadoEfetivacaoNFe> {
+    const entradaService = new NFeEntradaService(this.repository);
+    return entradaService.efetivarEntrada(notaFiscal, options);
   }
 }

@@ -199,7 +199,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
     - Preço divergente além da margem de tolerância.
     - Itens na nota que não constam no pedido.
   - Determinação do status da NFe (`APROVADA_TOTAL`, `APROVADA_COM_DIVERGENCIA`, `REJEITADA`).
-- [ ] **4.3 — Workflow de Efetivação de Entrada por NFe**:
+- [x] **4.3 — Workflow de Efetivação de Entrada por NFe (`src/core/services/nfe-entrada.service.ts`)**:
   - Conversão direta dos itens aprovados na NFe em movimentações do tipo `ENTRADA_COMPRA`, atualizando instantaneamente os saldos dos itens.
 - [ ] **4.4 — Gestor de Metadados de Arquivamento (`src/core/services/nfe-archive.service.ts`)**:
   - Padronização do caminho de arquivamento virtual por data de recebimento (`AAAA/MM/DD/CHAVE_NFE`), atendendo à necessidade da fábrica de histórico organizado.
