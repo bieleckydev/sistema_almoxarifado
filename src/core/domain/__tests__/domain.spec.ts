@@ -19,6 +19,13 @@ import {
   MovimentacaoSchema,
 } from '../movimentacao.schema';
 import {
+  AbrirSessaoInventarioSchema,
+  RegistrarContagemItemSchema,
+  SessaoInventarioSchema,
+  calcularDivergenciaItem,
+  calcularMetricasSessao,
+} from '../inventario.schema';
+import {
   TipoItemSchema,
   UnidadeMedidaSchema,
   TipoMovimentacaoSchema,
@@ -382,5 +389,103 @@ describe('2.1 — Schemas de Movimentações de Estoque', () => {
     const parsed = MovimentacaoSchema.parse(mov);
     assert.equal(parsed.saldoAnterior, 20);
     assert.equal(parsed.saldoResultante, 15);
+  });
+});
+
+describe('3.1 — Schema de Inventário e Contagem Física', () => {
+  it('deve validar abertura de sessão de inventário por setor', () => {
+    const input = {
+      titulo: 'Inventário Geral Solda - 2026/10',
+      escopo: 'POR_SETOR' as const,
+      setorAlvo: 'SOLDA' as const,
+      responsavelAberturaId: 'colab-001',
+    };
+
+    const parsed = AbrirSessaoInventarioSchema.parse(input);
+    assert.equal(parsed.titulo, 'Inventário Geral Solda - 2026/10');
+    assert.equal(parsed.escopo, 'POR_SETOR');
+    assert.equal(parsed.setorAlvo, 'SOLDA');
+  });
+
+  it('deve validar lançamento de contagem física de item', () => {
+    const contagem = {
+      sessaoId: 'sessao-1',
+      itemId: 'item-90-1105',
+      quantidadeContada: 42,
+      responsavelContagemId: 'colab-001',
+      responsavelContagemNome: 'João da Solda',
+    };
+
+    const parsed = RegistrarContagemItemSchema.parse(contagem);
+    assert.equal(parsed.sessaoId, 'sessao-1');
+    assert.equal(parsed.quantidadeContada, 42);
+  });
+
+  it('deve calcular divergência entre saldo do sistema e contagem física', () => {
+    // Caso conciliado (sem divergência)
+    const resConciliado = calcularDivergenciaItem(50, 50);
+    assert.equal(resConciliado.divergencia, 0);
+    assert.equal(resConciliado.status, 'CONCILIADO');
+
+    // Caso divergente (sobra)
+    const resSobra = calcularDivergenciaItem(50, 55);
+    assert.equal(resSobra.divergencia, 5);
+    assert.equal(resSobra.status, 'DIVERGENTE');
+
+    // Caso divergente (perda/falta)
+    const resFalta = calcularDivergenciaItem(50, 47);
+    assert.equal(resFalta.divergencia, -3);
+    assert.equal(resFalta.status, 'DIVERGENTE');
+  });
+
+  it('deve calcular acurácia percentual e métricas da sessão de inventário', () => {
+    const contagens = [
+      { saldoSistema: 100, quantidadeContada: 100 }, // conciliado
+      { saldoSistema: 50, quantidadeContada: 50 },   // conciliado
+      { saldoSistema: 30, quantidadeContada: 30 },   // conciliado
+      { saldoSistema: 20, quantidadeContada: 18 },   // divergente
+    ];
+
+    const metricas = calcularMetricasSessao(contagens);
+    assert.equal(metricas.totalItens, 4);
+    assert.equal(metricas.totalConciliados, 3);
+    assert.equal(metricas.totalDivergentes, 1);
+    assert.equal(metricas.acuraciaPercentual, 75); // 3 de 4 = 75%
+  });
+
+  it('deve validar schema completo da SessaoInventario com contagens', () => {
+    const agora = new Date().toISOString();
+    const sessao = {
+      id: 'inv-2026-10',
+      titulo: 'Balanço Cíclico Flap e Brocas',
+      escopo: 'CICLICO' as const,
+      status: 'EM_ANDAMENTO' as const,
+      dataInicio: agora,
+      responsavelAberturaId: 'colab-1',
+      contagens: [
+        {
+          id: 'c-1',
+          itemId: 'item-90-1105',
+          codigoItem: '90-1105',
+          descricaoItem: 'Disco Flap',
+          unidade: 'UNIDADE' as const,
+          saldoSistema: 50,
+          quantidadeContada: 48,
+          divergencia: -2,
+          dataHoraContagem: agora,
+          responsavelContagemId: 'colab-1',
+          statusContagem: 'DIVERGENTE' as const,
+        },
+      ],
+      totalItens: 1,
+      totalConciliados: 0,
+      totalDivergentes: 1,
+      acuraciaPercentual: 0,
+    };
+
+    const parsed = SessaoInventarioSchema.parse(sessao);
+    assert.equal(parsed.id, 'inv-2026-10');
+    assert.equal(parsed.contagens.length, 1);
+    assert.equal(parsed.contagens[0].divergencia, -2);
   });
 });

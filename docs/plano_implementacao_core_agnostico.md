@@ -171,7 +171,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 > **Objetivo:** Automatizar o processo que hoje é feito na planilha `ESTOQUE 2026.xlsx` (fechamento mensal e contagens diárias), com histórico de auditoria e rastreio de perdas/sobras.
 
 #### Micro-tarefas da Fase 3:
-- [ ] **3.1 — Schema de Inventário e Contagem (`src/core/domain/inventario.schema.ts`)**:
+- [x] **3.1 — Schema de Inventário e Contagem (`src/core/domain/inventario.schema.ts`)**:
   - Definição de sessão de inventário (geral, por setor ou por tipo de material).
   - Schema de contagem física (`itemId`, `saldoSistema`, `quantidadeContada`, `dataHoraContagem`, `responsavelContagemId`).
 - [ ] **3.2 — Serviço de Apuração de Divergências (`src/core/services/inventario.service.ts`)**:
