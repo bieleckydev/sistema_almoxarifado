@@ -3,3 +3,4 @@ export * from './user.schema';
 export * from './item.schema';
 export * from './colaborador.schema';
 export * from './movimentacao.schema';
+export * from './inventario.schema';
