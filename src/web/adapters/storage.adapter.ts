@@ -33,6 +33,28 @@ export class WebLocalStorageAdapter implements IStorageAdapter {
       console.error(`Erro ao remover chave "${key}" do localStorage:`, error);
     }
   }
+
+  async clear(): Promise<void> {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.clear();
+    } catch (error) {
+      console.error('Erro ao limpar localStorage:', error);
+    }
+  }
+
+  async getAllKeys(): Promise<string[]> {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+    try {
+      return Object.keys(window.localStorage);
+    } catch {
+      return [];
+    }
+  }
 }
 
 export const webStorageAdapter = new WebLocalStorageAdapter();
