@@ -8,64 +8,19 @@ import {
   ColaboradorInativoError,
   LoteEstoqueInsuficienteError,
 } from '../movimentacao.service';
-import { IEstoqueRepository } from '../../storage/estoque.repository.interface';
-import { Item } from '../../domain/item.schema';
-import { Colaborador } from '../../domain/colaborador.schema';
-import { Movimentacao } from '../../domain/movimentacao.schema';
+import { MemoryEstoqueRepository } from '../../storage/memory-estoque.adapter';
 import { SaldoInsuficienteError } from '../estoque-calculator';
 
-class MockEstoqueRepository implements IEstoqueRepository {
-  public itens = new Map<string, Item>();
-  public colaboradores = new Map<string, Colaborador>();
-  public movimentacoes: Movimentacao[] = [];
-
-  async buscarItemPorId(id: string): Promise<Item | null> {
-    return this.itens.get(id) || null;
-  }
-
-  async buscarPorCodigo(codigo: string): Promise<Item | null> {
-    for (const item of this.itens.values()) {
-      if (item.codigo === codigo) return item;
-    }
-    return null;
-  }
-
-  async listarComFiltros(): Promise<{ itens: Item[]; total: number }> {
-    const list = Array.from(this.itens.values());
-    return { itens: list, total: list.length };
-  }
-
-  async buscarColaboradorPorId(id: string): Promise<Colaborador | null> {
-    return this.colaboradores.get(id) || null;
-  }
-
-  async atualizarSaldoItem(itemId: string, novoSaldo: number): Promise<void> {
-    const item = this.itens.get(itemId);
-    if (item) {
-      item.estoqueAtual = novoSaldo;
-    }
-  }
-
-  async registrarMovimentacao(movimentacao: Movimentacao): Promise<Movimentacao> {
-    this.movimentacoes.push(movimentacao);
-    return movimentacao;
-  }
-
-  async consultarExtratoItem(itemId: string): Promise<Movimentacao[]> {
-    return this.movimentacoes.filter((m) => m.itemId === itemId);
-  }
-}
-
 describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', () => {
-  let repo: MockEstoqueRepository;
+  let repo: MemoryEstoqueRepository;
   let service: MovimentacaoService;
 
-  beforeEach(() => {
-    repo = new MockEstoqueRepository();
+  beforeEach(async () => {
+    repo = new MemoryEstoqueRepository();
     service = new MovimentacaoService(repo);
 
     // Carregar dados de teste
-    repo.itens.set('item-1', {
+    await repo.salvarItem({
       id: 'item-1',
       codigo: '90-1105',
       descricao: 'Disco Flap 4.1/2 Grão 60',
@@ -77,7 +32,7 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       embalagem: { possuiEmbalagem: false, fatorConversao: 1 },
     });
 
-    repo.itens.set('item-2', {
+    await repo.salvarItem({
       id: 'item-2',
       codigo: '90-2001',
       descricao: 'Broca HSS Aço Rápido 6mm',
@@ -89,7 +44,7 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       embalagem: { possuiEmbalagem: false, fatorConversao: 1 },
     });
 
-    repo.itens.set('item-inativo', {
+    await repo.salvarItem({
       id: 'item-inativo',
       codigo: '90-0000',
       descricao: 'Item Obsoleto',
@@ -101,7 +56,7 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       embalagem: { possuiEmbalagem: false, fatorConversao: 1 },
     });
 
-    repo.colaboradores.set('colab-1', {
+    await repo.salvarColaborador({
       id: 'colab-1',
       matricula: '001',
       nome: 'João da Solda',
@@ -110,7 +65,7 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       ativo: true,
     });
 
-    repo.colaboradores.set('colab-inativo', {
+    await repo.salvarColaborador({
       id: 'colab-inativo',
       matricula: '999',
       nome: 'Ex-Colaborador',
@@ -121,25 +76,23 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
   });
 
   describe('Entrada de Estoque', () => {
-    it('deve registrar entrada e atualizar o saldo com sucesso', () => {
-      return service
-        .executarEntrada({
-          itemId: 'item-1',
-          tipo: 'ENTRADA_COMPRA',
-          quantidade: 100,
-          numeroNF: '45600',
-          numeroPedidoRhowert: 'PED-100',
-          fornecedor: 'Fornecedor Teste',
-        })
-        .then((mov) => {
-          assert.equal(mov.tipo, 'ENTRADA_COMPRA');
-          assert.equal(mov.quantidade, 100);
-          assert.equal(mov.saldoAnterior, 50);
-          assert.equal(mov.saldoResultante, 150);
+    it('deve registrar entrada e atualizar o saldo com sucesso', async () => {
+      const mov = await service.executarEntrada({
+        itemId: 'item-1',
+        tipo: 'ENTRADA_COMPRA',
+        quantidade: 100,
+        numeroNF: '45600',
+        numeroPedidoRhowert: 'PED-100',
+        fornecedor: 'Fornecedor Teste',
+      });
 
-          const itemAtualizado = repo.itens.get('item-1');
-          assert.equal(itemAtualizado?.estoqueAtual, 150);
-        });
+      assert.equal(mov.tipo, 'ENTRADA_COMPRA');
+      assert.equal(mov.quantidade, 100);
+      assert.equal(mov.saldoAnterior, 50);
+      assert.equal(mov.saldoResultante, 150);
+
+      const itemAtualizado = await repo.buscarItemPorId('item-1');
+      assert.equal(itemAtualizado?.estoqueAtual, 150);
     });
 
     it('deve rejeitar entrada para item inexistente', async () => {
@@ -181,7 +134,7 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       assert.equal(mov.colaboradorMatricula, '001');
       assert.equal(mov.setor, 'SOLDA');
 
-      const itemAtualizado = repo.itens.get('item-1');
+      const itemAtualizado = await repo.buscarItemPorId('item-1');
       assert.equal(itemAtualizado?.estoqueAtual, 40);
     });
 
@@ -234,8 +187,10 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       });
 
       assert.equal(resultado.length, 2);
-      assert.equal(repo.itens.get('item-1')?.estoqueAtual, 45); // 50 - 5
-      assert.equal(repo.itens.get('item-2')?.estoqueAtual, 1);  // 3 - 2
+      const item1 = await repo.buscarItemPorId('item-1');
+      const item2 = await repo.buscarItemPorId('item-2');
+      assert.equal(item1?.estoqueAtual, 45); // 50 - 5
+      assert.equal(item2?.estoqueAtual, 1);  // 3 - 2
     });
 
     it('deve abortar o lote INTEIRO se qualquer item não tiver saldo suficiente', async () => {
@@ -253,9 +208,13 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       );
 
       // Garante atomicidade: o item-1 NÃO deve ter sido debitado!
-      assert.equal(repo.itens.get('item-1')?.estoqueAtual, 50);
-      assert.equal(repo.itens.get('item-2')?.estoqueAtual, 3);
-      assert.equal(repo.movimentacoes.length, 0);
+      const item1 = await repo.buscarItemPorId('item-1');
+      const item2 = await repo.buscarItemPorId('item-2');
+      assert.equal(item1?.estoqueAtual, 50);
+      assert.equal(item2?.estoqueAtual, 3);
+
+      const lista = await repo.listarMovimentacoes();
+      assert.equal(lista.total, 0);
     });
   });
 

@@ -160,7 +160,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 - [x] **2.3 — Serviço de Movimentação (`src/core/services/movimentacao.service.ts`)**:
   - Validação completa antes da persistência (verificar se colaborador está ativo e se o item existe).
   - Orquestração de baixa rápida em lote (para quando o colaborador retira broca + disco flap + bico de contato de uma só vez).
-- [ ] **2.4 — Contrato de Repositório de Estoque (`src/core/storage/estoque.repository.interface.ts`)**:
+- [x] **2.4 — Contrato de Repositório de Estoque (`src/core/storage/estoque.repository.interface.ts`)**:
   - Interface com métodos assíncronos: `buscarPorCodigo`, `listarComFiltros`, `registrarMovimentacao`, `consultarExtratoItem`.
 - [ ] **2.5 — Custom Hooks Agnósticos (`src/core/hooks/useMovimentacao.ts`)**:
   - Hooks com TanStack Query para mutação de entrada e saída rápida com invalidação de cache atômica.
