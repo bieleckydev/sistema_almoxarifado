@@ -26,6 +26,12 @@ import {
   calcularMetricasSessao,
 } from '../inventario.schema';
 import {
+  NotaFiscalSchema,
+  PedidoCompraSchema,
+  ItemNotaFiscalSchema,
+  ItemPedidoCompraSchema,
+} from '../nfe.schema';
+import {
   TipoItemSchema,
   UnidadeMedidaSchema,
   TipoMovimentacaoSchema,
@@ -487,5 +493,122 @@ describe('3.1 — Schema de Inventário e Contagem Física', () => {
     assert.equal(parsed.id, 'inv-2026-10');
     assert.equal(parsed.contagens.length, 1);
     assert.equal(parsed.contagens[0].divergencia, -2);
+  });
+});
+
+describe('4.1 — Schemas de NFe e Pedido de Compra', () => {
+  it('deve validar item de Nota Fiscal com código de fornecedor e NCM', () => {
+    const itemNFe = {
+      id: 'item-nf-1',
+      numeroItem: 1,
+      codigoFornecedor: 'TB-1020-38',
+      codigoInternoRhowert: '10-3812',
+      descricao: 'TUBO ACO SAE 1020 38.1X1.2MM',
+      ncm: '7306.30.00',
+      cfop: '5102',
+      unidadeComercial: 'KG',
+      quantidadeFaturada: 1250.5,
+      valorUnitario: 14.5,
+      valorTotal: 18132.25,
+    };
+
+    const parsed = ItemNotaFiscalSchema.parse(itemNFe);
+    assert.equal(parsed.codigoFornecedor, 'TB-1020-38');
+    assert.equal(parsed.codigoInternoRhowert, '10-3812');
+    assert.equal(parsed.quantidadeFaturada, 1250.5);
+    assert.equal(parsed.statusConciliacao, 'PENDENTE');
+  });
+
+  it('deve validar Nota Fiscal Eletrônica com chave de acesso de 44 dígitos', () => {
+    const agora = new Date().toISOString();
+    const chave = '35260100000000000000550010000000011000000010';
+
+    const nfe = {
+      id: 'nfe-1',
+      chaveAcesso: chave,
+      numero: '12345',
+      serie: '1',
+      cnpjFornecedor: '12345678000199',
+      razaoSocialFornecedor: 'Aços Tubulares do Brasil Ltda',
+      dataEmissao: agora,
+      dataRecebimento: agora,
+      valorTotalNota: 18132.25,
+      status: 'RECEBIDA' as const,
+      itens: [
+        {
+          id: 'item-nf-1',
+          numeroItem: 1,
+          codigoFornecedor: 'TB-1020',
+          descricao: 'Tubo de Aço',
+          unidadeComercial: 'KG',
+          quantidadeFaturada: 1000,
+          valorUnitario: 18.13,
+          valorTotal: 18130,
+        },
+      ],
+    };
+
+    const parsed = NotaFiscalSchema.parse(nfe);
+    assert.equal(parsed.chaveAcesso, chave);
+    assert.equal(parsed.status, 'RECEBIDA');
+    assert.equal(parsed.itens.length, 1);
+  });
+
+  it('deve rejeitar Nota Fiscal com chave de acesso diferente de 44 dígitos', () => {
+    assert.throws(() => {
+      NotaFiscalSchema.parse({
+        id: 'nfe-err',
+        chaveAcesso: '12345', // Inválida
+        numero: '123',
+        cnpjFornecedor: '12345678000199',
+        razaoSocialFornecedor: 'Fornecedor',
+        dataEmissao: new Date().toISOString(),
+        dataRecebimento: new Date().toISOString(),
+        valorTotalNota: 100,
+        itens: [
+          {
+            id: 'it-1',
+            numeroItem: 1,
+            codigoFornecedor: 'F1',
+            descricao: 'Item 1',
+            unidadeComercial: 'UN',
+            quantidadeFaturada: 1,
+            valorUnitario: 100,
+            valorTotal: 100,
+          },
+        ],
+      });
+    }, /A chave de acesso da NFe deve conter exatamente 44 dígitos/);
+  });
+
+  it('deve validar Pedido de Compra com itens autorizados e tolerância percentual', () => {
+    const agora = new Date().toISOString();
+    const pedido = {
+      id: 'ped-1',
+      numeroPedido: 'PED-2026-08',
+      cnpjFornecedor: '12345678000199',
+      razaoSocialFornecedor: 'Aços Tubulares do Brasil Ltda',
+      dataAutorizacao: agora,
+      valorTotalPedido: 18000,
+      itens: [
+        {
+          id: 'ped-item-1',
+          numeroItem: 1,
+          codigoInternoRhowert: '10-3812',
+          descricao: 'Tubo de Aço Carbono SAE 1020',
+          unidade: 'KG' as const,
+          quantidadeAutorizada: 1200,
+          quantidadeJaEntregue: 0,
+          valorUnitarioContratado: 14.5,
+          valorTotalContratado: 17400,
+          toleranciaPercentual: 5,
+        },
+      ],
+    };
+
+    const parsed = PedidoCompraSchema.parse(pedido);
+    assert.equal(parsed.numeroPedido, 'PED-2026-08');
+    assert.equal(parsed.itens[0].toleranciaPercentual, 5);
+    assert.equal(parsed.itens[0].quantidadeAutorizada, 1200);
   });
 });
