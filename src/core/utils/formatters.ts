@@ -52,6 +52,11 @@ export function normalizarCodigoItem(codigo: string | null | undefined): string 
 }
 
 /**
+ * Alias semântico para normalizarCodigoItem
+ */
+export const normalizarCodigoProduto = normalizarCodigoItem;
+
+/**
  * Formatador de peso em Quilogramas (KG) com 2 casas decimais no padrão brasileiro.
  * Exemplo: 1234.5 -> "1.234,50 KG" ou "1.234,50" (se semUnidade = true).
  */
