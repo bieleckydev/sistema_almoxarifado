@@ -174,7 +174,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 - [x] **3.1 — Schema de Inventário e Contagem (`src/core/domain/inventario.schema.ts`)**:
   - Definição de sessão de inventário (geral, por setor ou por tipo de material).
   - Schema de contagem física (`itemId`, `saldoSistema`, `quantidadeContada`, `dataHoraContagem`, `responsavelContagemId`).
-- [ ] **3.2 — Serviço de Apuração de Divergências (`src/core/services/inventario.service.ts`)**:
+- [x] **3.2 — Serviço de Apuração de Divergências (`src/core/services/inventario.service.ts`)**:
   - Cálculo de divergência: `diferenca = contagemFisica - saldoSistema`.
   - Classificação de acurácia do estoque (percentual de acurácia global).
   - Geração automática de movimentações compensatórias do tipo `AJUSTE_INVENTARIO`.
