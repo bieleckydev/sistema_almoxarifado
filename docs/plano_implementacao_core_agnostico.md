@@ -136,7 +136,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Schemas para listagem, criação e atualização de itens.
 - [x] **1.3 — Schema de Colaboradores e Setores (`src/core/domain/colaborador.schema.ts`)**:
   - Mapear matrícula (`001` a `999`), nome completo, setor fabril (Ferramentaria, Qualidade, Logística, Cadeira, Montagem, Solda) e cargo.
-- [ ] **1.4 — Formatadores Puros de Domínio (`src/core/utils/formatters.ts`)**:
+- [x] **1.4 — Formatadores Puros de Domínio (`src/core/utils/formatters.ts`)**:
   - Normalizador de código de produto.
   - Formatador de peso em KG (duas casas decimais) e quantidades inteiras para unidades.
   - Sanitizador de números de NF e chaves de acesso.
