@@ -213,7 +213,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 - [x] **5.1 — Store de Baixa Rápida / "Carrinho de Retirada" (`src/core/store/useBaixaRapidaStore.ts`)**:
   - Armazenamento em memória do operador selecionado e lista de itens adicionados para baixa simultânea.
   - Permite ao almoxarife escanear múltiplos itens antes de confirmar a entrega final.
-- [ ] **5.2 — Adaptador de Persistência em Memória/Cache (`src/core/storage/memory-storage.adapter.ts`)**:
+- [x] **5.2 — Adaptador de Persistência em Memória/Cache (`src/core/storage/memory-storage.adapter.ts`)**:
   - Implementação de fallback do `IStorageAdapter` para execução de testes unitários ou ambientes offline sem storage de navegador.
 - [ ] **5.3 — Interceptadores e Injeção de Dependência (`src/core/api/client.ts`)**:
   - Configuração de interceptadores HTTP com injeção do token de autenticação via adaptador.
