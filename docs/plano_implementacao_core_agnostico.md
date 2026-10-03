@@ -149,7 +149,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
 > **Objetivo:** Implementar as regras de entrada, baixa rápida e auditoria de saldo, eliminando a manutenção manual de planilhas.
 
 #### Micro-tarefas da Fase 2:
-- [ ] **2.1 — Schema de Movimentações (`src/core/domain/movimentacao.schema.ts`)**:
+- [x] **2.1 — Schema de Movimentações (`src/core/domain/movimentacao.schema.ts`)**:
   - Schema de entrada (`itemId`, `quantidade`, `numeroNF`, `fornecedor`, `numeroPedidoRhowert`, `observacoes`).
   - Schema de baixa interna (`itemId`, `quantidade`, `colaboradorId`, `setor`, `observacao`).
   - Schema de saída de expedição (`itemId`, `quantidade`, `clienteDestino`, `numeroNF`, `status`).
