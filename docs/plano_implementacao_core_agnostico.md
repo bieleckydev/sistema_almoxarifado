@@ -180,7 +180,7 @@ A execução está fatiada em **5 Fases Sequenciais**, com **micro-tarefas atôm
   - Geração automática de movimentações compensatórias do tipo `AJUSTE_INVENTARIO`.
 - [x] **3.3 — Fechamento Periódico de Saldo (`src/core/services/fechamento-mensal.service.ts`)**:
   - Mecanismo que consolida o saldo final de um mês como inventário inicial do mês subsequente (substituindo a transição manual entre abas de mês da planilha).
-- [ ] **3.4 — Custom Hooks de Inventário (`src/core/hooks/useInventario.ts`)**:
+- [x] **3.4 — Custom Hooks de Inventário (`src/core/hooks/useInventario.ts`)**:
   - Hook para iniciar contagem, registrar itens bipados/contados e emitir relatório de divergências.
 
 ---
