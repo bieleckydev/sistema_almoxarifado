@@ -31,6 +31,13 @@ export const CreateUserCommandSchema = z
     email: UserEmailSchema,
     role: ManagedUserRoleSchema.default('requisitante'),
     sendInvite: z.boolean().default(true),
+    idempotencyKey: z
+      .string()
+      .trim()
+      .min(8)
+      .max(128)
+      .regex(/^[^/]+$/, 'A chave de idempotência não pode conter "/"')
+      .optional(),
   })
   .strict();
 
