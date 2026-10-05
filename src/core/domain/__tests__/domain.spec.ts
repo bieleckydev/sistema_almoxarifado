@@ -38,6 +38,7 @@ import {
   StatusEstoqueSchema,
   StatusConferenciaNFeSchema,
 } from '../types';
+import { UserSchema, UserRoleSchema } from '../user.schema';
 import {
   normalizarCodigoItem,
   formatarPesoKg,
@@ -55,6 +56,50 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     assert.equal(TipoItemSchema.parse('IMPRODUTIVO_CONSUMIVEL'), 'IMPRODUTIVO_CONSUMIVEL');
     assert.equal(TipoItemSchema.parse('ACABADO'), 'ACABADO');
     assert.throws(() => TipoItemSchema.parse('OUTRO_TIPO_INVALIDO'));
+  });
+
+  it('deve validar papéis de usuário e aplicar defaults de perfil', () => {
+    assert.equal(UserRoleSchema.parse('mestre'), 'mestre');
+    assert.equal(UserRoleSchema.parse('admin'), 'admin');
+    assert.equal(UserRoleSchema.parse('operador'), 'operador');
+    assert.equal(UserRoleSchema.parse('requisitante'), 'requisitante');
+    assert.throws(() => UserRoleSchema.parse('superadmin'));
+
+    const user = UserSchema.parse({
+      id: 'user-1',
+      name: 'Eduardo',
+      email: 'eduardo@example.com',
+    });
+
+    assert.equal(user.role, 'requisitante');
+    assert.equal(user.ativo, true);
+    assert.equal(user.mustChangePassword, false);
+  });
+
+  it('deve validar metadados e rejeitar datas inválidas no perfil', () => {
+    const user = UserSchema.parse({
+      id: 'user-1',
+      name: 'Eduardo',
+      email: 'eduardo@example.com',
+      role: 'mestre',
+      ativo: true,
+      mustChangePassword: true,
+      createdAt: '2026-10-05T17:00:00.000Z',
+      updatedAt: '2026-10-05T17:30:00.000Z',
+      createdBy: '5KaM1wFaqmcG9jZQsAJThix15xh1',
+      updatedBy: '5KaM1wFaqmcG9jZQsAJThix15xh1',
+    });
+
+    assert.equal(user.mustChangePassword, true);
+    assert.equal(user.createdBy, '5KaM1wFaqmcG9jZQsAJThix15xh1');
+    assert.throws(() =>
+      UserSchema.parse({
+        id: 'user-2',
+        name: 'Usuário',
+        email: 'usuario@example.com',
+        createdAt: 'data inválida',
+      })
+    );
   });
 
   it('deve aceitar unidades de medida válidas e rejeitar inválidas', () => {
