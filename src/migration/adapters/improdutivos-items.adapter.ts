@@ -9,6 +9,10 @@ import {
   normalizeUnit,
   type NormalizationIssue,
 } from '../normalizers';
+import {
+  classifyMigrationIssues,
+  type ClassifiedMigrationIssue,
+} from '../issue-classification';
 import type { SourceCellValue, SourceRecord } from '../source-record';
 
 const WORKBOOK_NAME = 'Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx';
@@ -20,7 +24,7 @@ export interface ItemMigrationCandidate {
   valuesOriginal: Record<string, SourceCellValue>;
   valuesNormalized: Record<string, SourceCellValue>;
   candidate: CreateItemInput | null;
-  issues: NormalizationIssue[];
+  issues: ClassifiedMigrationIssue[];
   action: 'CREATE' | 'REJECT';
 }
 
@@ -185,7 +189,7 @@ export function mapImprodutivosItems(filePath: string): ItemMigrationPreview {
       valuesOriginal,
       valuesNormalized,
       candidate,
-      issues,
+      issues: classifyMigrationIssues(issues),
       action: candidate ? 'CREATE' : 'REJECT',
     });
   }
