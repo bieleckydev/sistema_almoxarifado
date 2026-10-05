@@ -11,6 +11,25 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'mestre';
     }
 
+    function currentRole() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : '';
+    }
+
+    function hasRole(role) {
+      return currentRole() == role;
+    }
+
+    function canManageCatalog() {
+      return isMestre() || hasRole('admin');
+    }
+
+    function canOperateStock() {
+      return canManageCatalog() || hasRole('operador');
+    }
+
     function validUserRole() {
       return request.resource.data.role in ['mestre', 'admin', 'operador', 'requisitante'];
     }
@@ -48,7 +67,84 @@ service cloud.firestore {
       allow delete: if isMestre() && request.auth.uid != userId;
     }
 
-    // Every application collection must receive explicit rules before use.
+    match /items/{itemId} {
+      allow read: if signedIn();
+      allow create: if canManageCatalog()
+        && request.resource.data.id == itemId
+        && request.resource.data.estoqueAtual == 0;
+      allow update: if canManageCatalog()
+        && request.resource.data.id == itemId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'codigo',
+            'descricao',
+            'tipo',
+            'unidade',
+            'estoqueSeguranca',
+            'embalagem',
+            'localizacaoFisica',
+            'clienteDestino',
+            'ativo',
+            'observacoes',
+            'updatedAt'
+          ]);
+      allow delete: if isMestre();
+    }
+
+    match /collaborators/{collaboratorId} {
+      allow read: if signedIn();
+      allow create: if canManageCatalog()
+        && request.resource.data.id == collaboratorId;
+      allow update: if canManageCatalog()
+        && request.resource.data.id == collaboratorId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'matricula',
+            'nome',
+            'setor',
+            'funcao',
+            'ativo',
+            'email',
+            'telefone',
+            'observacoes',
+            'updatedAt'
+          ]);
+      allow delete: if isMestre();
+    }
+
+    match /movements/{movementId} {
+      allow read: if signedIn();
+      allow create: if canOperateStock()
+        && request.resource.data.id == movementId;
+      allow update, delete: if false;
+    }
+
+    match /importBatches/{batchId} {
+      allow read: if isMestre() || hasRole('admin');
+      allow create: if isMestre()
+        && request.resource.data.id == batchId;
+      allow update: if isMestre()
+        && request.resource.data.id == batchId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'status',
+            'counters',
+            'completedAt',
+            'updatedAt',
+            'warnings',
+            'errors'
+          ]);
+      allow delete: if false;
+
+      match /records/{recordId} {
+        allow read: if isMestre() || hasRole('admin');
+        allow create: if isMestre()
+          && request.resource.data.id == recordId;
+        allow update, delete: if false;
+      }
+    }
+
+    // Deny any collection that has not received an explicit policy.
     match /{document=**} {
       allow read, write: if false;
     }
