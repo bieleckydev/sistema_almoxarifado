@@ -16,11 +16,22 @@ import type { AuthenticatedIdentity } from '../auth/identity';
 export class UserCreationError extends Error {
   readonly statusCode = 500;
   readonly authUid?: string;
+  readonly compensation?: {
+    profileDeleted: boolean;
+    authenticationUserDeleted: boolean;
+    errors: string[];
+  };
 
-  constructor(message: string, authUid?: string, options?: ErrorOptions) {
+  constructor(
+    message: string,
+    authUid?: string,
+    options?: ErrorOptions,
+    compensation?: UserCreationError['compensation']
+  ) {
     super(message, options);
     this.name = 'UserCreationError';
     this.authUid = authUid;
+    this.compensation = compensation;
   }
 }
 
@@ -30,7 +41,7 @@ export interface CreateUserResult {
 }
 
 interface UserCreationDependencies {
-  auth: Pick<Auth, 'createUser'>;
+  auth: Pick<Auth, 'createUser' | 'deleteUser' | 'getUser'>;
   db: Pick<Firestore, 'collection'>;
   now: () => Date;
 }
@@ -52,6 +63,43 @@ function publicProfile(user: User): PublicUserProfile {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
+}
+
+export type UserReconciliationResult =
+  | { status: 'CONSISTENT'; uid: string }
+  | { status: 'AUTH_DELETED'; uid: string }
+  | { status: 'PROFILE_DELETED'; uid: string };
+
+export async function reconcileUserCreation(
+  uid: string,
+  dependencies: Pick<UserCreationDependencies, 'auth' | 'db'> = defaultDependencies
+): Promise<UserReconciliationResult> {
+  const profileReference = dependencies.db.collection('users').doc(uid);
+  const [authUser, profileSnapshot] = await Promise.all([
+    dependencies.auth.getUser(uid).catch((error: unknown) => {
+      if (error instanceof Error && 'code' in error && error.code === 'auth/user-not-found') {
+        return null;
+      }
+      throw error;
+    }),
+    profileReference.get(),
+  ]);
+
+  if (authUser && profileSnapshot.exists) {
+    return { status: 'CONSISTENT', uid };
+  }
+
+  if (authUser && !profileSnapshot.exists) {
+    await dependencies.auth.deleteUser(uid);
+    return { status: 'AUTH_DELETED', uid };
+  }
+
+  if (!authUser && profileSnapshot.exists) {
+    await profileReference.delete();
+    return { status: 'PROFILE_DELETED', uid };
+  }
+
+  return { status: 'CONSISTENT', uid };
 }
 
 function buildAuthenticationUser(command: CreateUserCommand): Parameters<Auth['createUser']>[0] {
@@ -97,9 +145,11 @@ export async function createManagedUser(
   const timestamp = dependencies.now().toISOString();
   const authUser = await dependencies.auth.createUser(buildAuthenticationUser(command));
   const user = buildUserProfile(authUser, command, actor, timestamp);
+  let profileCreated = false;
 
   try {
     await dependencies.db.collection('users').doc(authUser.uid).create(user);
+    profileCreated = true;
     const audit = UserAuditLogSchema.parse({
       targetUserId: authUser.uid,
       performedBy: actor.id,
@@ -109,10 +159,41 @@ export async function createManagedUser(
     });
     await dependencies.db.collection('userAuditLogs').add(audit);
   } catch (error) {
+    const compensationErrors: string[] = [];
+    let profileDeleted = !profileCreated;
+    let authenticationUserDeleted = false;
+
+    if (profileCreated) {
+      try {
+        await dependencies.db.collection('users').doc(authUser.uid).delete();
+        profileDeleted = true;
+      } catch (cleanupError) {
+        compensationErrors.push(
+          `Falha ao remover o perfil do Firestore: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`
+        );
+      }
+    }
+
+    try {
+      await dependencies.auth.deleteUser(authUser.uid);
+      authenticationUserDeleted = true;
+    } catch (cleanupError) {
+      compensationErrors.push(
+        `Falha ao remover o usuário do Authentication: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`
+      );
+    }
+
     throw new UserCreationError(
-      'Usuário criado no Authentication, mas o perfil não foi concluído no Firestore.',
+      compensationErrors.length === 0
+        ? 'A criação do usuário falhou e as alterações parciais foram desfeitas.'
+        : 'A criação do usuário falhou e a compensação ficou incompleta; reconciliação necessária.',
       authUser.uid,
-      { cause: error }
+      { cause: error },
+      {
+        profileDeleted,
+        authenticationUserDeleted,
+        errors: compensationErrors,
+      }
     );
   }
 
