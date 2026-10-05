@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { mapImprodutivosCollaborators } from './adapters/improdutivos-collaborators.adapter';
 import { mapImprodutivosItems } from './adapters/improdutivos-items.adapter';
 import type { ClassifiedMigrationIssue } from './issue-classification';
+import { fingerprintSource, type SourceFingerprint } from './source-fingerprint';
 
 const DEFAULT_INPUT = resolve(
   'docs/excel/Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx'
@@ -26,6 +27,7 @@ export interface DryRunIssue {
 export interface DryRunReport {
   generatedAt: string;
   mode: 'DRY_RUN';
+  sourceFingerprint: SourceFingerprint;
   sources: Array<{ file: string; sheet: string; headerRow: number }>;
   entities: {
     items: ReturnType<typeof mapImprodutivosItems>['summary'];
@@ -79,6 +81,7 @@ export function buildImprodutivosDryRunReport(
 ): DryRunReport {
   const items = mapImprodutivosItems(inputPath);
   const collaborators = mapImprodutivosCollaborators(inputPath);
+  const sourceFingerprint = fingerprintSource(inputPath);
   const issues = [
     ...collectIssues('ITEM', items.candidates),
     ...collectIssues('COLABORADOR', collaborators.candidates),
@@ -94,6 +97,7 @@ export function buildImprodutivosDryRunReport(
   return {
     generatedAt: new Date().toISOString(),
     mode: 'DRY_RUN',
+    sourceFingerprint,
     sources: [items.source, collaborators.source],
     entities: {
       items: items.summary,
