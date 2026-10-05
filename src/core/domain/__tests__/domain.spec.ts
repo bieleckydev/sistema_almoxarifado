@@ -55,6 +55,13 @@ import {
   UserRoleChangeSchema,
 } from '../user-audit.schema';
 import {
+  canChangeOwnRole,
+  canChangeTargetRole,
+  canCreateUserWithRole,
+  getRolePermissions,
+  hasUserPermission,
+} from '../user-authorization';
+import {
   normalizarCodigoItem,
   formatarPesoKg,
   formatarQuantidadeInteira,
@@ -222,6 +229,37 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
       }),
       { previousRole: 'requisitante', newRole: 'operador' }
     );
+  });
+
+  it('deve aplicar autorização por papel e proteger a hierarquia', () => {
+    const mestre = UserSchema.parse({
+      id: 'mestre-1',
+      name: 'Mestre',
+      email: 'mestre@example.com',
+      role: 'mestre',
+    });
+    const admin = UserSchema.parse({
+      id: 'admin-1',
+      name: 'Admin',
+      email: 'admin@example.com',
+      role: 'admin',
+    });
+    const requisitante = UserSchema.parse({
+      id: 'req-1',
+      name: 'Requisitante',
+      email: 'req@example.com',
+      role: 'requisitante',
+    });
+
+    assert.equal(hasUserPermission(mestre, 'users:create'), true);
+    assert.equal(hasUserPermission(admin, 'users:create'), false);
+    assert.equal(hasUserPermission(requisitante, 'stock:operate'), false);
+    assert.equal(canCreateUserWithRole(mestre, 'operador'), true);
+    assert.equal(canCreateUserWithRole(mestre, 'mestre'), false);
+    assert.equal(canChangeTargetRole(mestre, admin), true);
+    assert.equal(canChangeTargetRole(admin, requisitante), false);
+    assert.equal(canChangeOwnRole(mestre), false);
+    assert.equal(getRolePermissions('operador').includes('stock:operate'), true);
   });
 
   it('deve aceitar unidades de medida válidas e rejeitar inválidas', () => {
