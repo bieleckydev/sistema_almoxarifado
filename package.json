@@ -12,7 +12,8 @@
     "migration:discover": "tsx src/migration/excel-discovery.ts",
     "migration:extract-source": "tsx src/migration/extract-source-records.ts",
     "migration:validate-improdutivos-items": "tsx src/migration/validate-improdutivos-items.ts",
-    "migration:validate-improdutivos-collaborators": "tsx src/migration/validate-improdutivos-collaborators.ts"
+    "migration:validate-improdutivos-collaborators": "tsx src/migration/validate-improdutivos-collaborators.ts",
+    "migration:dry-run-improdutivos": "tsx src/migration/dry-run-report.ts"
   },
   "repository": {
     "type": "git",
