@@ -61,4 +61,26 @@ export interface IEstoqueRepository {
    * Lista todas as movimentações recentes com suporte a paginação e filtros.
    */
   listarMovimentacoes(filtros?: MovimentacaoFiltros): Promise<{ movimentacoes: Movimentacao[]; total: number }>;
+
+  /**
+   * Registra atomicamente uma movimentação física e atualiza o saldo do item em uma única transação.
+   * Em bancos relacionais ou Firestore, garante integridade ACID estrita.
+   */
+  registrarMovimentacaoComSaldo?(
+    itemId: string,
+    novoSaldo: number,
+    movimentacao: Movimentacao
+  ): Promise<Movimentacao>;
+
+  /**
+   * Registra atomicamente uma baixa em lote de múltiplos itens com seus respectivos saldos e movimentações.
+   * Se qualquer item apresentar divergência na transação, toda a operação é cancelada.
+   */
+  registrarBaixaLoteAtomica?(
+    operacoes: Array<{
+      itemId: string;
+      novoSaldo: number;
+      movimentacao: Movimentacao;
+    }>
+  ): Promise<Movimentacao[]>;
 }
