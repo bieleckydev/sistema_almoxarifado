@@ -244,4 +244,112 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       assert.equal(mov.saldoResultante, 55);
     });
   });
+
+  describe('Delegação e Fallback de Transações Atômicas', () => {
+    it('deve utilizar registrarMovimentacaoComSaldo e registrarBaixaLoteAtomica quando disponíveis no repositório', async () => {
+      let chamouComSaldo = false;
+      let chamouLoteAtomico = false;
+
+      const repoEspiao = new MemoryEstoqueRepository({
+        itens: [
+          {
+            id: 'item-espiao-1',
+            codigo: '90-1105',
+            descricao: 'Disco Flap',
+            tipo: 'IMPRODUTIVO_CONSUMIVEL',
+            unidade: 'UNIDADE',
+            estoqueSeguranca: 5,
+            estoqueAtual: 20,
+            ativo: true,
+            embalagem: { possuiEmbalagem: false, fatorConversao: 1 },
+          },
+        ],
+        colaboradores: [
+          {
+            id: 'colab-1',
+            matricula: '042',
+            nome: 'Carlos Eduardo',
+            setor: 'FERRAMENTARIA',
+            funcao: 'Ferramenteiro',
+            ativo: true,
+          },
+        ],
+      });
+
+      const origComSaldo = repoEspiao.registrarMovimentacaoComSaldo.bind(repoEspiao);
+      repoEspiao.registrarMovimentacaoComSaldo = async (id, saldo, mov) => {
+        chamouComSaldo = true;
+        return origComSaldo(id, saldo, mov);
+      };
+
+      const origLoteAtomico = repoEspiao.registrarBaixaLoteAtomica.bind(repoEspiao);
+      repoEspiao.registrarBaixaLoteAtomica = async (ops) => {
+        chamouLoteAtomico = true;
+        return origLoteAtomico(ops);
+      };
+
+      const servicoComEspiao = new MovimentacaoService(repoEspiao);
+
+      // 1. Testa entrada delegando para transação atômica
+      await servicoComEspiao.executarEntrada({
+        itemId: 'item-espiao-1',
+        quantidade: 10,
+      });
+      assert.equal(chamouComSaldo, true);
+
+      // 2. Testa baixa em lote delegando para baixa lote atômica
+      await servicoComEspiao.executarBaixaLote({
+        colaboradorId: 'colab-1',
+        itens: [{ itemId: 'item-espiao-1', quantidade: 5 }],
+      });
+      assert.equal(chamouLoteAtomico, true);
+    });
+
+    it('deve realizar fallback suave quando repositório não implementar métodos atômicos', async () => {
+      const repoSemAtomico = new MemoryEstoqueRepository({
+        itens: [
+          {
+            id: 'item-sem-1',
+            codigo: '90-1105',
+            descricao: 'Disco Flap',
+            tipo: 'IMPRODUTIVO_CONSUMIVEL',
+            unidade: 'UNIDADE',
+            estoqueSeguranca: 5,
+            estoqueAtual: 20,
+            ativo: true,
+            embalagem: { possuiEmbalagem: false, fatorConversao: 1 },
+          },
+        ],
+        colaboradores: [
+          {
+            id: 'colab-1',
+            matricula: '042',
+            nome: 'Carlos Eduardo',
+            setor: 'FERRAMENTARIA',
+            funcao: 'Ferramenteiro',
+            ativo: true,
+          },
+        ],
+      });
+
+      // Remove intencionalmente os métodos atômicos
+      delete (repoSemAtomico as any).registrarMovimentacaoComSaldo;
+      delete (repoSemAtomico as any).registrarBaixaLoteAtomica;
+
+      const servicoFallback = new MovimentacaoService(repoSemAtomico);
+
+      const entrada = await servicoFallback.executarEntrada({
+        itemId: 'item-sem-1',
+        quantidade: 10,
+      });
+      assert.equal(entrada.saldoResultante, 30);
+
+      const lote = await servicoFallback.executarBaixaLote({
+        colaboradorId: 'colab-1',
+        itens: [{ itemId: 'item-sem-1', quantidade: 5 }],
+      });
+      assert.equal(lote.length, 1);
+      assert.equal(lote[0].saldoResultante, 25);
+    });
+  });
 });

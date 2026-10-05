@@ -160,6 +160,10 @@ export class MovimentacaoService {
       createdAt: agora,
     };
 
+    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
+      return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao);
+    }
+
     await this.repository.atualizarSaldoItem(item.id, saldoResultante);
     return this.repository.registrarMovimentacao(movimentacao);
   }
@@ -199,6 +203,10 @@ export class MovimentacaoService {
       createdAt: agora,
     };
 
+    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
+      return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao);
+    }
+
     await this.repository.atualizarSaldoItem(item.id, saldoResultante);
     return this.repository.registrarMovimentacao(movimentacao);
   }
@@ -234,6 +242,10 @@ export class MovimentacaoService {
       observacao: validado.observacao,
       createdAt: agora,
     };
+
+    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
+      return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao);
+    }
 
     await this.repository.atualizarSaldoItem(item.id, saldoResultante);
     return this.repository.registrarMovimentacao(movimentacao);
@@ -291,7 +303,11 @@ export class MovimentacaoService {
     // 2. Fase de Aplicação e Persistência
     const agora = validado.dataMovimentacao || new Date().toISOString();
     const setorOperacao = validado.setor || colaborador.setor;
-    const movimentacoesGeradas: Movimentacao[] = [];
+    const operacoesParaPersistir: Array<{
+      itemId: string;
+      novoSaldo: number;
+      movimentacao: Movimentacao;
+    }> = [];
 
     for (const { item, quantidade, observacao } of itensCarregados) {
       const saldoAnterior = item.estoqueAtual;
@@ -317,12 +333,25 @@ export class MovimentacaoService {
         createdAt: agora,
       };
 
-      await this.repository.atualizarSaldoItem(item.id, saldoResultante);
-      const movPersistida = await this.repository.registrarMovimentacao(movimentacao);
-      movimentacoesGeradas.push(movPersistida);
+      operacoesParaPersistir.push({
+        itemId: item.id,
+        novoSaldo: saldoResultante,
+        movimentacao,
+      });
 
       // Atualiza o saldo local para o caso de itens duplicados no mesmo lote
       item.estoqueAtual = saldoResultante;
+    }
+
+    if (typeof this.repository.registrarBaixaLoteAtomica === 'function') {
+      return this.repository.registrarBaixaLoteAtomica(operacoesParaPersistir);
+    }
+
+    const movimentacoesGeradas: Movimentacao[] = [];
+    for (const op of operacoesParaPersistir) {
+      await this.repository.atualizarSaldoItem(op.itemId, op.novoSaldo);
+      const movPersistida = await this.repository.registrarMovimentacao(op.movimentacao);
+      movimentacoesGeradas.push(movPersistida);
     }
 
     return movimentacoesGeradas;
@@ -355,6 +384,10 @@ export class MovimentacaoService {
       observacao: `[Ajuste de Inventário] ${validado.motivo}`,
       createdAt: agora,
     };
+
+    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
+      return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao);
+    }
 
     await this.repository.atualizarSaldoItem(item.id, saldoResultante);
     return this.repository.registrarMovimentacao(movimentacao);
