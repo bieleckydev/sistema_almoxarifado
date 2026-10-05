@@ -33,11 +33,9 @@ function createAdminApp(): App {
     });
   }
 
-  throw new Error(
-    'Credenciais do Firebase Admin não configuradas. Informe ' +
-    'FIREBASE_ADMIN_CLIENT_EMAIL e FIREBASE_ADMIN_PRIVATE_KEY, ou ' +
-    'GOOGLE_APPLICATION_CREDENTIALS, somente no servidor.'
-  );
+  // Keep module loading safe during framework build/generation. Firebase
+  // Admin will report the missing credential when a request uses a service.
+  return initializeApp({ projectId });
 }
 
 const adminApp = createAdminApp();
