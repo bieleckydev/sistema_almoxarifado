@@ -14,7 +14,8 @@
     "migration:validate-improdutivos-items": "tsx src/migration/validate-improdutivos-items.ts",
     "migration:validate-improdutivos-collaborators": "tsx src/migration/validate-improdutivos-collaborators.ts",
     "migration:dry-run-improdutivos": "tsx src/migration/dry-run-report.ts",
-    "test:integration:admin-api": "node scripts/integration-admin-api.mjs"
+    "test:integration:admin-api": "node scripts/integration-admin-api.mjs",
+    "test:rules": "firebase emulators:exec --only firestore \"node scripts/test-firestore-rules.mjs\""
   },
   "repository": {
     "type": "git",
@@ -48,6 +49,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
