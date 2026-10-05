@@ -38,7 +38,16 @@ import {
   StatusEstoqueSchema,
   StatusConferenciaNFeSchema,
 } from '../types';
-import { UserSchema, UserRoleSchema } from '../user.schema';
+import {
+  ChangeUserRoleCommandSchema,
+  CreateUserCommandSchema,
+  ResetUserPasswordCommandSchema,
+  SendUserInviteCommandSchema,
+  SetUserStatusCommandSchema,
+  UpdateUserProfileCommandSchema,
+  UserSchema,
+  UserRoleSchema,
+} from '../user.schema';
 import {
   normalizarCodigoItem,
   formatarPesoKg,
@@ -99,6 +108,57 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
         email: 'usuario@example.com',
         createdAt: 'data inválida',
       })
+    );
+  });
+
+  it('deve validar comandos administrativos sem aceitar criação de mestre', () => {
+    const command = CreateUserCommandSchema.parse({
+      name: '  Maria Silva  ',
+      email: ' maria@example.com ',
+    });
+
+    assert.equal(command.name, 'Maria Silva');
+    assert.equal(command.email, 'maria@example.com');
+    assert.equal(command.role, 'requisitante');
+    assert.equal(command.sendInvite, true);
+
+    assert.throws(() =>
+      CreateUserCommandSchema.parse({
+        name: 'Maria Silva',
+        email: 'maria@example.com',
+        role: 'mestre',
+      })
+    );
+    assert.throws(() =>
+      CreateUserCommandSchema.parse({
+        name: 'Maria Silva',
+        email: 'maria@example.com',
+        password: 'nao-deve-ser-aceita',
+      })
+    );
+  });
+
+  it('deve validar atualização, papel, status, convite e redefinição', () => {
+    assert.deepEqual(
+      UpdateUserProfileCommandSchema.parse({ name: 'Novo nome' }),
+      { name: 'Novo nome' }
+    );
+    assert.deepEqual(
+      ChangeUserRoleCommandSchema.parse({ role: 'admin', reason: 'Mudança de função' }),
+      { role: 'admin', reason: 'Mudança de função' }
+    );
+    assert.deepEqual(SetUserStatusCommandSchema.parse({ ativo: false }), {
+      ativo: false,
+    });
+    assert.deepEqual(SendUserInviteCommandSchema.parse({}), {});
+    assert.deepEqual(ResetUserPasswordCommandSchema.parse({}), {});
+
+    assert.throws(() => UpdateUserProfileCommandSchema.parse({}));
+    assert.throws(() =>
+      ChangeUserRoleCommandSchema.parse({ role: 'invalido' })
+    );
+    assert.throws(() =>
+      SetUserStatusCommandSchema.parse({ ativo: 'false' })
     );
   });
 
