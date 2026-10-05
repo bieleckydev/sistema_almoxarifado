@@ -173,6 +173,14 @@ Classificar cada erro em:
 
 **Aceite:** nenhuma duplicidade bloqueante permanece sem decisão.
 
+**Implementação atual:** o relatório
+`migration-reports/improdutivos-duplicate-resolution.json` relaciona as quatro
+duplicidades à primeira ocorrência correspondente. As decisões continuam
+pendentes até revisão humana; nenhuma prevalência é escolhida automaticamente.
+O template de decisões inclui o fingerprint SHA-256 da fonte, e
+`npm run migration:validate-resolutions` rejeita decisões de outra versão da
+planilha, `sourceKey` inexistente ou mesclagem aprovada sem destino compatível.
+
 ### Tarefa 1.4 — Reexecutar o `dry-run`
 
 - gerar relatório após as correções;
