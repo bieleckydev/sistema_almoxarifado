@@ -15,6 +15,7 @@
     "migration:validate-improdutivos-collaborators": "tsx src/migration/validate-improdutivos-collaborators.ts",
     "migration:dry-run-improdutivos": "tsx src/migration/dry-run-report.ts",
     "migration:error-resolution": "tsx src/migration/error-resolution-report.ts",
+    "migration:resolution-template": "tsx src/migration/resolution-decisions-report.ts",
     "test:integration:admin-api": "node scripts/integration-admin-api.mjs",
     "test:rules": "firebase emulators:exec --only firestore \"node scripts/test-firestore-rules.mjs\""
   },
