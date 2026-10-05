@@ -84,11 +84,11 @@ flowchart TD
 > **Objetivo:** Implementar métodos de leitura indexada e operações não transacionais no repositório.
 
 - **Micro-tarefas:**
-  - [ ] **2.1** Criar classe `FirestoreEstoqueRepository` em `src/server/storage/firestore-estoque.repository.ts`.
-  - [ ] **2.2** Implementar `buscarItemPorId(id)` e `buscarPorCodigo(codigo)` utilizando queries indexadas por código padronizado.
-  - [ ] **2.3** Implementar `listarComFiltros(filtros)` com suporte a paginação por limite/offset ou cursor, filtros de tipo e status de estoque.
-  - [ ] **2.4** Implementar `buscarColaboradorPorId(idOrMatricula)` e `listarColaboradores(filtros)`.
-  - [ ] **2.5** Implementar `consultarExtratoItem(itemId, filtros)` e `listarMovimentacoes(filtros)` com ordenação cronológica decrescente.
+  - [x] **2.1** Criar classe `FirestoreEstoqueRepository` em `src/server/storage/firestore-estoque.repository.ts`.
+  - [x] **2.2** Implementar `buscarItemPorId(id)` e `buscarPorCodigo(codigo)` utilizando queries indexadas por código padronizado.
+  - [x] **2.3** Implementar `listarComFiltros(filtros)` com suporte a paginação por limite/offset ou cursor, filtros de tipo e status de estoque.
+  - [x] **2.4** Implementar `buscarColaboradorPorId(idOrMatricula)` e `listarColaboradores(filtros)`.
+  - [x] **2.5** Implementar `consultarExtratoItem(itemId, filtros)` e `listarMovimentacoes(filtros)` com ordenação cronológica decrescente.
 
 ---
 
