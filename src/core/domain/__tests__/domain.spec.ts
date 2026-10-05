@@ -49,6 +49,12 @@ import {
   UserRoleSchema,
 } from '../user.schema';
 import {
+  PublicUserProfileSchema,
+  UserAuditActionSchema,
+  UserAuditLogSchema,
+  UserRoleChangeSchema,
+} from '../user-audit.schema';
+import {
   normalizarCodigoItem,
   formatarPesoKg,
   formatarQuantidadeInteira,
@@ -159,6 +165,62 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     );
     assert.throws(() =>
       SetUserStatusCommandSchema.parse({ ativo: 'false' })
+    );
+  });
+
+  it('deve validar logs de auditoria e limitar campos auditáveis', () => {
+    assert.equal(UserAuditActionSchema.parse('CHANGE_ROLE'), 'CHANGE_ROLE');
+    assert.throws(() => UserAuditActionSchema.parse('VIEW_PASSWORD'));
+
+    const log = UserAuditLogSchema.parse({
+      targetUserId: 'user-2',
+      performedBy: '5KaM1wFaqmcG9jZQsAJThix15xh1',
+      action: 'CHANGE_ROLE',
+      changedFields: ['role'],
+      reason: 'Mudança de responsabilidade',
+      createdAt: '2026-10-05T17:30:00.000Z',
+    });
+
+    assert.deepEqual(log.changedFields, ['role']);
+    assert.throws(() =>
+      UserAuditLogSchema.parse({
+        targetUserId: 'user-2',
+        performedBy: 'user-1',
+        action: 'RESET_PASSWORD',
+        changedFields: ['password'],
+        createdAt: '2026-10-05T17:30:00.000Z',
+      })
+    );
+  });
+
+  it('deve expor apenas dados públicos de usuário', () => {
+    const profile = PublicUserProfileSchema.parse({
+      id: 'user-1',
+      name: 'Maria',
+      email: 'maria@example.com',
+      role: 'operador',
+      ativo: true,
+      mustChangePassword: true,
+      createdAt: '2026-10-05T17:00:00.000Z',
+    });
+
+    assert.equal(profile.role, 'operador');
+    assert.equal('createdBy' in profile, false);
+    assert.throws(() =>
+      PublicUserProfileSchema.parse({
+        ...profile,
+        password: 'nao-deve-existir',
+      })
+    );
+  });
+
+  it('deve validar a alteração de papel para auditoria', () => {
+    assert.deepEqual(
+      UserRoleChangeSchema.parse({
+        previousRole: 'requisitante',
+        newRole: 'operador',
+      }),
+      { previousRole: 'requisitante', newRole: 'operador' }
     );
   });
 
