@@ -52,6 +52,26 @@ const defaultDependencies: UserCreationDependencies = {
   now: () => new Date(),
 };
 
+interface UserCreationOperation {
+  id: string;
+  fingerprint: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  uid?: string;
+  invitationRequested: boolean;
+  createdAt: string;
+  updatedAt: string;
+  error?: string;
+}
+
+class UserCreationConflictError extends Error {
+  readonly statusCode = 409;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'UserCreationConflictError';
+  }
+}
+
 function publicProfile(user: User): PublicUserProfile {
   return {
     id: user.id,
@@ -111,6 +131,29 @@ function buildAuthenticationUser(command: CreateUserCommand): Parameters<Auth['c
   };
 }
 
+function operationId(command: CreateUserCommand): string {
+  return command.idempotencyKey
+    ?? `email-${encodeURIComponent(command.email.toLowerCase())}-${command.role}`;
+}
+
+function fingerprint(command: CreateUserCommand): string {
+  return JSON.stringify({
+    name: command.name,
+    email: command.email.toLowerCase(),
+    role: command.role,
+    sendInvite: command.sendInvite,
+  });
+}
+
+function publicProfileFromSnapshot(
+  snapshot: { exists: boolean; id: string; data: () => Record<string, unknown> | undefined }
+): PublicUserProfile {
+  if (!snapshot.exists) {
+    throw new UserCreationConflictError('Perfil idempotente não foi encontrado.');
+  }
+  return publicProfile(UserSchema.parse({ id: snapshot.id, ...snapshot.data() }));
+}
+
 function buildUserProfile(
   authUser: UserRecord,
   command: CreateUserCommand,
@@ -143,7 +186,74 @@ export async function createManagedUser(
   }
 
   const timestamp = dependencies.now().toISOString();
-  const authUser = await dependencies.auth.createUser(buildAuthenticationUser(command));
+  const id = operationId(command);
+  const operationReference = dependencies.db.collection('userCreationOperations').doc(id);
+  const existingOperation = await operationReference.get();
+  const requestFingerprint = fingerprint(command);
+
+  if (existingOperation.exists) {
+    const operation = existingOperation.data() as UserCreationOperation;
+    if (operation.fingerprint !== requestFingerprint) {
+      throw new UserCreationConflictError(
+        'A chave de idempotência já foi usada com dados diferentes.'
+      );
+    }
+    if (operation.status === 'COMPLETED' && operation.uid) {
+      const profileSnapshot = await dependencies.db.collection('users').doc(operation.uid).get();
+      return {
+        user: publicProfileFromSnapshot(profileSnapshot),
+        invitationRequested: operation.invitationRequested,
+      };
+    }
+    if (operation.status === 'PENDING') {
+      throw new UserCreationConflictError(
+        'A mesma operação de criação já está em processamento.'
+      );
+    }
+    throw new UserCreationConflictError(
+      'A mesma operação falhou anteriormente e precisa ser reconciliada antes de repetir.'
+    );
+  }
+
+  const pendingOperation: UserCreationOperation = {
+    id,
+    fingerprint: requestFingerprint,
+    status: 'PENDING',
+    invitationRequested: command.sendInvite,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  try {
+    await operationReference.create(pendingOperation);
+  } catch (error) {
+    throw new UserCreationConflictError(
+      `Não foi possível reservar a operação de criação: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+
+  let authUser: UserRecord;
+  try {
+    authUser = await dependencies.auth.createUser(buildAuthenticationUser(command));
+  } catch (error) {
+    try {
+      await operationReference.update({
+        status: 'FAILED',
+        updatedAt: dependencies.now().toISOString(),
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } catch (operationError) {
+      throw new UserCreationError(
+        'A criação falhou e o estado da operação não pôde ser atualizado; reconciliação necessária.',
+        undefined,
+        { cause: operationError }
+      );
+    }
+    throw new UserCreationError(
+      'Não foi possível criar o usuário no Authentication.',
+      undefined,
+      { cause: error }
+    );
+  }
   const user = buildUserProfile(authUser, command, actor, timestamp);
   let profileCreated = false;
 
@@ -158,6 +268,11 @@ export async function createManagedUser(
       createdAt: timestamp,
     });
     await dependencies.db.collection('userAuditLogs').add(audit);
+    await operationReference.update({
+      status: 'COMPLETED',
+      uid: authUser.uid,
+      updatedAt: dependencies.now().toISOString(),
+    });
   } catch (error) {
     const compensationErrors: string[] = [];
     let profileDeleted = !profileCreated;
@@ -182,6 +297,12 @@ export async function createManagedUser(
         `Falha ao remover o usuário do Authentication: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`
       );
     }
+
+    await operationReference.update({
+      status: 'FAILED',
+      updatedAt: dependencies.now().toISOString(),
+      error: error instanceof Error ? error.message : String(error),
+    }).catch(() => undefined);
 
     throw new UserCreationError(
       compensationErrors.length === 0

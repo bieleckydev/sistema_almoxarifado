@@ -135,6 +135,15 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     assert.equal(command.role, 'requisitante');
     assert.equal(command.sendInvite, true);
 
+    assert.equal(
+      CreateUserCommandSchema.parse({
+        name: 'Maria Silva',
+        email: 'maria@example.com',
+        idempotencyKey: 'request-123456',
+      }).idempotencyKey,
+      'request-123456'
+    );
+
     assert.throws(() =>
       CreateUserCommandSchema.parse({
         name: 'Maria Silva',
