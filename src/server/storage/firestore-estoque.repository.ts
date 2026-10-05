@@ -3,7 +3,12 @@ import { IEstoqueRepository } from '@/core/storage/estoque.repository.interface'
 import { Item, ItemFiltros } from '@/core/domain/item.schema';
 import { Colaborador, ColaboradorFiltros, normalizarMatricula } from '@/core/domain/colaborador.schema';
 import { Movimentacao, MovimentacaoFiltros } from '@/core/domain/movimentacao.schema';
-import { determinarStatusEstoque } from '@/core/services/estoque-calculator';
+import { determinarStatusEstoque, SaldoInsuficienteError } from '@/core/services/estoque-calculator';
+import {
+  ItemNaoEncontradoError,
+  ItemInativoError,
+  LoteEstoqueInsuficienteError,
+} from '@/core/services/movimentacao.service';
 import {
   itemFromFirestore,
   itemToFirestore,
@@ -266,5 +271,135 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     const paginados = lista.slice(inicio, inicio + limite);
 
     return { movimentacoes: paginados, total };
+  }
+
+  // ==========================================
+  // TRANSAÇÕES ATÔMICAS (ACID)
+  // ==========================================
+
+  /**
+   * Registra uma movimentação e atualiza o saldo do item dentro de uma única transação Firestore (runTransaction).
+   * Garante trava otimista, verificação de concorrência e auditoria atômica.
+   */
+  async registrarMovimentacaoComSaldo(
+    itemId: string,
+    novoSaldo: number,
+    movimentacao: Movimentacao
+  ): Promise<Movimentacao> {
+    const itemRef = this.db.collection('items').doc(itemId);
+    const movRef = this.db.collection('movements').doc(movimentacao.id);
+
+    await this.db.runTransaction(async (transaction) => {
+      // 1. Leitura prévia (regra estrita do Firestore: leituras antes de escritas)
+      const itemSnap = await transaction.get(itemRef);
+      if (!itemSnap.exists) {
+        throw new ItemNaoEncontradoError(itemId);
+      }
+
+      const itemData = itemSnap.data() || {};
+      if (itemData.ativo === false) {
+        throw new ItemInativoError(itemId, itemData.codigo || itemId);
+      }
+
+      // 2. Validação estrita de saldo
+      if (novoSaldo < 0) {
+        throw new SaldoInsuficienteError(
+          itemData.estoqueAtual || 0,
+          movimentacao.quantidade,
+          itemData.codigo || itemId
+        );
+      }
+
+      // 3. Escritas atômicas conjuntas
+      transaction.update(itemRef, {
+        estoqueAtual: novoSaldo,
+        updatedAt: new Date().toISOString(),
+      });
+
+      const movData = movimentacaoToFirestore(movimentacao);
+      transaction.set(movRef, movData);
+    });
+
+    return movimentacao;
+  }
+
+  /**
+   * Registra a baixa simultânea de múltiplos itens em lote dentro de uma única transação atômica.
+   * Se qualquer item apresentar divergência ou saldo insuficiente, todas as operações são abortadas pelo Firestore.
+   */
+  async registrarBaixaLoteAtomica(
+    operacoes: Array<{
+      itemId: string;
+      novoSaldo: number;
+      movimentacao: Movimentacao;
+    }>
+  ): Promise<Movimentacao[]> {
+    if (operacoes.length === 0) {
+      return [];
+    }
+
+    const itemRefs = operacoes.map((op) => this.db.collection('items').doc(op.itemId));
+
+    await this.db.runTransaction(async (transaction) => {
+      // 1. TODAS as leituras primeiro
+      const itemSnaps = await Promise.all(itemRefs.map((ref) => transaction.get(ref)));
+
+      // 2. Validações e detecção de concorrência/saldo insuficiente
+      const itensComProblema: Array<{
+        itemId: string;
+        codigo: string;
+        descricao: string;
+        saldoAtual: number;
+        quantidadeSolicitada: number;
+        faltante: number;
+      }> = [];
+
+      for (let i = 0; i < operacoes.length; i++) {
+        const op = operacoes[i];
+        const snap = itemSnaps[i];
+
+        if (!snap.exists) {
+          throw new ItemNaoEncontradoError(op.itemId);
+        }
+
+        const data = snap.data() || {};
+        if (data.ativo === false) {
+          throw new ItemInativoError(op.itemId, data.codigo || op.itemId);
+        }
+
+        const saldoRealNoBanco = typeof data.estoqueAtual === 'number' ? data.estoqueAtual : 0;
+        if (op.novoSaldo < 0 || saldoRealNoBanco < op.movimentacao.quantidade) {
+          itensComProblema.push({
+            itemId: op.itemId,
+            codigo: data.codigo || op.itemId,
+            descricao: data.descricao || '',
+            saldoAtual: saldoRealNoBanco,
+            quantidadeSolicitada: op.movimentacao.quantidade,
+            faltante: Math.max(0, op.movimentacao.quantidade - saldoRealNoBanco),
+          });
+        }
+      }
+
+      if (itensComProblema.length > 0) {
+        throw new LoteEstoqueInsuficienteError(itensComProblema);
+      }
+
+      // 3. TODAS as escritas atômicas
+      const agora = new Date().toISOString();
+      for (let i = 0; i < operacoes.length; i++) {
+        const op = operacoes[i];
+        const ref = itemRefs[i];
+        const movRef = this.db.collection('movements').doc(op.movimentacao.id);
+
+        transaction.update(ref, {
+          estoqueAtual: op.novoSaldo,
+          updatedAt: agora,
+        });
+
+        transaction.set(movRef, movimentacaoToFirestore(op.movimentacao));
+      }
+    });
+
+    return operacoes.map((op) => op.movimentacao);
   }
 }
