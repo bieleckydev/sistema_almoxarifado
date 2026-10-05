@@ -8,8 +8,9 @@
     "build": "next build src/web",
     "start": "next start src/web",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test \"src/core/**/__tests__/*.spec.ts\"",
-    "migration:discover": "tsx src/migration/excel-discovery.ts"
+    "test": "tsx --test \"src/core/**/__tests__/*.spec.ts\" \"src/migration/**/__tests__/*.spec.ts\"",
+    "migration:discover": "tsx src/migration/excel-discovery.ts",
+    "migration:extract-source": "tsx src/migration/extract-source-records.ts"
   },
   "repository": {
     "type": "git",
