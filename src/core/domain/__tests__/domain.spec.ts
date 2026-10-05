@@ -39,6 +39,30 @@ import {
   StatusConferenciaNFeSchema,
 } from '../types';
 import {
+  ChangeUserRoleCommandSchema,
+  CreateUserCommandSchema,
+  DeleteUserCommandSchema,
+  ResetUserPasswordCommandSchema,
+  SendUserInviteCommandSchema,
+  SetUserStatusCommandSchema,
+  UpdateUserProfileCommandSchema,
+  UserSchema,
+  UserRoleSchema,
+} from '../user.schema';
+import {
+  PublicUserProfileSchema,
+  UserAuditActionSchema,
+  UserAuditLogSchema,
+  UserRoleChangeSchema,
+} from '../user-audit.schema';
+import {
+  canChangeOwnRole,
+  canChangeTargetRole,
+  canCreateUserWithRole,
+  getRolePermissions,
+  hasUserPermission,
+} from '../user-authorization';
+import {
   normalizarCodigoItem,
   formatarPesoKg,
   formatarQuantidadeInteira,
@@ -55,6 +79,226 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     assert.equal(TipoItemSchema.parse('IMPRODUTIVO_CONSUMIVEL'), 'IMPRODUTIVO_CONSUMIVEL');
     assert.equal(TipoItemSchema.parse('ACABADO'), 'ACABADO');
     assert.throws(() => TipoItemSchema.parse('OUTRO_TIPO_INVALIDO'));
+  });
+
+  it('deve validar papéis de usuário e aplicar defaults de perfil', () => {
+    assert.equal(UserRoleSchema.parse('mestre'), 'mestre');
+    assert.equal(UserRoleSchema.parse('admin'), 'admin');
+    assert.equal(UserRoleSchema.parse('operador'), 'operador');
+    assert.equal(UserRoleSchema.parse('requisitante'), 'requisitante');
+    assert.throws(() => UserRoleSchema.parse('superadmin'));
+
+    const user = UserSchema.parse({
+      id: 'user-1',
+      name: 'Eduardo',
+      email: 'eduardo@example.com',
+    });
+
+    assert.equal(user.role, 'requisitante');
+    assert.equal(user.ativo, true);
+    assert.equal(user.mustChangePassword, false);
+  });
+
+  it('deve validar metadados e rejeitar datas inválidas no perfil', () => {
+    const user = UserSchema.parse({
+      id: 'user-1',
+      name: 'Eduardo',
+      email: 'eduardo@example.com',
+      role: 'mestre',
+      ativo: true,
+      mustChangePassword: true,
+      createdAt: '2026-10-05T17:00:00.000Z',
+      updatedAt: '2026-10-05T17:30:00.000Z',
+      createdBy: '5KaM1wFaqmcG9jZQsAJThix15xh1',
+      updatedBy: '5KaM1wFaqmcG9jZQsAJThix15xh1',
+    });
+
+    assert.equal(user.mustChangePassword, true);
+    assert.equal(user.createdBy, '5KaM1wFaqmcG9jZQsAJThix15xh1');
+    assert.throws(() =>
+      UserSchema.parse({
+        id: 'user-2',
+        name: 'Usuário',
+        email: 'usuario@example.com',
+        createdAt: 'data inválida',
+      })
+    );
+  });
+
+  it('deve validar comandos administrativos sem aceitar criação de mestre', () => {
+    const command = CreateUserCommandSchema.parse({
+      name: '  Maria Silva  ',
+      email: ' maria@example.com ',
+    });
+
+    assert.equal(command.name, 'Maria Silva');
+    assert.equal(command.email, 'maria@example.com');
+    assert.equal(command.role, 'requisitante');
+    assert.equal(command.sendInvite, true);
+
+    assert.equal(
+      CreateUserCommandSchema.parse({
+        name: 'Maria Silva',
+        email: 'maria@example.com',
+        idempotencyKey: 'request-123456',
+      }).idempotencyKey,
+      'request-123456'
+    );
+
+    assert.throws(() =>
+      CreateUserCommandSchema.parse({
+        name: 'Maria Silva',
+        email: 'maria@example.com',
+        role: 'mestre',
+      })
+    );
+    assert.throws(() =>
+      CreateUserCommandSchema.parse({
+        name: 'Maria Silva',
+        email: 'maria@example.com',
+        password: 'nao-deve-ser-aceita',
+      })
+    );
+  });
+
+  it('deve validar atualização, papel, status, convite e redefinição', () => {
+    assert.deepEqual(
+      UpdateUserProfileCommandSchema.parse({ name: 'Novo nome' }),
+      { name: 'Novo nome' }
+    );
+    assert.deepEqual(
+      ChangeUserRoleCommandSchema.parse({ role: 'admin', reason: 'Mudança de função' }),
+      { role: 'admin', reason: 'Mudança de função' }
+    );
+    assert.deepEqual(SetUserStatusCommandSchema.parse({ ativo: false }), {
+      ativo: false,
+    });
+    assert.deepEqual(SendUserInviteCommandSchema.parse({}), {});
+    assert.deepEqual(ResetUserPasswordCommandSchema.parse({}), {});
+
+    assert.throws(() => UpdateUserProfileCommandSchema.parse({}));
+    assert.throws(() =>
+      ChangeUserRoleCommandSchema.parse({ role: 'invalido' })
+    );
+    assert.throws(() =>
+      SetUserStatusCommandSchema.parse({ ativo: 'false' })
+    );
+    assert.deepEqual(
+      DeleteUserCommandSchema.parse({
+        confirmation: 'EXCLUIR',
+        reason: 'Usuário desligado da empresa',
+      }),
+      {
+        confirmation: 'EXCLUIR',
+        reason: 'Usuário desligado da empresa',
+      }
+    );
+    assert.throws(() =>
+      DeleteUserCommandSchema.parse({
+        confirmation: 'EXCLUIR',
+        reason: 'ok',
+      })
+    );
+    assert.throws(() =>
+      DeleteUserCommandSchema.parse({
+        confirmation: 'DELETE',
+        reason: 'Usuário desligado da empresa',
+      })
+    );
+  });
+
+  it('deve validar logs de auditoria e limitar campos auditáveis', () => {
+    assert.equal(UserAuditActionSchema.parse('CHANGE_ROLE'), 'CHANGE_ROLE');
+    assert.throws(() => UserAuditActionSchema.parse('VIEW_PASSWORD'));
+
+    const log = UserAuditLogSchema.parse({
+      targetUserId: 'user-2',
+      performedBy: '5KaM1wFaqmcG9jZQsAJThix15xh1',
+      action: 'CHANGE_ROLE',
+      changedFields: ['role'],
+      reason: 'Mudança de responsabilidade',
+      createdAt: '2026-10-05T17:30:00.000Z',
+    });
+
+    assert.deepEqual(log.changedFields, ['role']);
+    assert.throws(() =>
+      UserAuditLogSchema.parse({
+        targetUserId: 'user-2',
+        performedBy: 'user-1',
+        action: 'RESET_PASSWORD',
+        changedFields: ['password'],
+        createdAt: '2026-10-05T17:30:00.000Z',
+      })
+    );
+  });
+
+  it('deve expor apenas dados públicos de usuário', () => {
+    const profile = PublicUserProfileSchema.parse({
+      id: 'user-1',
+      name: 'Maria',
+      email: 'maria@example.com',
+      role: 'operador',
+      ativo: true,
+      mustChangePassword: true,
+      createdAt: '2026-10-05T17:00:00.000Z',
+    });
+
+    assert.equal(profile.role, 'operador');
+    assert.equal('createdBy' in profile, false);
+    assert.throws(() =>
+      PublicUserProfileSchema.parse({
+        ...profile,
+        password: 'nao-deve-existir',
+      })
+    );
+    assert.equal('updatedBy' in profile, false);
+    assert.equal('createdBy' in profile, false);
+    assert.equal('token' in profile, false);
+  });
+
+  it('deve validar a alteração de papel para auditoria', () => {
+    assert.deepEqual(
+      UserRoleChangeSchema.parse({
+        previousRole: 'requisitante',
+        newRole: 'operador',
+      }),
+      { previousRole: 'requisitante', newRole: 'operador' }
+    );
+  });
+
+  it('deve aplicar autorização por papel e proteger a hierarquia', () => {
+    const mestre = UserSchema.parse({
+      id: 'mestre-1',
+      name: 'Mestre',
+      email: 'mestre@example.com',
+      role: 'mestre',
+    });
+    const admin = UserSchema.parse({
+      id: 'admin-1',
+      name: 'Admin',
+      email: 'admin@example.com',
+      role: 'admin',
+    });
+    const requisitante = UserSchema.parse({
+      id: 'req-1',
+      name: 'Requisitante',
+      email: 'req@example.com',
+      role: 'requisitante',
+    });
+
+    assert.equal(hasUserPermission(mestre, 'users:create'), true);
+    assert.equal(hasUserPermission(admin, 'users:create'), false);
+    assert.equal(hasUserPermission(requisitante, 'stock:operate'), false);
+    assert.equal(canCreateUserWithRole(mestre, 'operador'), true);
+    assert.equal(canCreateUserWithRole(mestre, 'mestre'), false);
+    assert.equal(canChangeTargetRole(mestre, admin), true);
+    assert.equal(canChangeTargetRole(admin, requisitante), false);
+    assert.equal(canChangeTargetRole(mestre, mestre), false);
+    assert.equal(canChangeTargetRole(admin, mestre), false);
+    assert.equal(hasUserPermission(requisitante, 'users:read'), false);
+    assert.equal(hasUserPermission({ ...mestre, ativo: false }, 'users:read'), false);
+    assert.equal(canChangeOwnRole(mestre), false);
+    assert.equal(getRolePermissions('operador').includes('stock:operate'), true);
   });
 
   it('deve aceitar unidades de medida válidas e rejeitar inválidas', () => {

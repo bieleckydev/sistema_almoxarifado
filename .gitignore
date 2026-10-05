@@ -8,6 +8,8 @@ node_modules/
 
 # Testing
 coverage/
+# Migration reports generated locally
+migration-reports/
 
 # Next.js
 .next/
