@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Almoxarifado · Monitoração de estoque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceff3;--surface:#fff;--side:#12303f;--side-ink:#d5e4ec;--ink:#17212b;--muted:#5b6876;--line:#d9dfe5;--brand:#0f5c7a;--brand-ink:#fff;--ok:#2e7d4f;--low:#a85f00;--crit:#bf3427;--okbg:#e1f1e8;--lowbg:#fbecd0;--critbg:#f8dedb;--track:#e3e8ed;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151b;--surface:#17212a;--side:#0a1217;--side-ink:#b9c9d3;--ink:#e6edf3;--muted:#9aa8b5;--line:#2a3743;--brand:#4cb3d9;--brand-ink:#06222d;--ok:#5ec58a;--low:#e9a23b;--crit:#f0796b;--okbg:#18372a;--lowbg:#3b2f17;--critbg:#40201d;--track:#27333d}}
+:root[data-theme="dark"]{--bg:#0e151b;--surface:#17212a;--side:#0a1217;--side-ink:#b9c9d3;--ink:#e6edf3;--muted:#9aa8b5;--line:#2a3743;--brand:#4cb3d9;--brand-ink:#06222d;--ok:#5ec58a;--low:#e9a23b;--crit:#f0796b;--okbg:#18372a;--lowbg:#3b2f17;--critbg:#40201d;--track:#27333d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--side);color:var(--side-ink);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.logo{font-weight:700;font-size:17px;color:#fff;padding:0 10px 18px}
+.logo small{display:block;font-weight:400;font-size:12.5px;color:var(--side-ink);opacity:.8}
+.nav{background:none;border:0;text-align:left;padding:10px 12px;border-radius:8px;color:inherit;display:flex;justify-content:space-between;align-items:center}
+.nav:hover{background:rgba(255,255,255,.07)}
+.nav[aria-current="page"]{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.badge{background:var(--crit);color:#fff;border-radius:99px;font-size:12px;padding:0 8px;font-weight:600}
+.theme{margin-top:auto;background:none;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px;color:inherit}
+main{padding:28px clamp(16px,3vw,40px) 48px;max-width:1180px;width:100%}
+h1{font-size:clamp(24px,3.2vw,34px);line-height:1.2;margin:0 0 6px;font-weight:600;max-width:24ch}
+.sub{color:var(--muted);margin:0 0 24px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat b{display:block;font-size:28px;font-weight:600;line-height:1.1}
+.stat span{color:var(--muted);font-size:13.5px}
+.stat.crit b{color:var(--crit)}.stat.low b{color:var(--low)}
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.panel h2{font-size:16px;margin:0 0 10px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+input[type=search]{flex:1 1 240px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 14px}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:500;color:var(--muted);font-size:13.5px}
+tbody tr:last-child td{border-bottom:0}
+tr.row{cursor:pointer}tr.row:hover{background:var(--bg)}
+td small{display:block;color:var(--muted)}
+.gauge{position:relative;height:8px;background:var(--track);border-radius:4px;min-width:120px}
+.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.gauge u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.55}
+.s-ok i{background:var(--ok)}.s-low i{background:var(--low)}.s-crit i{background:var(--crit)}
+.tag{display:inline-block;border-radius:6px;padding:2px 9px;font-size:13px;font-weight:600}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.low{background:var(--lowbg);color:var(--low)}.tag.crit{background:var(--critbg);color:var(--crit)}
+.li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.li:last-child{border:0}
+.li button{background:none;border:0;text-align:left;padding:0}
+.in{color:var(--ok)}.out{color:var(--crit)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .22s;padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px));overflow-y:auto}
+body.open .scrim{opacity:1;pointer-events:auto}body.open .drawer{transform:none}
+.drawer h2{margin:6px 0 2px;font-size:22px}
+.close{float:right;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:18px 0}dt{color:var(--muted)}dd{margin:0}
+.big{font-size:40px;font-weight:600;line-height:1}
+@media (max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;padding:12px}.logo{width:100%;padding:0 6px 4px}.theme{margin:0 0 0 auto}.cols{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.drawer,.scrim{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="logo">Almoxarifado<small>Monitoração de estoque</small></div>
+    <div id="nav" style="display:contents"></div>
+    <button class="theme" id="theme">Alternar tema</button>
+  </aside>
+  <main id="main"></main>
+</div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Detalhes do produto" aria-hidden="true"></aside>
+
+<script>
+/* ---- DADOS DE EXEMPLO ----
+   Troque por chamadas ao seu back end, por exemplo:
+   produtos = await (await fetch('/api/produtos')).json();
+   movs     = await (await fetch('/api/movimentacoes')).json();
+   Campos esperados: id, aba (mp | imp | motos), nome, sku, cat, loc, qtd, min, max, un
+   e info (opcional): objeto com as informações específicas do item */
+let produtos = [
+ {id:1,aba:'mp',nome:'Chapa de aço 3 mm',sku:'CHP-0300',cat:'Chapas',loc:'E-00-01',qtd:48,min:20,max:90,un:'un'},
+ {id:2,aba:'mp',nome:'Barra redonda SAE 1045 Ø25',sku:'BAR-1045',cat:'Barras',loc:'E-01-02',qtd:14,min:15,max:60,un:'un'},
+ {id:3,aba:'mp',nome:'Tubo industrial 40 x 40',sku:'TUB-4040',cat:'Tubos',loc:'E-02-01',qtd:62,min:30,max:120,un:'un'},
+ {id:4,aba:'mp',nome:'Eletrodo E6013 2,5 mm',sku:'SOL-6013',cat:'Soldagem',loc:'B-01-04',qtd:12,min:20,max:80,un:'kg'},
+ {id:5,aba:'mp',nome:'Cantoneira 1"',sku:'CAN-0100',cat:'Perfis',loc:'E-01-04',qtd:6,min:20,max:70,un:'un'},
+ {id:6,aba:'mp',nome:'Arame MIG 0,8 mm',sku:'SOL-0800',cat:'Soldagem',loc:'B-01-05',qtd:90,min:40,max:160,un:'kg'},
+ {id:7,aba:'imp',nome:'Luva de raspa',sku:'EPI-0112',cat:'EPI',loc:'C-02-01',qtd:38,min:40,max:120,un:'par'},
+ {id:8,aba:'imp',nome:'Óculos de proteção',sku:'EPI-0120',cat:'EPI',loc:'C-02-02',qtd:9,min:30,max:90,un:'un'},
+ {id:9,aba:'imp',nome:'Disco de corte 7"',sku:'ABR-0710',cat:'Abrasivos',loc:'B-03-01',qtd:64,min:50,max:200,un:'un'},
+ {id:10,aba:'imp',nome:'Graxa multiuso',sku:'LUB-0300',cat:'Lubrificantes',loc:'D-01-02',qtd:5,min:12,max:30,un:'kg'},
+ {id:11,aba:'imp',nome:'Fita isolante',sku:'ELE-0010',cat:'Elétrica',loc:'F-01-02',qtd:140,min:40,max:200,un:'un'},
+ {id:12,aba:'imp',nome:'Broca HSS 10 mm',sku:'FER-1010',cat:'Ferramentas',loc:'B-02-03',qtd:7,min:10,max:30,un:'un'},
+ {id:13,aba:'motos',nome:'Pastilha de freio',sku:'PEC-1601',cat:'CG 160 · Freios',loc:'H-01-01',qtd:18,min:12,max:60,un:'jogo'},
+ {id:14,aba:'motos',nome:'Kit relação',sku:'PEC-1602',cat:'CG 160 · Transmissão',loc:'H-01-04',qtd:4,min:8,max:30,un:'kit'},
+ {id:15,aba:'motos',nome:'Vela de ignição',sku:'PEC-0310',cat:'Universal · Elétrica',loc:'H-02-01',qtd:46,min:30,max:120,un:'un'},
+ {id:16,aba:'motos',nome:'Filtro de óleo',sku:'PEC-3001',cat:'XRE 300 · Filtros',loc:'H-02-03',qtd:9,min:10,max:40,un:'un'},
+ {id:17,aba:'motos',nome:'Câmara de ar aro 18',sku:'PEC-1800',cat:'Universal · Pneus',loc:'H-03-02',qtd:22,min:10,max:40,un:'un'},
+ {id:18,aba:'motos',nome:'Cabo de embreagem',sku:'PEC-0220',cat:'Universal · Cabos',loc:'H-03-04',qtd:0,min:6,max:24,un:'un'}
+];
+let movs = [
+ {hora:'Hoje, 09:42',tipo:'Saída',p:8,q:6,quem:'Manutenção'},
+ {hora:'Hoje, 09:15',tipo:'Saída',p:10,q:3,quem:'Produção'},
+ {hora:'Hoje, 08:30',tipo:'Entrada',p:1,q:20,quem:'Recebimento'},
+ {hora:'Ontem, 17:10',tipo:'Saída',p:18,q:4,quem:'Oficina'},
+ {hora:'Ontem, 16:58',tipo:'Saída',p:5,q:12,quem:'Serralheria'},
+ {hora:'Ontem, 15:20',tipo:'Saída',p:4,q:8,quem:'Soldagem'},
+ {hora:'Ontem, 11:05',tipo:'Entrada',p:13,q:24,quem:'Recebimento'},
+ {hora:'Ontem, 08:47',tipo:'Saída',p:14,q:3,quem:'Balcão'}
+];
+
+/* Informações específicas de cada item: objeto livre {rótulo: valor}.
+   O site mostra todos os campos que o back end enviar em "info" no painel do item. */
+const INFO={
+ 1:{'Material':'Aço carbono SAE 1020','Especificação':'Laminada a quente, chapa grossa','Dimensões':'1200 x 3000 mm','Fornecedor':'Aços Santa Rita'},
+ 2:{'Material':'Aço SAE 1045','Especificação':'Trefilada, tolerância h11','Dimensões':'Ø25 mm x 6 m','Fornecedor':'Aços Santa Rita'},
+ 3:{'Material':'Aço carbono','Especificação':'Tubo quadrado com costura','Dimensões':'40 x 40 x 2 mm, barra de 6 m','Fornecedor':'Metalfer'},
+ 4:{'Material':'Revestido rutílico','Especificação':'AWS E6013, 2,5 mm','Aplicação':'Soldagem geral em aço carbono','Fornecedor':'Esab'},
+ 5:{'Material':'Aço ASTM A36','Especificação':'Perfil L abas iguais','Dimensões':'1" x 1/8", barra de 6 m','Fornecedor':'Metalfer'},
+ 6:{'Material':'Arame maciço ER70S-6','Especificação':'AWS A5.18, bobina de 15 kg','Dimensões':'Ø0,8 mm','Fornecedor':'Esab'},
+ 7:{'Tipo':'Proteção das mãos','Material':'Raspa de couro','Certificado (CA)':'Informar número do CA','Aplicação':'Soldagem e manuseio de chapas'},
+ 8:{'Tipo':'Proteção dos olhos','Material':'Policarbonato incolor','Certificado (CA)':'Informar número do CA','Aplicação':'Corte, esmerilhamento e usinagem'},
+ 9:{'Tipo':'Abrasivo','Especificação':'Disco fino para corte de aço','Dimensões':'178 x 1,6 x 22,23 mm','Aplicação':'Esmerilhadeira angular'},
+ 10:{'Tipo':'Lubrificante','Especificação':'Graxa de lítio NLGI 2','Embalagem':'Balde de 1 kg','Aplicação':'Mancais e rolamentos'},
+ 11:{'Tipo':'Material elétrico','Especificação':'PVC antichama 750 V','Dimensões':'19 mm x 20 m','Aplicação':'Isolação de emendas'},
+ 12:{'Tipo':'Ferramenta de corte','Material':'Aço rápido HSS','Dimensões':'Ø10 mm','Aplicação':'Furação em aço carbono'},
+ 13:{'Modelo compatível':'Honda CG 160','Posição':'Dianteira','Marca':'Informar marca','Código original':'Informar código'},
+ 14:{'Modelo compatível':'Honda CG 160','Composição':'Corrente 428H, coroa e pinhão','Marca':'Informar marca','Código original':'Informar código'},
+ 15:{'Modelo compatível':'Universal','Especificação':'Velas de ignição iridium ou níquel','Marca':'NGK','Código original':'Informar código'},
+ 16:{'Modelo compatível':'Honda XRE 300','Tipo':'Filtro de óleo','Marca':'Informar marca','Código original':'Informar código'},
+ 17:{'Modelo compatível':'Aro 18','Medida':'2.75 / 3.00-18','Marca':'Informar marca','Código original':'Informar código'},
+ 18:{'Modelo compatível':'Universal','Tipo':'Cabo de embreagem','Marca':'Informar marca','Código original':'Informar código'}
+};
+const $=s=>document.querySelector(s);
+const nf=n=>n.toLocaleString('pt-BR');
+const st=p=>p.qtd<=p.min*.5?'crit':p.qtd<=p.min?'low':'ok';
+const lab={ok:'Normal',low:'Abaixo do mínimo',crit:'Crítico'};
+const by=id=>produtos.find(p=>p.id===id);
+produtos.forEach(p=>{if(!p.info&&INFO[p.id])p.info=INFO[p.id]});
+let view='mp',q='',f='todos';
+
+const gauge=p=>{const s=st(p),w=Math.min(100,p.qtd/p.max*100),m=p.min/p.max*100;
+ return `<div class="gauge s-${s}" role="img" aria-label="${nf(p.qtd)} de ${nf(p.max)} ${p.un}; mínimo ${nf(p.min)}"><i style="width:${w}%"></i><u style="left:${m}%"></u></div>`};
+const tag=p=>`<span class="tag ${st(p)}">${lab[st(p)]}</span>`;
+
+const ABAS={
+ mp:['Matéria-prima','Chapas, barras, tubos e insumos que viram produto.'],
+ imp:['Materiais improdutivos','Itens de consumo da fábrica: EPI, abrasivos, lubrificantes e ferramentas.'],
+ motos:['Peças de motos','Peças para venda e reposição, por modelo.']};
+const movLi=m=>{const p=by(m.p);return `<div class="li"><div><b>${p.nome}</b><br><small>${m.hora} · ${m.quem}</small></div><b class="${m.tipo==='Entrada'?'in':'out'}">${m.tipo==='Entrada'?'+':'−'}${nf(m.q)} ${p.un}</b></div>`};
+
+function lista(){
+ const base=produtos.filter(p=>p.aba===view),c=base.filter(p=>st(p)==='crit').length,l=base.filter(p=>st(p)==='low').length;
+ const t=q.trim().toLowerCase();
+ const r=base.filter(p=>(f==='todos'||st(p)===f)&&(!t||[p.nome,p.sku,p.cat,p.loc,...Object.values(p.info||{})].some(x=>x.toLowerCase().includes(t))));
+ const chips=[['todos','Todos'],['ok','Normal'],['low','Abaixo do mínimo'],['crit','Crítico']].map(([k,v])=>`<button class="chip" data-f="${k}" aria-pressed="${f===k}">${v}</button>`).join('');
+ return `<h1>${ABAS[view][0]}</h1><p class="sub">${ABAS[view][1]} A marca vertical na barra indica o estoque mínimo.</p>
+ <div class="stats">
+  <div class="stat"><b>${base.length}</b><span>Itens nesta aba</span></div>
+  <div class="stat low"><b>${l}</b><span>Abaixo do mínimo</span></div>
+  <div class="stat crit"><b>${c}</b><span>Nível crítico</span></div>
+ </div>
+ <div class="tools"><input type="search" id="busca" placeholder="Buscar por nome, código ou endereço" value="${q}" aria-label="Buscar nesta aba">${chips}</div>
+ <div class="wrap"><table><thead><tr><th>Item</th><th>Endereço</th><th>Quantidade</th><th style="width:22%">Nível</th><th>Situação</th></tr></thead><tbody>
+ ${r.map(p=>`<tr class="row" tabindex="0" data-open="${p.id}"><td><b>${p.nome}</b><small>${p.sku} · ${p.cat}</small></td><td>${p.loc}</td><td>${nf(p.qtd)} ${p.un}</td><td>${gauge(p)}</td><td>${tag(p)}</td></tr>`).join('')||`<tr><td colspan="5" class="empty">Nenhum item encontrado. Limpe a busca ou escolha outro filtro.</td></tr>`}
+ </tbody></table></div>`}
+
+function render(){
+ const keep=document.activeElement&&document.activeElement.id==='busca';
+ $('#nav').innerHTML=Object.entries(ABAS).map(([k,[n]])=>{const c=produtos.filter(p=>p.aba===k&&st(p)==='crit').length;
+  return `<button class="nav" data-v="${k}"${k===view?' aria-current="page"':''}>${n}${c?` <span class="badge" title="${c} em nível crítico">${c}</span>`:''}</button>`}).join('');
+ $('#main').innerHTML=lista();
+ if(keep){const i=$('#busca');i.focus();i.setSelectionRange(q.length,q.length)}
+}
+function abrir(id){
+ const p=by(id),h=movs.filter(m=>m.p===id);
+ $('#drawer').innerHTML=`<button class="close" id="x">Fechar</button>${tag(p)}<h2>${p.nome}</h2><small style="color:var(--muted)">${p.sku} · ${p.cat}</small>
+ <p class="big" style="margin-top:18px">${nf(p.qtd)} <span style="font-size:16px;font-weight:400">${p.un}</span></p><div style="margin:12px 0">${gauge(p)}</div>
+ <dl><dt>Estoque mínimo</dt><dd>${nf(p.min)} ${p.un}</dd><dt>Capacidade</dt><dd>${nf(p.max)} ${p.un}</dd><dt>Endereço</dt><dd>${p.loc}</dd>${p.qtd<p.min?`<dt>Falta para o mínimo</dt><dd>${nf(p.min-p.qtd)} ${p.un}</dd>`:''}</dl>
+ ${Object.keys(p.info||{}).length?`<h2 style="font-size:16px">Especificações</h2><dl>${Object.entries(p.info).map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`:''}
+ <h2 style="font-size:16px">Histórico</h2>${h.map(movLi).join('')||'<div class="empty">Sem movimentações recentes.</div>'}`;
+ document.body.classList.add('open');$('#drawer').setAttribute('aria-hidden','false');$('#x').focus();
+}
+function fechar(){document.body.classList.remove('open');$('#drawer').setAttribute('aria-hidden','true')}
+
+document.addEventListener('click',e=>{
+ const n=e.target.closest('.nav'),o=e.target.closest('[data-open]'),c=e.target.closest('[data-f]');
+ if(n){view=n.dataset.v;q='';f='todos';render()}
+ else if(o)abrir(+o.dataset.open);
+ else if(c){f=c.dataset.f;render()}
+ else if(e.target.id==='x'||e.target.id==='scrim')fechar();
+});
+document.addEventListener('input',e=>{if(e.target.id==='busca'){q=e.target.value;render()}});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape')fechar();
+ if(e.key==='Enter'&&e.target.classList.contains('row'))abrir(+e.target.dataset.open);
+});
+$('#theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'};
+render();
+</script>
+</body>
+</html>
