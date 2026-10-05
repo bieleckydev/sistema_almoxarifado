@@ -93,6 +93,12 @@ service cloud.firestore {
       allow delete: if isMestre() && request.auth.uid != userId;
     }
 
+    match /userAuditLogs/{logId} {
+      // Audit records are written only by the trusted backend/Admin SDK.
+      allow read: if isMestre();
+      allow create, update, delete: if false;
+    }
+
     match /items/{itemId} {
       allow read: if signedIn();
       allow create: if canManageCatalog()
