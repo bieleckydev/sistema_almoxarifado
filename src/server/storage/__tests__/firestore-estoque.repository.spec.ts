@@ -99,6 +99,31 @@ function createMockFirestore() {
         },
       };
     },
+
+    async runTransaction(updateFunction: (transaction: any) => Promise<any>) {
+      const pendingUpdates: Array<() => void> = [];
+      const pendingSets: Array<() => void> = [];
+
+      const transaction = {
+        async get(docRef: any) {
+          return docRef.get();
+        },
+        update(docRef: any, data: any) {
+          pendingUpdates.push(() => docRef.update(data));
+        },
+        set(docRef: any, data: any, options?: any) {
+          pendingSets.push(() => docRef.set(data, options));
+        },
+      };
+
+      const result = await updateFunction(transaction);
+
+      // Aplica todas as escritas atomicamente ao final da transação
+      for (const fn of pendingUpdates) fn();
+      for (const fn of pendingSets) fn();
+
+      return result;
+    },
   };
 
   return mockDb as any;
@@ -286,6 +311,151 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
 
       assert.equal(lista.total, 1);
       assert.equal(lista.movimentacoes[0].id, 'mov-tubo-1');
+    });
+  });
+
+  describe('Fase 3 — Transações Atômicas (ACID via runTransaction)', () => {
+    it('deve registrar movimentação e atualizar saldo atomicamente com sucesso', async () => {
+      const movEntrada: Movimentacao = {
+        id: 'mov-tx-1',
+        itemId: 'item-flap-1',
+        tipo: 'ENTRADA_COMPRA',
+        quantidade: 25,
+        saldoAnterior: 50,
+        saldoResultante: 75,
+        dataMovimentacao: new Date().toISOString(),
+      };
+
+      const movSalva = await repo.registrarMovimentacaoComSaldo('item-flap-1', 75, movEntrada);
+      assert.equal(movSalva.id, 'mov-tx-1');
+
+      // Verifica saldo consolidado no item
+      const itemAtualizado = await repo.buscarItemPorId('item-flap-1');
+      assert.equal(itemAtualizado?.estoqueAtual, 75);
+
+      // Verifica registro na coleção movements
+      const extrato = await repo.consultarExtratoItem('item-flap-1');
+      assert(extrato.some((m) => m.id === 'mov-tx-1'));
+    });
+
+    it('deve rejeitar e abortar transação se o novoSaldo for negativo', async () => {
+      const movInvalida: Movimentacao = {
+        id: 'mov-neg-1',
+        itemId: 'item-flap-1',
+        tipo: 'SAIDA_CONSUMO_INTERNO',
+        quantidade: 100,
+        saldoAnterior: 50,
+        saldoResultante: -50,
+        dataMovimentacao: new Date().toISOString(),
+      };
+
+      await assert.rejects(
+        () => repo.registrarMovimentacaoComSaldo('item-flap-1', -50, movInvalida),
+        /Saldo insuficiente/
+      );
+
+      // Saldo do item deve permanecer inalterado
+      const itemIntacto = await repo.buscarItemPorId('item-flap-1');
+      assert.equal(itemIntacto?.estoqueAtual, 50);
+    });
+
+    it('deve rejeitar transação se o item não existir', async () => {
+      const movFantasma: Movimentacao = {
+        id: 'mov-fantasma',
+        itemId: 'item-fantasma',
+        tipo: 'ENTRADA_COMPRA',
+        quantidade: 10,
+        saldoAnterior: 0,
+        saldoResultante: 10,
+        dataMovimentacao: new Date().toISOString(),
+      };
+
+      await assert.rejects(
+        () => repo.registrarMovimentacaoComSaldo('item-fantasma', 10, movFantasma),
+        /Item com identificador "item-fantasma" não foi encontrado/
+      );
+    });
+
+    it('deve executar baixa em lote atômica com múltiplos itens', async () => {
+      const movFlap: Movimentacao = {
+        id: 'mov-lote-flap',
+        itemId: 'item-flap-1',
+        tipo: 'SAIDA_CONSUMO_INTERNO',
+        quantidade: 10,
+        saldoAnterior: 50,
+        saldoResultante: 40,
+        dataMovimentacao: new Date().toISOString(),
+        colaboradorId: 'colab-1',
+      };
+
+      const movTubo: Movimentacao = {
+        id: 'mov-lote-tubo',
+        itemId: 'item-tubo-1',
+        tipo: 'SAIDA_CONSUMO_INTERNO',
+        quantidade: 50,
+        saldoAnterior: 200,
+        saldoResultante: 150,
+        dataMovimentacao: new Date().toISOString(),
+        colaboradorId: 'colab-1',
+      };
+
+      const resultado = await repo.registrarBaixaLoteAtomica([
+        { itemId: 'item-flap-1', novoSaldo: 40, movimentacao: movFlap },
+        { itemId: 'item-tubo-1', novoSaldo: 150, movimentacao: movTubo },
+      ]);
+
+      assert.equal(resultado.length, 2);
+      assert.equal(resultado[0].id, 'mov-lote-flap');
+      assert.equal(resultado[1].id, 'mov-lote-tubo');
+
+      const flapAtualizado = await repo.buscarItemPorId('item-flap-1');
+      const tuboAtualizado = await repo.buscarItemPorId('item-tubo-1');
+      assert.equal(flapAtualizado?.estoqueAtual, 40);
+      assert.equal(tuboAtualizado?.estoqueAtual, 150);
+    });
+
+    it('deve abortar o lote INTEIRO e não alterar nenhum saldo se qualquer item tiver estoque insuficiente', async () => {
+      const movFlapValida: Movimentacao = {
+        id: 'mov-flap-ok',
+        itemId: 'item-flap-1',
+        tipo: 'SAIDA_CONSUMO_INTERNO',
+        quantidade: 10,
+        saldoAnterior: 50,
+        saldoResultante: 40,
+        dataMovimentacao: new Date().toISOString(),
+        colaboradorId: 'colab-1',
+      };
+
+      // Item tubo só tem 200, mas está pedindo 500
+      const movTuboExcessiva: Movimentacao = {
+        id: 'mov-tubo-insuficiente',
+        itemId: 'item-tubo-1',
+        tipo: 'SAIDA_CONSUMO_INTERNO',
+        quantidade: 500,
+        saldoAnterior: 200,
+        saldoResultante: -300,
+        dataMovimentacao: new Date().toISOString(),
+        colaboradorId: 'colab-1',
+      };
+
+      await assert.rejects(
+        () =>
+          repo.registrarBaixaLoteAtomica([
+            { itemId: 'item-flap-1', novoSaldo: 40, movimentacao: movFlapValida },
+            { itemId: 'item-tubo-1', novoSaldo: -300, movimentacao: movTuboExcessiva },
+          ]),
+        /A baixa em lote não pôde ser efetuada devido a saldo insuficiente/
+      );
+
+      // Verificação de isolamento atômico (Rollback): NENHUM saldo foi alterado!
+      const flapInalterado = await repo.buscarItemPorId('item-flap-1');
+      const tuboInalterado = await repo.buscarItemPorId('item-tubo-1');
+      assert.equal(flapInalterado?.estoqueAtual, 50);
+      assert.equal(tuboInalterado?.estoqueAtual, 200);
+
+      // Nenhuma movimentação foi gravada
+      const extratoFlap = await repo.consultarExtratoItem('item-flap-1');
+      assert.equal(extratoFlap.some((m) => m.id === 'mov-flap-ok'), false);
     });
   });
 });

@@ -96,13 +96,13 @@ flowchart TD
 > **Objetivo:** Implementar o núcleo ACID com `adminDb.runTransaction()`, assegurando consistência estrita contra concorrência.
 
 - **Micro-tarefas:**
-  - [ ] **3.1** Implementar `registrarMovimentacaoComSaldo`:
+  - [x] **3.1** Implementar `registrarMovimentacaoComSaldo`:
     - Dentro de `runTransaction`:
       1. Ler `itemRef`.
       2. Validar existência e integridade do saldo atual do item.
       3. Atualizar atomicamente `estoqueAtual` e `updatedAt` no documento do item.
       4. Inserir documento imutável na coleção `movements/{movimentacaoId}`.
-  - [ ] **3.2** Implementar `registrarBaixaLoteAtomica`:
+  - [x] **3.2** Implementar `registrarBaixaLoteAtomica`:
     - Dentro de uma única `runTransaction`:
       1. Executar leituras de todos os itens envolvidos no lote.
       2. Validar que nenhum item teve seu saldo violado por concorrência entre a montagem do carrinho e a confirmação.
