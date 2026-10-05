@@ -72,11 +72,11 @@ flowchart TD
 > **Objetivo:** Garantir a conversão segura e bidirecional entre documentos do Firestore (com `Timestamps` ou campos raw) e os Schemas Zod de domínio.
 
 - **Micro-tarefas:**
-  - [ ] **1.1** Criar `src/server/storage/firestore-estoque.mapper.ts`:
+  - [x] **1.1** Criar `src/server/storage/firestore-estoque.mapper.ts`:
     - Conversão de documento Firestore para entidade `Item` (com validação via `ItemSchema`).
     - Conversão de documento Firestore para entidade `Colaborador` (com validação via `ColaboradorSchema`).
     - Conversão de documento Firestore para entidade `Movimentacao` (com validação via `MovimentacaoSchema`).
-  - [ ] **1.2** Criar sanitizadores para garantir que campos `undefined` sejam omitidos antes de enviar ao Firestore.
+  - [x] **1.2** Criar sanitizadores para garantir que campos `undefined` sejam omitidos antes de enviar ao Firestore.
 
 ---
 
