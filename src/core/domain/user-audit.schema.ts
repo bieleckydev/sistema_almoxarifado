@@ -6,6 +6,7 @@ export const UserAuditActionSchema = z.enum([
   'UPDATE',
   'DISABLE',
   'ENABLE',
+  'SEND_INVITE',
   'RESET_PASSWORD',
   'CHANGE_ROLE',
   'DELETE',
