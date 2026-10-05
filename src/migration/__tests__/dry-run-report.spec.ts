@@ -19,4 +19,6 @@ test('consolida itens e colaboradores em relatório dry-run', () => {
   );
   assert.ok(report.issues.length > 0);
   assert.ok(report.issues.every((issue) => issue.sourceKey && issue.row > 0));
+  assert.ok(Object.keys(report.issueCategories).length > 0);
+  assert.ok(report.issues.every((issue) => issue.category && issue.action));
 });

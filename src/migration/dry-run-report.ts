@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { mapImprodutivosCollaborators } from './adapters/improdutivos-collaborators.adapter';
 import { mapImprodutivosItems } from './adapters/improdutivos-items.adapter';
-import type { NormalizationIssue } from './normalizers';
+import type { ClassifiedMigrationIssue } from './issue-classification';
 
 const DEFAULT_INPUT = resolve(
   'docs/excel/Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx'
@@ -16,8 +16,11 @@ export interface DryRunIssue {
   sheet: string;
   row: number;
   field: string;
-  severity: NormalizationIssue['severity'];
+  severity: ClassifiedMigrationIssue['severity'];
   message: string;
+  category: ClassifiedMigrationIssue['category'];
+  action: ClassifiedMigrationIssue['action'];
+  blocking: boolean;
 }
 
 export interface DryRunReport {
@@ -37,6 +40,10 @@ export interface DryRunReport {
     errors: number;
   };
   issues: DryRunIssue[];
+  issueCategories: Record<
+    ClassifiedMigrationIssue['category'],
+    { count: number; blocking: number }
+  >;
 }
 
 function argument(name: string): string | undefined {
@@ -47,7 +54,7 @@ function collectIssues(
   entity: DryRunIssue['entity'],
   candidates: Array<{
     origin: { sourceKey: string; file: string; sheet: string; row: number };
-    issues: NormalizationIssue[];
+    issues: ClassifiedMigrationIssue[];
   }>
 ): DryRunIssue[] {
   return candidates.flatMap((candidate) =>
@@ -60,6 +67,9 @@ function collectIssues(
       field: issue.field,
       severity: issue.severity,
       message: issue.message,
+      category: issue.category,
+      action: issue.action,
+      blocking: issue.blocking,
     }))
   );
 }
@@ -73,6 +83,13 @@ export function buildImprodutivosDryRunReport(
     ...collectIssues('ITEM', items.candidates),
     ...collectIssues('COLABORADOR', collaborators.candidates),
   ];
+  const issueCategories = issues.reduce<DryRunReport['issueCategories']>((result, issue) => {
+    const current = result[issue.category] ?? { count: 0, blocking: 0 };
+    current.count += 1;
+    current.blocking += issue.blocking ? 1 : 0;
+    result[issue.category] = current;
+    return result;
+  }, {} as DryRunReport['issueCategories']);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -91,6 +108,7 @@ export function buildImprodutivosDryRunReport(
       errors: items.summary.errors + collaborators.summary.errors,
     },
     issues,
+    issueCategories,
   };
 }
 

@@ -11,6 +11,10 @@ import {
   normalizeText,
   type NormalizationIssue,
 } from '../normalizers';
+import {
+  classifyMigrationIssues,
+  type ClassifiedMigrationIssue,
+} from '../issue-classification';
 import type { SourceCellValue, SourceRecord } from '../source-record';
 
 const SHEET_NAME = 'Tabela de Colobaradores';
@@ -32,7 +36,7 @@ export interface CollaboratorMigrationCandidate {
   valuesOriginal: Record<string, SourceCellValue>;
   valuesNormalized: Record<string, SourceCellValue>;
   candidate: CreateColaboradorInput | null;
-  issues: NormalizationIssue[];
+  issues: ClassifiedMigrationIssue[];
   action: 'CREATE' | 'REJECT';
 }
 
@@ -216,7 +220,7 @@ export function mapImprodutivosCollaborators(filePath: string): CollaboratorMigr
       valuesOriginal,
       valuesNormalized,
       candidate,
-      issues,
+      issues: classifyMigrationIssues(issues),
       action: candidate ? 'CREATE' : 'REJECT',
     });
   }
