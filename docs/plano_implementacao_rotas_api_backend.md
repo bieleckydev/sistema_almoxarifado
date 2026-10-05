@@ -67,12 +67,12 @@ flowchart TD
 > **Objetivo:** Centralizar helpers de parsing, autenticação, verificação de permissões RBAC e tratamento unificado de erros para todas as rotas da aplicação.
 
 - **Micro-tarefas:**
-  - [ ] **1.1** Criar `src/web/app/api/api-helpers.ts`:
+  - [x] **1.1** Criar `src/web/app/api/api-helpers.ts`:
     - `requireIdentity(request)`: valida token Bearer e extrai identidade do usuário.
     - `requirePermission(identity, permission)`: valida permissão RBAC (`stock:operate`, `catalog:manage`, etc.).
     - `readJson<T>(request)`: extração segura com erro amigável se JSON inválido.
     - `toErrorResponse(error)`: tratamento centralizado de `ZodError`, `ApiError`, `AuthorizationError`, `SaldoInsuficienteError`, `LoteEstoqueInsuficienteError`, etc.
-  - [ ] **1.2** Criar fábrica de injeção de dependência para instanciar repositório e serviços no contexto da requisição (`getEstoqueService()`).
+  - [x] **1.2** Criar fábrica de injeção de dependência para instanciar repositório e serviços no contexto da requisição (`getEstoqueService()`).
 
 ---
 
