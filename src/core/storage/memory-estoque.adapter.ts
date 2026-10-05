@@ -209,6 +209,31 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     return { movimentacoes: paginados, total };
   }
 
+  async registrarMovimentacaoComSaldo(
+    itemId: string,
+    novoSaldo: number,
+    movimentacao: Movimentacao
+  ): Promise<Movimentacao> {
+    await this.atualizarSaldoItem(itemId, novoSaldo);
+    return this.registrarMovimentacao(movimentacao);
+  }
+
+  async registrarBaixaLoteAtomica(
+    operacoes: Array<{
+      itemId: string;
+      novoSaldo: number;
+      movimentacao: Movimentacao;
+    }>
+  ): Promise<Movimentacao[]> {
+    const gravadas: Movimentacao[] = [];
+    for (const op of operacoes) {
+      await this.atualizarSaldoItem(op.itemId, op.novoSaldo);
+      const m = await this.registrarMovimentacao(op.movimentacao);
+      gravadas.push(m);
+    }
+    return gravadas;
+  }
+
   /**
    * Limpa todos os dados armazenados em memória (útil em testes).
    */

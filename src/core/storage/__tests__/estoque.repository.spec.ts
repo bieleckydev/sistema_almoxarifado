@@ -159,4 +159,63 @@ describe('2.4 — Contrato e Implementação de Repositório de Estoque', () => 
     const porMatricula = await repo.buscarColaboradorPorId('042');
     assert.equal(porMatricula?.id, 'colab-1');
   });
+
+  it('deve registrar movimentação e atualizar saldo atomicamente (registrarMovimentacaoComSaldo)', async () => {
+    const mov: Movimentacao = {
+      id: 'mov-atomica-1',
+      itemId: 'item-10-3812',
+      tipo: 'ENTRADA_COMPRA',
+      quantidade: 300,
+      saldoAnterior: 1200,
+      saldoResultante: 1500,
+      dataMovimentacao: new Date().toISOString(),
+    };
+
+    const movSalva = await repo.registrarMovimentacaoComSaldo('item-10-3812', 1500, mov);
+    assert.equal(movSalva.id, 'mov-atomica-1');
+
+    const itemAtualizado = await repo.buscarItemPorId('item-10-3812');
+    assert.equal(itemAtualizado?.estoqueAtual, 1500);
+
+    const extrato = await repo.consultarExtratoItem('item-10-3812');
+    assert(extrato.some((m) => m.id === 'mov-atomica-1'));
+  });
+
+  it('deve registrar baixa em lote atômica com múltiplos itens (registrarBaixaLoteAtomica)', async () => {
+    const movItem1: Movimentacao = {
+      id: 'mov-lote-1',
+      itemId: 'item-10-3812',
+      tipo: 'SAIDA_CONSUMO_INTERNO',
+      quantidade: 200,
+      saldoAnterior: 1200,
+      saldoResultante: 1000,
+      dataMovimentacao: new Date().toISOString(),
+      colaboradorId: 'colab-1',
+    };
+
+    const movItem2: Movimentacao = {
+      id: 'mov-lote-2',
+      itemId: 'item-90-1105',
+      tipo: 'SAIDA_CONSUMO_INTERNO',
+      quantidade: 5,
+      saldoAnterior: 15,
+      saldoResultante: 10,
+      dataMovimentacao: new Date().toISOString(),
+      colaboradorId: 'colab-1',
+    };
+
+    const resultado = await repo.registrarBaixaLoteAtomica([
+      { itemId: 'item-10-3812', novoSaldo: 1000, movimentacao: movItem1 },
+      { itemId: 'item-90-1105', novoSaldo: 10, movimentacao: movItem2 },
+    ]);
+
+    assert.equal(resultado.length, 2);
+    assert.equal(resultado[0].id, 'mov-lote-1');
+    assert.equal(resultado[1].id, 'mov-lote-2');
+
+    const i1 = await repo.buscarItemPorId('item-10-3812');
+    const i2 = await repo.buscarItemPorId('item-90-1105');
+    assert.equal(i1?.estoqueAtual, 1000);
+    assert.equal(i2?.estoqueAtual, 10);
+  });
 });
