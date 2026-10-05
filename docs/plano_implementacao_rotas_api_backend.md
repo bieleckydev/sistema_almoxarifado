@@ -80,13 +80,13 @@ flowchart TD
 > **Objetivo:** Expor operações de catálogo para busca, detalhamento e manutenção de materiais.
 
 - **Micro-tarefas:**
-  - [ ] **2.1** Criar `src/web/app/api/itens/route.ts`:
+  - [x] **2.1** Criar `src/web/app/api/itens/route.ts`:
     - `GET`: parsing de `ItemFiltrosSchema` a partir dos searchParams e chamada a `repo.listarComFiltros()`.
     - `POST`: validação com `CreateItemSchema`, verificação de permissão `catalog:manage` e chamada a `repo.salvarItem()`.
-  - [ ] **2.2** Criar `src/web/app/api/itens/[id]/route.ts`:
+  - [x] **2.2** Criar `src/web/app/api/itens/[id]/route.ts`:
     - `GET`: busca item por ID (`repo.buscarItemPorId`).
     - `PATCH`: atualização cadastral com `UpdateItemSchema`.
-  - [ ] **2.3** Criar `src/web/app/api/itens/codigo/[codigo]/route.ts`:
+  - [x] **2.3** Criar `src/web/app/api/itens/codigo/[codigo]/route.ts`:
     - `GET`: busca direta por código padronizado com retorno 404 se não encontrado.
 
 ---
@@ -132,4 +132,4 @@ flowchart TD
 
 ## 5. Próximo Passo Imediato
 
-Iniciar pela **Fase 1**: implementação de `src/web/app/api/api-helpers.ts` com unificação dos utilitários de autenticação, RBAC e tratamento de erros para as rotas do Next.js.
+Iniciar pela **Fase 3**: implementação das rotas de colaboradores (`/api/colaboradores`, `/api/colaboradores/[id]`, `/api/colaboradores/matricula/[matricula]`).
