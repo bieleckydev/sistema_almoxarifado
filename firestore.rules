@@ -34,6 +34,22 @@ service cloud.firestore {
       return request.resource.data.role in ['mestre', 'admin', 'operador', 'requisitante'];
     }
 
+    function validUserFields() {
+      return request.resource.data.keys().hasAll(['id', 'name', 'email', 'role'])
+        && request.resource.data.keys().hasOnly([
+          'id',
+          'name',
+          'email',
+          'role',
+          'ativo',
+          'mustChangePassword',
+          'createdAt',
+          'updatedAt',
+          'createdBy',
+          'updatedBy'
+        ]);
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isMestre());
 
@@ -43,24 +59,34 @@ service cloud.firestore {
         && request.auth.uid == userId
         && request.resource.data.id == userId
         && request.resource.data.role == 'requisitante'
-        && request.resource.data.keys().hasAll(['id', 'name', 'email', 'role'])
-        && request.resource.data.keys().hasOnly(['id', 'name', 'email', 'role', 'createdAt']);
+        && request.resource.data.email == request.auth.token.email
+        && validUserFields();
 
       allow update: if signedIn()
         && request.resource.data.id == userId
         && validUserRole()
-        && request.resource.data.keys().hasAll(['id', 'name', 'email', 'role'])
-        && request.resource.data.keys().hasOnly(['id', 'name', 'email', 'role', 'createdAt'])
+        && validUserFields()
         && (
           (
             request.auth.uid == userId
             && request.resource.data.role == resource.data.role
+            && request.resource.data.email == request.auth.token.email
             && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['name', 'email'])
           )
           || (
             isMestre()
             && request.auth.uid != userId
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'name',
+                'email',
+                'role',
+                'ativo',
+                'mustChangePassword',
+                'updatedAt',
+                'updatedBy'
+              ])
           )
         );
 
