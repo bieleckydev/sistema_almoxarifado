@@ -70,7 +70,7 @@ function asText(value: SourceCellValue): string {
   return value instanceof Date ? value.toISOString() : String(value);
 }
 
-function normalizeText(value: SourceCellValue): NormalizedValue {
+export function normalizeText(value: SourceCellValue): NormalizedValue {
   if (value === null || typeof value !== 'string') {
     return { original: value, normalized: value, changed: false, issues: emptyIssueList() };
   }
@@ -129,7 +129,14 @@ export function normalizeRegistration(value: SourceCellValue, field: string): No
 export function normalizeUnit(value: SourceCellValue, field: string): NormalizedValue {
   if (value === null) return normalizeText(value);
   const original = asText(value);
-  const normalized = UNIT_ALIASES[original.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')];
+  const normalized = UNIT_ALIASES[
+    original
+      .trim()
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[.]/g, '')
+  ];
   const issues = emptyIssueList();
 
   if (!normalized) {
