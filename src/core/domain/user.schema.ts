@@ -6,6 +6,20 @@ export type UserRole = z.infer<typeof UserRoleSchema>;
 export const ManagedUserRoleSchema = z.enum(['admin', 'operador', 'requisitante']);
 export type ManagedUserRole = z.infer<typeof ManagedUserRoleSchema>;
 
+const UserTimestampSchema = z.preprocess((value) => {
+  if (value instanceof Date) return value.toISOString();
+  if (
+    value
+    && typeof value === 'object'
+    && 'toDate' in value
+    && typeof value.toDate === 'function'
+  ) {
+    const date = value.toDate();
+    if (date instanceof Date) return date.toISOString();
+  }
+  return value;
+}, z.string().datetime().optional());
+
 export const UserSchema = z.object({
   id: z.string().min(1, 'ID do usuário é obrigatório'),
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -13,8 +27,8 @@ export const UserSchema = z.object({
   role: UserRoleSchema.default('requisitante'),
   ativo: z.boolean().default(true),
   mustChangePassword: z.boolean().default(false),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
+  createdAt: UserTimestampSchema,
+  updatedAt: UserTimestampSchema,
   createdBy: z.string().min(1).optional(),
   updatedBy: z.string().min(1).optional(),
 });
