@@ -73,6 +73,15 @@ export const SetUserStatusCommandSchema = z
 
 export type SetUserStatusCommand = z.infer<typeof SetUserStatusCommandSchema>;
 
+export const DeleteUserCommandSchema = z
+  .object({
+    confirmation: z.literal('EXCLUIR'),
+    reason: z.string().trim().min(3, 'O motivo deve conter no mínimo 3 caracteres'),
+  })
+  .strict();
+
+export type DeleteUserCommand = z.infer<typeof DeleteUserCommandSchema>;
+
 export const SendUserInviteCommandSchema = z
   .object({
     reason: AuditReasonSchema,
