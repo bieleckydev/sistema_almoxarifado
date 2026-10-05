@@ -11,7 +11,8 @@
     "test": "tsx --test \"src/core/**/__tests__/*.spec.ts\" \"src/migration/**/__tests__/*.spec.ts\"",
     "migration:discover": "tsx src/migration/excel-discovery.ts",
     "migration:extract-source": "tsx src/migration/extract-source-records.ts",
-    "migration:validate-improdutivos-items": "tsx src/migration/validate-improdutivos-items.ts"
+    "migration:validate-improdutivos-items": "tsx src/migration/validate-improdutivos-items.ts",
+    "migration:validate-improdutivos-collaborators": "tsx src/migration/validate-improdutivos-collaborators.ts"
   },
   "repository": {
     "type": "git",
