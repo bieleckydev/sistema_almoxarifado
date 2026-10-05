@@ -41,6 +41,7 @@ import {
 import {
   ChangeUserRoleCommandSchema,
   CreateUserCommandSchema,
+  DeleteUserCommandSchema,
   ResetUserPasswordCommandSchema,
   SendUserInviteCommandSchema,
   SetUserStatusCommandSchema,
@@ -182,6 +183,28 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     assert.throws(() =>
       SetUserStatusCommandSchema.parse({ ativo: 'false' })
     );
+    assert.deepEqual(
+      DeleteUserCommandSchema.parse({
+        confirmation: 'EXCLUIR',
+        reason: 'Usuário desligado da empresa',
+      }),
+      {
+        confirmation: 'EXCLUIR',
+        reason: 'Usuário desligado da empresa',
+      }
+    );
+    assert.throws(() =>
+      DeleteUserCommandSchema.parse({
+        confirmation: 'EXCLUIR',
+        reason: 'ok',
+      })
+    );
+    assert.throws(() =>
+      DeleteUserCommandSchema.parse({
+        confirmation: 'DELETE',
+        reason: 'Usuário desligado da empresa',
+      })
+    );
   });
 
   it('deve validar logs de auditoria e limitar campos auditáveis', () => {
@@ -228,6 +251,9 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
         password: 'nao-deve-existir',
       })
     );
+    assert.equal('updatedBy' in profile, false);
+    assert.equal('createdBy' in profile, false);
+    assert.equal('token' in profile, false);
   });
 
   it('deve validar a alteração de papel para auditoria', () => {
@@ -267,6 +293,10 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     assert.equal(canCreateUserWithRole(mestre, 'mestre'), false);
     assert.equal(canChangeTargetRole(mestre, admin), true);
     assert.equal(canChangeTargetRole(admin, requisitante), false);
+    assert.equal(canChangeTargetRole(mestre, mestre), false);
+    assert.equal(canChangeTargetRole(admin, mestre), false);
+    assert.equal(hasUserPermission(requisitante, 'users:read'), false);
+    assert.equal(hasUserPermission({ ...mestre, ativo: false }, 'users:read'), false);
     assert.equal(canChangeOwnRole(mestre), false);
     assert.equal(getRolePermissions('operador').includes('stock:operate'), true);
   });
