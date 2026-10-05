@@ -43,11 +43,25 @@ export class AuthorizationError extends Error {
 // AUTENTICAÇÃO E AUTORIZAÇÃO (RBAC)
 // ==========================================
 
+let identityAuthenticatorMock: ((request: Request) => Promise<AuthenticatedIdentity>) | null = null;
+
+/**
+ * Permite definir um autenticador customizado para testes unitários.
+ */
+export function setIdentityAuthenticator(
+  fn: ((request: Request) => Promise<AuthenticatedIdentity>) | null
+): void {
+  identityAuthenticatorMock = fn;
+}
+
 /**
  * Valida o token Bearer do cabeçalho Authorization e retorna a identidade do usuário autenticado.
  * Carrega o autenticador sob demanda para compatibilidade com ambientes de teste.
  */
 export async function requireIdentity(request: Request): Promise<AuthenticatedIdentity> {
+  if (identityAuthenticatorMock) {
+    return identityAuthenticatorMock(request);
+  }
   const { authenticateIdentity } = await import('@/server/auth/identity');
   return authenticateIdentity(request.headers.get('authorization'));
 }
