@@ -8,7 +8,7 @@
     "build": "next build src/web",
     "start": "next start src/web",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test \"src/core/**/__tests__/*.spec.ts\" \"src/server/**/__tests__/*.spec.ts\" \"src/migration/**/__tests__/*.spec.ts\"",
+    "test": "tsx --test \"src/core/**/__tests__/*.spec.ts\" \"src/server/**/__tests__/*.spec.ts\" \"src/web/**/__tests__/*.spec.ts\" \"src/migration/**/__tests__/*.spec.ts\"",
     "migration:discover": "tsx src/migration/excel-discovery.ts",
     "migration:extract-source": "tsx src/migration/extract-source-records.ts",
     "migration:validate-improdutivos-items": "tsx src/migration/validate-improdutivos-items.ts",
