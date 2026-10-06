@@ -66,7 +66,7 @@ export function StockStatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[11px] leading-tight font-medium transition-colors ${config.badgeStyle} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs leading-tight font-medium transition-colors ${config.badgeStyle} ${className}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor} shrink-0`} aria-hidden="true" />
       <span>{config.rotulo}</span>

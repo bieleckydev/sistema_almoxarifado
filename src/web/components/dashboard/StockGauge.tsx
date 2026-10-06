@@ -20,7 +20,6 @@ export function StockGauge({
   capacidadeMaxima,
   unidade = 'un',
   showLimits = false,
-  showLabels = false,
   size = 'md',
   className = '',
 }: StockGaugeProps) {
@@ -43,17 +42,17 @@ export function StockGauge({
   }[status];
 
   return (
-    <div className={`flex flex-col gap-1 w-full min-w-[140px] max-w-[220px] ${className}`}>
-      {/* Barra de progresso com marcador posicionado */}
+    <div className={`w-full ${className}`}>
+      {/* Barra de progresso limpa com marcador vertical */}
       <div
-        className={`relative w-full ${heightClasses} bg-slate-200 dark:bg-slate-700 rounded-sm overflow-visible`}
+        className={`relative w-full ${heightClasses} bg-slate-200 dark:bg-slate-700/70 rounded-xs overflow-visible`}
         role="progressbar"
         aria-valuenow={estoqueAtual}
         aria-valuemin={0}
         aria-valuemax={capMax}
       >
         <div
-          className={`h-full rounded-sm transition-all duration-200 ${colorClasses}`}
+          className={`h-full rounded-xs transition-all duration-200 ${colorClasses}`}
           style={{ width: `${fillPercentage}%` }}
         />
         {/* Marcador vertical da meta de segurança */}
@@ -64,19 +63,14 @@ export function StockGauge({
         />
       </div>
 
-      {/* Legenda numérica explícita dos pontos de corte */}
-      {showLimits ? (
-        <div className="flex justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-none">
+      {/* Legenda dos pontos de corte sem fontes microscópicas */}
+      {showLimits && (
+        <div className="flex justify-between text-xs font-mono text-slate-500 dark:text-slate-400 mt-1.5 leading-none">
           <span>0</span>
-          <span className="text-slate-700 dark:text-slate-300 font-medium">
-            Mín: {estoqueSeguranca.toLocaleString('pt-BR')}
+          <span className="text-slate-700 dark:text-slate-200 font-medium">
+            Mín: {estoqueSeguranca.toLocaleString('pt-BR')} {unidade}
           </span>
-          <span>Máx: {capMax.toLocaleString('pt-BR')}</span>
-        </div>
-      ) : (
-        <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-slate-500 leading-none">
-          <span>{fillPercentage.toFixed(0)}% ocupado</span>
-          <span>Mín: {estoqueSeguranca.toLocaleString('pt-BR')} {unidade}</span>
+          <span>Máx: {capMax.toLocaleString('pt-BR')} {unidade}</span>
         </div>
       )}
     </div>

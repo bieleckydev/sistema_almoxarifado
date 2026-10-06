@@ -61,7 +61,7 @@ export function StockFilterToolbar({
         role="group"
         aria-label="Filtro de situação do estoque"
       >
-        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1 hidden md:flex">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1 hidden md:flex">
           <Filter className="w-3 h-3" /> Situação:
         </span>
         {CHIP_OPTIONS.map(({ chave, rotulo }) => {
