@@ -66,7 +66,7 @@ export function StockMetricsCards({
           </span>
         </div>
         <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Itens cadastrados nesta categoria
+          {totalItens === 1 ? 'Item cadastrado nesta categoria' : 'Itens cadastrados nesta categoria'}
         </div>
       </button>
 
