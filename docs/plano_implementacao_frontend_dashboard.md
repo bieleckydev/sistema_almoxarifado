@@ -139,7 +139,7 @@ flowchart LR
     - `mp` -> `PRODUTIVO_MATERIA_PRIMA`
     - `imp` -> `IMPRODUTIVO_CONSUMIVEL`
     - `motos` -> `ACABADO`
-- [ ] **2.2** Criar [`src/web/hooks/useDebounce.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/hooks/useDebounce.ts):
+- [x] **2.2** Criar [`src/web/hooks/useDebounce.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/hooks/useDebounce.ts):
   - Hook genérico de debounce (300ms) para otimizar pesquisas textuais sem causar re-renders excessivos.
 - [ ] **2.3** Criar [`src/web/hooks/useItensEstoque.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/hooks/useItensEstoque.ts):
   - Consumir a rota `GET /api/itens` com parâmetros de filtro (`tipo`, `busca`, `statusEstoque`).
