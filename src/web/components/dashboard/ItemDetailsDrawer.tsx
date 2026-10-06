@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { X, ArrowDownRight, ArrowUpRight, Clock, MapPin, ShieldAlert, Cpu } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
+import { formatarTextoFalta } from '@/web/utils/pluralization';
 import { useExtratoItem } from '@/web/hooks/useExtratoItem';
 import { StockGauge } from './StockGauge';
 import { StockStatusBadge } from './StockStatusBadge';
@@ -157,7 +158,7 @@ export function ItemDetailsDrawer({ item, isOpen, onClose }: ItemDetailsDrawerPr
                     <ShieldAlert className="w-3 h-3" /> Reposição Necessária
                   </dt>
                   <dd className="text-sm font-bold text-rose-700 dark:text-rose-300 tabular-nums">
-                    Faltam {faltaParaMinimo.toLocaleString('pt-BR')} {unidadeFormatada}
+                    {formatarTextoFalta(faltaParaMinimo, item.unidade, { sufixo: '' })}
                   </dd>
                 </div>
               ) : (

@@ -3,6 +3,7 @@
 import React from 'react';
 import { FileText, ArrowDownRight, MoreHorizontal } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
+import { formatarTextoFalta } from '@/web/utils/pluralization';
 import { StockGauge } from './StockGauge';
 import { StockStatusBadge } from './StockStatusBadge';
 import { StockTableSkeleton } from './StockTableSkeleton';
@@ -116,7 +117,7 @@ export function StockTable({
                   />
                   {deficit > 0 && (
                     <span className="text-[10px] text-rose-600 dark:text-rose-400 font-medium block mt-0.5">
-                      Falta {deficit.toLocaleString('pt-BR')} {unidadeFormatada} para o mínimo
+                      {formatarTextoFalta(deficit, item.unidade)}
                     </span>
                   )}
                 </td>

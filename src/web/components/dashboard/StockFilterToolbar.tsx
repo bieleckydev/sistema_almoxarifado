@@ -87,7 +87,7 @@ export function StockFilterToolbar({
 
       {totalFiltrados !== undefined && (
         <span className="text-xs font-mono text-slate-500 dark:text-slate-400 shrink-0">
-          <strong>{totalFiltrados}</strong> itens exibidos
+          <strong>{totalFiltrados}</strong> {totalFiltrados === 1 ? 'item exibido' : 'itens exibidos'}
         </span>
       )}
     </div>

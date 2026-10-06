@@ -77,7 +77,7 @@ export function AppSidebar({
                 {critCount > 0 && (
                   <span
                     className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#bf3427] text-white shadow-xs"
-                    title={`${critCount} itens em nível crítico`}
+                    title={`${critCount} ${critCount === 1 ? 'item em nível crítico' : 'itens em nível crítico'}`}
                   >
                     {critCount}
                   </span>
