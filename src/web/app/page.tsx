@@ -85,14 +85,9 @@ export default function AlmoxarifadoDashboardPage() {
         {/* Cabeçalho Operacional Compacto */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {metadadosAba.titulo}
-              </h1>
-              <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                {abaAtiva.toUpperCase()}
-              </span>
-            </div>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {metadadosAba.titulo}
+            </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {metadadosAba.subtitulo}
             </p>
