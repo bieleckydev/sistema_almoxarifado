@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { api } from '@/core/api/client';
 import type { Item } from '@/core/domain/item.schema';
 import {
@@ -132,39 +132,30 @@ export function useItensEstoque({
   filtroSituacao = 'todos',
   enabled = true,
 }: UseItensEstoqueOptions = {}): UseItensEstoqueResult {
-  const queryClient = useQueryClient();
-  const queryKey = ['itens-estoque', aba];
-
-  // Prefetch proativo de todas as abas em background logo na inicialização
-  useEffect(() => {
-    TODAS_AS_ABAS.forEach((outraAba) => {
-      queryClient.prefetchQuery({
-        queryKey: ['itens-estoque', outraAba],
-        queryFn: () => fetchItensPorAba(outraAba),
-        staleTime: 5 * 60 * 1000,
-      });
-    });
-  }, [queryClient]);
-
-  const query = useQuery({
-    queryKey,
-    enabled,
-    queryFn: () => fetchItensPorAba(aba),
-    // Fornece dados instantâneos ao trocar de aba se ainda não estiver em cache
-    placeholderData: (previousData) => {
-      if (previousData) return previousData;
-      return {
-        itens: MOCK_ITENS.filter((item) => item.aba === aba),
-        isFallback: false,
-      };
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache fresco por aba
+  // Carrega todas as 3 abas em paralelo com useQueries para manter badges globais sincronizados
+  const queries = useQueries({
+    queries: TODAS_AS_ABAS.map((chaveAba) => ({
+      queryKey: ['itens-estoque', chaveAba],
+      queryFn: () => fetchItensPorAba(chaveAba),
+      placeholderData: (previousData: { itens: DashboardItem[]; isFallback: boolean } | undefined) => {
+        if (previousData) return previousData;
+        return {
+          itens: MOCK_ITENS.filter((item) => item.aba === chaveAba),
+          isFallback: false,
+        };
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutos de cache fresco por aba
+      enabled,
+    })),
   });
 
-  const todosItensAba = query.data?.itens || [];
-  const isFallbackMode = query.data?.isFallback ?? false;
+  const indiceAbaAtiva = TODAS_AS_ABAS.indexOf(aba);
+  const queryAtiva = queries[indiceAbaAtiva >= 0 ? indiceAbaAtiva : 0];
 
-  // 1. MÉTRICAS GLOBAIS ESTÁVEIS: Calculadas sobre todos os itens da categoria ativa
+  const todosItensAba = queryAtiva.data?.itens || [];
+  const isFallbackMode = queryAtiva.data?.isFallback ?? false;
+
+  // 1. MÉTRICAS GLOBAIS ESTÁVEIS DA ABA ATIVA
   const totalAba = todosItensAba.length;
   const totalAbaixoMinimo = useMemo(
     () =>
@@ -181,7 +172,7 @@ export function useItensEstoque({
     [todosItensAba]
   );
 
-  // 2. FILTRAGEM INSTANTÂNEA EM MEMÓRIA (0ms): Aplica filtro de situação e busca textual
+  // 2. FILTRAGEM INSTANTÂNEA EM MEMÓRIA (0ms) PARA A TABELA
   const itens = useMemo(() => {
     let resultado = todosItensAba;
 
@@ -209,30 +200,21 @@ export function useItensEstoque({
     return resultado;
   }, [todosItensAba, filtroSituacao, busca]);
 
-  // 3. Contagem de alertas críticos para os badges de navegação da Sidebar
-  const contagemCriticosPorAba: Record<AbaEstoque, number> = useMemo(
-    () => ({
-      mp:
-        aba === 'mp'
-          ? totalCriticos
-          : MOCK_ITENS.filter(
-              (i) => i.aba === 'mp' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
-            ).length,
-      imp:
-        aba === 'imp'
-          ? totalCriticos
-          : MOCK_ITENS.filter(
-              (i) => i.aba === 'imp' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
-            ).length,
-      motos:
-        aba === 'motos'
-          ? totalCriticos
-          : MOCK_ITENS.filter(
-              (i) => i.aba === 'motos' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
-            ).length,
-    }),
-    [aba, totalCriticos]
-  );
+  // 3. CONTAGEM SIMULTÂNEA DE CRÍTICOS PARA TODAS AS ABAS NA SIDEBAR
+  const contagemCriticosPorAba: Record<AbaEstoque, number> = useMemo(() => {
+    const calcularCriticosAba = (indice: number) => {
+      const itensAba = queries[indice]?.data?.itens || [];
+      return itensAba.filter(
+        (i) => calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
+      ).length;
+    };
+
+    return {
+      mp: calcularCriticosAba(0),
+      imp: calcularCriticosAba(1),
+      motos: calcularCriticosAba(2),
+    };
+  }, [queries]);
 
   return {
     itens,
@@ -241,10 +223,12 @@ export function useItensEstoque({
     totalAbaixoMinimo,
     totalCriticos,
     contagemCriticosPorAba,
-    isLoading: query.isLoading,
-    isError: query.isError,
+    isLoading: queryAtiva.isLoading && !queryAtiva.data,
+    isError: queryAtiva.isError,
     isFallbackMode,
-    error: (query.error as Error) || null,
-    refetch: () => query.refetch(),
+    error: (queryAtiva.error as Error) || null,
+    refetch: () => {
+      queries.forEach((q) => q.refetch());
+    },
   };
 }
