@@ -106,13 +106,30 @@ export function useItensEstoque({
           isFallback: false,
         };
       } catch (err) {
-        // Log sutil informando fallback automático para demonstração/desenvolvimento
-        console.warn(
-          'API de itens indisponível ou não autenticada. Utilizando dados de demonstração (fallback):',
-          err
-        );
+        // Tenta buscar diretamente do Firestore no cliente autenticado
+        try {
+          const { collection, getDocs } = await import('firebase/firestore');
+          const { db } = await import('@/core/services/firebase');
+          const snap = await getDocs(collection(db, 'items'));
+          if (!snap.empty) {
+            const itensBanco = snap.docs.map((d) => ({
+              id: d.id,
+              ...d.data(),
+            })) as Item[];
+            const convertidos = itensBanco.map(itemToDashboardItem);
+            const filtradosPorAba = convertidos.filter((i) => i.aba === aba);
+            if (filtradosPorAba.length > 0) {
+              return {
+                itens: filtradosPorAba,
+                isFallback: false,
+              };
+            }
+          }
+        } catch (clientErr) {
+          console.warn('Falha na consulta direta ao Firestore no cliente:', clientErr);
+        }
 
-        // Filtragem direta no mock local
+        // Filtragem direta no mock local como último recurso
         const termo = busca.trim().toLowerCase();
 
         const filtrados = MOCK_ITENS.filter((item) => {
