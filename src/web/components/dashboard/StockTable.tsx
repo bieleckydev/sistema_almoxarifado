@@ -34,8 +34,9 @@ export function StockTable({
   const rowVirtualizer = useVirtualizer({
     count: itens.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 54,
-    overscan: 6,
+    estimateSize: () => 64,
+    overscan: 25,
+    getItemKey: (index) => itens[index]?.id || index,
   });
 
   if (isLoading) {

@@ -114,7 +114,7 @@ export const ItemFiltrosSchema = z.object({
   apenasAtivos: z.boolean().default(true),
   clienteDestino: z.string().trim().optional(),
   pagina: z.number().int().min(1).default(1),
-  limite: z.number().int().min(1).max(100).default(20),
+  limite: z.number().int().min(1).max(1000).default(20),
 });
 
 export type ItemFiltros = z.input<typeof ItemFiltrosSchema>;
