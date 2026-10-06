@@ -124,8 +124,8 @@ flowchart LR
 ### Fase 1: Preparação do Ambiente e Dependências do Workspace
 > **Objetivo:** Garantir a integridade das dependências instaladas no projeto, permitindo compilação e execução correta do Next.js e TypeScript.
 
-- [ ] **1.1** Executar a instalação das dependências do projeto (`npm install`) no diretório raiz do repositório.
-- [ ] **1.2** Verificar a compilação do TypeScript com `npm run typecheck` para certificar que os tipos existentes estão íntegros.
+- [x] **1.1** Executar a instalação das dependências do projeto (`npm install`) no diretório raiz do repositório.
+- [x] **1.2** Verificar a compilação do TypeScript com `npm run typecheck` para certificar que os tipos existentes estão íntegros.
 - [ ] **1.3** Confirmar a configuração do Tailwind CSS em [`src/web/app/globals.css`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/app/globals.css) para suportar as variáveis de tema customizadas do almoxarifado (tons industriais: slate, navy, cyan, emerald, amber e rose).
 
 ---
