@@ -110,13 +110,13 @@ flowchart TD
 > **Objetivo:** Expor as operações de movimentação física de estoque com integridade ACID estrita.
 
 - **Micro-tarefas:**
-  - [ ] **4.1** Criar `src/web/app/api/movimentacoes/baixa-lote/route.ts`:
+  - [x] **4.1** Criar `src/web/app/api/movimentacoes/baixa-lote/route.ts`:
     - `POST`: validação com `RegistrarBaixaLoteSchema`, permissão `stock:operate` e chamada a `movimentacaoService.executarBaixaLote()`.
     - Retorno 422 Unprocessable Entity com payload detalhado caso haja `LoteEstoqueInsuficienteError`.
-  - [ ] **4.2** Criar `src/web/app/api/movimentacoes/entrada/route.ts`:
+  - [x] **4.2** Criar `src/web/app/api/movimentacoes/entrada/route.ts`:
     - `POST`: validação com `RegistrarEntradaSchema` e chamada a `movimentacaoService.executarEntrada()`.
-  - [ ] **4.3** Criar `src/web/app/api/movimentacoes/baixa-interna/route.ts`, `expedicao/route.ts` e `ajuste/route.ts`.
-  - [ ] **4.4** Criar `src/web/app/api/movimentacoes/extrato/[itemId]/route.ts` e `/api/movimentacoes/route.ts` para consulta de extrato e histórico auditado.
+  - [x] **4.3** Criar `src/web/app/api/movimentacoes/baixa-interna/route.ts`, `expedicao/route.ts` e `ajuste/route.ts`.
+  - [x] **4.4** Criar `src/web/app/api/movimentacoes/extrato/[itemId]/route.ts` e `/api/movimentacoes/route.ts` para consulta de extrato e histórico auditado.
 
 ---
 
@@ -132,4 +132,4 @@ flowchart TD
 
 ## 5. Próximo Passo Imediato
 
-Iniciar pela **Fase 4**: implementação das rotas de movimentações físicas e transações atômicas (`/api/movimentacoes/baixa-lote`, `/api/movimentacoes/entrada`, `/api/movimentacoes/extrato/[itemId]`, etc.).
+Iniciar pela **Fase 5**: consolidação de testes automatizados, validação global de segurança e build do BFF.
