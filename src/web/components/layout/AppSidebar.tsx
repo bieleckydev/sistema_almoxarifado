@@ -6,8 +6,13 @@ import {
   Layers,
   Wrench,
   Bike,
+  LogOut,
+  User as UserIcon,
+  Shield,
 } from 'lucide-react';
 import { type AbaEstoque, METADADOS_ABAS } from '@/web/data/mock-almoxarifado';
+import { useAuthStore } from '@/core/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 export interface AppSidebarProps {
   abaAtiva: AbaEstoque;
@@ -28,6 +33,13 @@ export function AppSidebar({
   contagemCriticos = { mp: 0, imp: 0, motos: 0 },
   className = '',
 }: AppSidebarProps) {
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/login');
+  };
 
   return (
     <aside
@@ -87,6 +99,43 @@ export function AppSidebar({
           })}
         </nav>
       </div>
+
+      {/* Perfil do Usuário Autenticado e Ação de Sair */}
+      {user && (
+        <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-cyan-300 shrink-0">
+                {user.role === 'mestre' ? (
+                  <Shield className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <UserIcon className="w-4 h-4" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-white truncate leading-tight">
+                  {user.name}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] text-cyan-200/70 uppercase tracking-wider font-semibold">
+                    {user.role}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Encerrar sessão"
+              aria-label="Encerrar sessão"
+              className="p-1.5 rounded-lg text-[#d5e4ec]/70 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-white/20"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

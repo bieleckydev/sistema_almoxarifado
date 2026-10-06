@@ -72,16 +72,24 @@ export function createApiClient(config: ApiClientConfig = {}): AxiosInstance {
     const currentStorage = explicitStorage || activeStorage;
     const currentTokenKey = explicitTokenKey || activeTokenKey;
 
+    let token: string | null = null;
+
     if (currentStorage) {
       try {
-        const token = await currentStorage.getItem(currentTokenKey);
-        if (token) {
-          reqConfig.headers.Authorization = `Bearer ${token}`;
-        }
+        token = await currentStorage.getItem(currentTokenKey);
       } catch (err) {
-        // Em caso de falha na leitura do storage, continua a requisição sem token
         console.warn('Falha ao recuperar token de autenticação do storage:', err);
       }
+    } else if (typeof window !== 'undefined') {
+      try {
+        token = localStorage.getItem(currentTokenKey);
+      } catch {
+        // Ignora
+      }
+    }
+
+    if (token) {
+      reqConfig.headers.Authorization = `Bearer ${token}`;
     }
 
     return reqConfig;

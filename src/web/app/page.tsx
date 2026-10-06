@@ -16,6 +16,7 @@ import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards'
 import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
 import { StockTable } from '@/web/components/dashboard/StockTable';
 import { ItemDetailsDrawer } from '@/web/components/dashboard/ItemDetailsDrawer';
+import { AuthGuard } from '@/web/components/auth/AuthGuard';
 
 export default function AlmoxarifadoDashboardPage() {
   const [abaAtiva, setAbaAtiva] = useState<AbaEstoque>('mp');
@@ -72,7 +73,8 @@ export default function AlmoxarifadoDashboardPage() {
   const metadadosAba = METADADOS_ABAS[abaAtiva];
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#f1f4f8] dark:bg-[#0c1218] text-[#17212b] dark:text-[#e6edf3]">
+    <AuthGuard>
+      <div className="flex flex-col md:flex-row min-h-screen bg-[#f1f4f8] dark:bg-[#0c1218] text-[#17212b] dark:text-[#e6edf3]">
       {/* Menu Lateral de Navegação Operacional */}
       <AppSidebar
         abaAtiva={abaAtiva}
@@ -147,5 +149,6 @@ export default function AlmoxarifadoDashboardPage() {
         onClose={handleCloseDrawer}
       />
     </div>
+    </AuthGuard>
   );
 }
