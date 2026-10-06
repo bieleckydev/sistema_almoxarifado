@@ -29,9 +29,9 @@ export const SETOR_FABRIL_LABELS: Record<SetorFabril, string> = {
 
 /**
  * Regex para validação da matrícula do colaborador.
- * Padrão operacional legado: códigos numéricos de 001 a 999 (ou até 4 dígitos).
+ * Padrão operacional: códigos numéricos de 3 a 5 dígitos (ex.: 001 a 999 e matrículas 20xxx).
  */
-export const MATRICULA_REGEX = /^\d{3,4}$/;
+export const MATRICULA_REGEX = /^\d{3,5}$/;
 
 /**
  * Função utilitária para normalizar e preencher a matrícula com zeros à esquerda (padrão 3 dígitos).

@@ -78,7 +78,7 @@ export function classifyMigrationIssue(
     classification = {
       category: 'UNKNOWN_UNIT',
       action: 'DEFINE_MAPPING',
-      blocking: true,
+      blocking: issue.severity === 'error',
     };
   } else if (field.includes('descricao') || message.includes('nome deve')) {
     classification = {

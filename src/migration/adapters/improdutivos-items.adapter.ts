@@ -123,7 +123,8 @@ export function mapImprodutivosItems(filePath: string): ItemMigrationPreview {
     };
     const codeResult = normalizeCode(code, 'Código');
     const descriptionResult = normalizeText(description);
-    const safetyResult = normalizeNumber(safety, 'Estoque de Segurança');
+    const rawSafety = safety === null || safety === '' ? 0 : safety;
+    const safetyResult = normalizeNumber(rawSafety, 'Estoque de Segurança');
     const unitResult = normalizeUnit(unit, 'Desc.');
     const issues = [...codeResult.issues, ...safetyResult.issues, ...unitResult.issues];
     const normalizedCode = codeResult.normalized;
@@ -146,7 +147,10 @@ export function mapImprodutivosItems(filePath: string): ItemMigrationPreview {
     if (typeof normalizedSafety !== 'number' || normalizedSafety < 0) {
       addIssue(issues, 'Estoque de Segurança', 'error', 'Estoque de segurança deve ser um número não negativo.');
     }
-    if (typeof normalizedUnit !== 'string' || normalizedUnit !== 'UNIDADE') {
+    if (
+      typeof normalizedUnit !== 'string' ||
+      !['KG', 'UNIDADE', 'METRO', 'PACOTE', 'PECA', 'LITRO'].includes(normalizedUnit)
+    ) {
       addIssue(issues, 'Desc.', 'warning', 'A unidade legada será revisada antes da persistência.');
     }
 

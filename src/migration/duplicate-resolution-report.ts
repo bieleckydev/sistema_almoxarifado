@@ -1,5 +1,6 @@
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { DryRunIssue, DryRunReport } from './dry-run-report';
 
 export interface DuplicateResolution {
@@ -52,6 +53,10 @@ function main(): void {
   console.log(`Relatório de duplicidades gerado: ${output}\nDuplicidades: ${duplicates.length}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMain =
+  Boolean(process.argv[1]) &&
+  fileURLToPath(import.meta.url).toLowerCase() === resolve(process.argv[1]).toLowerCase();
+
+if (isMain) {
   main();
 }
