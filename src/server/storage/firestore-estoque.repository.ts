@@ -17,6 +17,7 @@ import {
   movimentacaoFromFirestore,
   movimentacaoToFirestore,
 } from './firestore-estoque.mapper';
+import { fetchFirestoreCollectionRest } from './firestore-rest-client';
 
 /**
  * Implementação de produção do IEstoqueRepository utilizando o Google Cloud Firestore via Firebase Admin SDK.
@@ -87,7 +88,7 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     }
   }
 
-  async listarComFiltros(filtros?: ItemFiltros): Promise<{ itens: Item[]; total: number }> {
+  async listarComFiltros(filtros?: ItemFiltros, authToken?: string): Promise<{ itens: Item[]; total: number }> {
     let lista: Item[] = [];
     try {
       if (!this.db || typeof this.db.collection !== 'function') {
@@ -111,21 +112,35 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       const snap = await query.get();
       lista = snap.docs.map((d) => itemFromFirestore(d.id, d.data()));
     } catch {
-      // Fallback gracioso no backend para ambientes locais sem Service Account configurada
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
-      lista = MOCK_ITENS.map((m: any) => ({
-        id: m.id,
-        codigo: m.codigo,
-        descricao: m.descricao,
-        tipo: m.tipo,
-        unidade: m.unidade,
-        estoqueAtual: m.estoqueAtual,
-        estoqueSeguranca: m.estoqueSeguranca,
-        localizacaoFisica: m.localizacaoFisica,
-        ativo: m.ativo ?? true,
-        clienteDestino: m.clienteDestino,
-      }));
+      // 1. Tenta recuperar itens REAIS do Firestore via API REST usando o Bearer Token do usuário
+      if (authToken) {
+        try {
+          const itensReais = await fetchFirestoreCollectionRest<Item>('items', authToken);
+          if (Array.isArray(itensReais) && itensReais.length > 0) {
+            lista = itensReais;
+          }
+        } catch {
+          // Fallback subsequente
+        }
+      }
+
+      // 2. Se nenhuma fonte remota respondeu, recorre ao catálogo mock
+      if (lista.length === 0) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
+        lista = MOCK_ITENS.map((m: any) => ({
+          id: m.id,
+          codigo: m.codigo,
+          descricao: m.descricao,
+          tipo: m.tipo,
+          unidade: m.unidade,
+          estoqueAtual: m.estoqueAtual,
+          estoqueSeguranca: m.estoqueSeguranca,
+          localizacaoFisica: m.localizacaoFisica,
+          ativo: m.ativo ?? true,
+          clienteDestino: m.clienteDestino,
+        }));
+      }
 
       if (filtros?.apenasAtivos !== false) {
         lista = lista.filter((i: Item) => i.ativo);

@@ -56,9 +56,14 @@ function parseItemFiltros(request: Request) {
 export async function GET(request: Request) {
   try {
     await requireIdentity(request);
+    const authHeader = request.headers.get('authorization');
+    const match = /^Bearer\s+(\S+)$/i.exec(authHeader || '');
+    const token = match ? match[1] : undefined;
+
     const filtros = parseItemFiltros(request);
     const repo = getEstoqueRepository();
-    const resultado = await repo.listarComFiltros(filtros);
+    // @ts-expect-error Método aceita authToken para fallback REST opcional
+    const resultado = await repo.listarComFiltros(filtros, token);
 
     return NextResponse.json(resultado, { status: 200 });
   } catch (error) {
