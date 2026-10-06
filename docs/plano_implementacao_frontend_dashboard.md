@@ -199,7 +199,7 @@ flowchart LR
 ### Fase 5: Drawer Lateral de Detalhes e Histórico de Movimentações
 > **Objetivo:** Construir o painel lateral retrátil (slide-over) com especificações completas e extrato de movimentações do produto.
 
-- [ ] **5.1** Criar [`src/web/components/dashboard/ItemDetailsDrawer.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/ItemDetailsDrawer.tsx):
+- [x] **5.1** Criar [`src/web/components/dashboard/ItemDetailsDrawer.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/ItemDetailsDrawer.tsx):
   - Painel lateral deslizante com animação suave via CSS/Tailwind.
   - Fundo escurecido (scrim/backdrop) com fechamento ao clicar fora ou na tecla `Esc`.
   - Cabeçalho com botão fechar (`X`), Tag de situação, Nome do produto, SKU e Categoria.
