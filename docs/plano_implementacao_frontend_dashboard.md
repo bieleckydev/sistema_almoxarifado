@@ -152,16 +152,16 @@ flowchart LR
 ### Fase 3: Componentes Visuais Base e Layout
 > **Objetivo:** Construir os blocos visuais atômicos compartilhados e a barra de navegação lateral.
 
-- [ ] **3.1** Criar [`src/web/components/dashboard/StockGauge.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockGauge.tsx):
+- [x] **3.1** Criar [`src/web/components/dashboard/StockGauge.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockGauge.tsx):
   - Renderizar barra gráfica horizontal de progresso do estoque.
   - Indicador visual em porcentagem (`estoqueAtual / capacidadeMax * 100`).
   - Marcador vertical indicativo da linha do estoque mínimo de segurança.
   - Variação cromática semântica: Verde (Normal), Amarelo/Laranja (Abaixo do mínimo) e Vermelho (Crítico).
-- [ ] **3.2** Criar [`src/web/components/dashboard/StockStatusBadge.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockStatusBadge.tsx):
+- [x] **3.2** Criar [`src/web/components/dashboard/StockStatusBadge.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockStatusBadge.tsx):
   - Tag pill moderna com badge semântico (`Normal`, `Abaixo do mínimo`, `Crítico`).
-- [ ] **3.3** Criar [`src/web/components/feedback/EmptyState.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/feedback/EmptyState.tsx):
+- [x] **3.3** Criar [`src/web/components/feedback/EmptyState.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/feedback/EmptyState.tsx):
   - Feedback visual amigável com ícone de caixa/busca quando nenhum material atender aos filtros ativos.
-- [ ] **3.4** Criar [`src/web/components/layout/AppSidebar.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/layout/AppSidebar.tsx):
+- [x] **3.4** Criar [`src/web/components/layout/AppSidebar.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/layout/AppSidebar.tsx):
   - Logotipo e subtítulo da aplicação com ícone `Package`.
   - Botões de navegação para as 3 abas (`mp`, `imp`, `motos`) com estilo ativo destacado.
   - Badge numérico contador de alertas críticos por aba.
