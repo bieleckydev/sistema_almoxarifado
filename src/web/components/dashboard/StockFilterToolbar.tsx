@@ -71,8 +71,19 @@ export function StockFilterToolbar({
             <button
               key={chave}
               type="button"
-              onClick={() => onFiltroSituacaoChange(chave)}
+              onClick={() => {
+                if (chave !== 'todos' && filtroSituacao === chave) {
+                  onFiltroSituacaoChange('todos');
+                } else {
+                  onFiltroSituacaoChange(chave);
+                }
+              }}
               aria-pressed={isActive}
+              title={
+                isActive && chave !== 'todos'
+                  ? 'Filtro ativo. Clique novamente para desmarcar'
+                  : undefined
+              }
               className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
                 isActive
                   ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold'

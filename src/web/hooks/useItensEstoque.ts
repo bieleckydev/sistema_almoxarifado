@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/core/api/client';
 import type { Item } from '@/core/domain/item.schema';
@@ -62,8 +63,11 @@ function itemToDashboardItem(item: Item): DashboardItem {
 
 /**
  * Hook com TanStack Query para carregar a lista de materiais do almoxarifado.
- * Consome /api/itens e, caso haja erro de autorização (401) ou indisponibilidade,
- * aciona o modo de fallback transparente garantindo a continuidade da experiência.
+ * 
+ * Arquitetura Otimizada (Proposta 1):
+ * - A requisição de rede busca o catálogo completo da categoria ativa ('aba') uma única vez.
+ * - As métricas dos cards (total, abaixo do mínimo, críticos) permanecem sempre estáveis e consistentes.
+ * - A filtragem por situação ('crit', 'low', 'ok', 'todos') e busca textual ocorre instantaneamente (0ms) em memória.
  */
 export function useItensEstoque({
   aba = 'mp',
@@ -71,7 +75,8 @@ export function useItensEstoque({
   filtroSituacao = 'todos',
   enabled = true,
 }: UseItensEstoqueOptions = {}): UseItensEstoqueResult {
-  const queryKey = ['itens-estoque', aba, busca, filtroSituacao];
+  // Apenas a aba ativa define a consulta de rede. Filtros e buscas não re-disparam fetch HTTP!
+  const queryKey = ['itens-estoque', aba];
 
   const query = useQuery({
     queryKey,
@@ -80,20 +85,8 @@ export function useItensEstoque({
       try {
         const params: Record<string, string> = {
           tipo: METADADOS_ABAS[aba].tipoDominio,
-          limite: '100',
+          limite: '500',
         };
-
-        if (busca.trim()) {
-          params.busca = busca.trim();
-        }
-
-        if (filtroSituacao === 'ok') {
-          params.statusEstoque = 'NORMAL';
-        } else if (filtroSituacao === 'low') {
-          params.statusEstoque = 'ESTOQUE_BAIXO';
-        } else if (filtroSituacao === 'crit') {
-          params.statusEstoque = 'CRITICO_ZERADO';
-        }
 
         const response = await api.get<{ itens: Item[]; total: number }>('/itens', {
           params,
@@ -129,68 +122,90 @@ export function useItensEstoque({
           console.warn('Falha na consulta direta ao Firestore no cliente:', clientErr);
         }
 
-        // Filtragem direta no mock local como último recurso
-        const termo = busca.trim().toLowerCase();
-
-        const filtrados = MOCK_ITENS.filter((item) => {
-          if (item.aba !== aba) return false;
-
-          const status = calcularStatusCriticidade(item.estoqueAtual, item.estoqueSeguranca);
-          if (filtroSituacao !== 'todos' && status !== filtroSituacao) {
-            return false;
-          }
-
-          if (!termo) return true;
-
-          const valoresEspecificacoes = Object.values(item.especificacoes || {});
-          const campos = [
-            item.descricao,
-            item.codigo,
-            item.categoria,
-            item.localizacaoFisica || '',
-            ...valoresEspecificacoes,
-          ];
-
-          return campos.some((campo) => campo.toLowerCase().includes(termo));
-        });
+        // Fallback local com base completa da aba selecionada
+        const baseAba = MOCK_ITENS.filter((item) => item.aba === aba);
 
         return {
-          itens: filtrados,
+          itens: baseAba,
           isFallback: true,
         };
       }
     },
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000, // 1 minuto de cache fresco por aba
   });
 
-  const itens = query.data?.itens || [];
+  const todosItensAba = query.data?.itens || [];
   const isFallbackMode = query.data?.isFallback ?? false;
 
-  // Itens base da aba selecionada (para contadores de métricas da categoria ativa)
-  const itensBaseAba = isFallbackMode
-    ? MOCK_ITENS.filter((i) => i.aba === aba)
-    : itens;
+  // 1. MÉTRICAS GLOBAIS ESTÁVEIS: Calculadas sobre todos os itens da categoria ativa
+  const totalAba = todosItensAba.length;
+  const totalAbaixoMinimo = useMemo(
+    () =>
+      todosItensAba.filter(
+        (i) => calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'low'
+      ).length,
+    [todosItensAba]
+  );
+  const totalCriticos = useMemo(
+    () =>
+      todosItensAba.filter(
+        (i) => calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
+      ).length,
+    [todosItensAba]
+  );
 
-  const totalAba = itensBaseAba.length;
-  const totalAbaixoMinimo = itensBaseAba.filter(
-    (i) => calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'low'
-  ).length;
-  const totalCriticos = itensBaseAba.filter(
-    (i) => calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
-  ).length;
+  // 2. FILTRAGEM INSTANTÂNEA EM MEMÓRIA (0ms): Aplica filtro de situação e busca textual
+  const itens = useMemo(() => {
+    let resultado = todosItensAba;
 
-  // Contagem de alertas críticos para os badges de navegação da Sidebar
-  const contagemCriticosPorAba: Record<AbaEstoque, number> = {
-    mp: MOCK_ITENS.filter(
-      (i) => i.aba === 'mp' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
-    ).length,
-    imp: MOCK_ITENS.filter(
-      (i) => i.aba === 'imp' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
-    ).length,
-    motos: MOCK_ITENS.filter(
-      (i) => i.aba === 'motos' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
-    ).length,
-  };
+    if (filtroSituacao !== 'todos') {
+      resultado = resultado.filter(
+        (i) => calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === filtroSituacao
+      );
+    }
+
+    const termo = busca.trim().toLowerCase();
+    if (termo) {
+      resultado = resultado.filter((item) => {
+        const valoresEspecificacoes = Object.values(item.especificacoes || {});
+        const campos = [
+          item.descricao,
+          item.codigo,
+          item.categoria,
+          item.localizacaoFisica || '',
+          ...valoresEspecificacoes,
+        ];
+        return campos.some((campo) => campo.toLowerCase().includes(termo));
+      });
+    }
+
+    return resultado;
+  }, [todosItensAba, filtroSituacao, busca]);
+
+  // 3. Contagem de alertas críticos para os badges de navegação da Sidebar
+  const contagemCriticosPorAba: Record<AbaEstoque, number> = useMemo(
+    () => ({
+      mp:
+        aba === 'mp'
+          ? totalCriticos
+          : MOCK_ITENS.filter(
+              (i) => i.aba === 'mp' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
+            ).length,
+      imp:
+        aba === 'imp'
+          ? totalCriticos
+          : MOCK_ITENS.filter(
+              (i) => i.aba === 'imp' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
+            ).length,
+      motos:
+        aba === 'motos'
+          ? totalCriticos
+          : MOCK_ITENS.filter(
+              (i) => i.aba === 'motos' && calcularStatusCriticidade(i.estoqueAtual, i.estoqueSeguranca) === 'crit'
+            ).length,
+    }),
+    [aba, totalCriticos]
+  );
 
   return {
     itens,
