@@ -85,10 +85,10 @@ export default function AlmoxarifadoDashboardPage() {
         {/* Cabeçalho Operacional Compacto */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-slate-900 dark:text-white">
               {metadadosAba.titulo}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
               {metadadosAba.subtitulo}
             </p>
           </div>

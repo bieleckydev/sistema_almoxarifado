@@ -58,10 +58,10 @@ export function StockMetricsCards({
         }`}
       >
         <div className="flex items-baseline justify-between mb-1">
-          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums">
+          <span className="text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">
             {totalItens.toLocaleString('pt-BR')}
           </span>
-          <span className="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">
             100% catálogo
           </span>
         </div>
@@ -82,10 +82,10 @@ export function StockMetricsCards({
         }`}
       >
         <div className="flex items-baseline justify-between mb-1">
-          <span className="text-2xl font-bold tracking-tight text-amber-700 dark:text-amber-400 tabular-nums">
+          <span className="text-2xl font-semibold text-amber-700 dark:text-amber-400 tabular-nums">
             {totalAbaixoMinimo.toLocaleString('pt-BR')}
           </span>
-          <span className="text-[11px] font-mono font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
+          <span className="text-xs font-mono font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
             {percentualAbaixo}% em atenção
           </span>
         </div>
@@ -106,10 +106,10 @@ export function StockMetricsCards({
         }`}
       >
         <div className="flex items-baseline justify-between mb-1">
-          <span className="text-2xl font-bold tracking-tight text-rose-700 dark:text-rose-400 tabular-nums">
+          <span className="text-2xl font-semibold text-rose-700 dark:text-rose-400 tabular-nums">
             {totalCriticos.toLocaleString('pt-BR')}
           </span>
-          <span className="text-[11px] font-mono font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
+          <span className="text-xs font-mono font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
             {percentualCritico}% em ruptura
           </span>
         </div>

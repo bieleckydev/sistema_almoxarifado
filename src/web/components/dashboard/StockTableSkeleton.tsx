@@ -14,7 +14,7 @@ export function StockTableSkeleton({ rows = 8, className = '' }: StockTableSkele
     >
       <table className="w-full text-left border-collapse min-w-[760px]">
         <thead>
-          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-xs font-semibold text-slate-500 uppercase tracking-wider">
             <th className="py-2.5 px-3">Código</th>
             <th className="py-2.5 px-3">Descrição / Categoria</th>
             <th className="py-2.5 px-3">Endereço</th>

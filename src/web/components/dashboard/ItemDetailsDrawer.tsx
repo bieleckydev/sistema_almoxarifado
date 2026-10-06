@@ -237,7 +237,7 @@ export function ItemDetailsDrawer({ item, isOpen, onClose }: ItemDetailsDrawerPr
                           <b className="block text-slate-900 dark:text-white font-semibold">
                             {mov.tipo} · {mov.responsavel}
                           </b>
-                          <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+                          <span className="text-slate-500 dark:text-slate-400 text-xs">
                             {mov.dataHora}
                           </span>
                         </div>

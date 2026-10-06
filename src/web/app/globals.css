@@ -43,14 +43,25 @@
   }
 }
 
+@theme {
+  --font-sans: var(--font-sans), Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", "Geist Mono", "Cascadia Code", ui-monospace, Menlo, Monaco, monospace;
+}
+
 body {
   color: var(--foreground);
   background-color: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   min-height: 100vh;
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code, kbd, samp, pre, .font-mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0;
 }
 
 /* Custom smooth transitions for theme switches */

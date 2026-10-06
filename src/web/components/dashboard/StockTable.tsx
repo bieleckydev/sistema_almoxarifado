@@ -49,11 +49,11 @@ export function StockTable({
     >
       <table className="w-full text-left border-collapse min-w-[760px]">
         <thead>
-          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             <th className="py-2.5 px-3 w-28">Código</th>
             <th className="py-2.5 px-3">Descrição / Categoria</th>
             <th className="py-2.5 px-3 w-24">Endereço</th>
-            <th className="py-2.5 px-3 min-w-[190px]">Saldo & Cobertura</th>
+            <th className="py-2.5 px-3 min-w-[200px]">Saldo & Cobertura</th>
             <th className="py-2.5 px-3 w-32">Situação</th>
             <th className="py-2.5 px-3 text-right w-36">Ações</th>
           </tr>
@@ -74,56 +74,71 @@ export function StockTable({
                     : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30'
                 }`}
               >
-                {/* Código SKU / Prefixo */}
-                <td className="py-2 px-3 font-mono font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                {/* Código SKU / Prefixo Técnico */}
+                <td className="py-2.5 px-3 font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
                   {item.codigo}
                 </td>
 
                 {/* Descrição e Categoria */}
-                <td className="py-2 px-3">
+                <td className="py-2.5 px-3">
                   <button
                     type="button"
                     onClick={() => onSelectItem(item)}
-                    className="text-left font-semibold text-slate-900 dark:text-white hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors cursor-pointer block leading-tight"
+                    className="text-left font-medium text-xs text-slate-900 dark:text-white hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors cursor-pointer block leading-tight"
                   >
                     {item.descricao}
                   </button>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 block font-normal">
                     {item.categoria}
                   </span>
                 </td>
 
                 {/* Endereço Físico no Almoxarifado */}
-                <td className="py-2 px-3 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                <td className="py-2.5 px-3 font-mono text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
                   {item.localizacaoFisica || '-'}
                 </td>
 
                 {/* Saldo Unificado e Medidor de Cobertura */}
-                <td className="py-2 px-3">
-                  <div className="flex items-baseline justify-between mb-1 max-w-[220px]">
-                    <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
-                      {item.estoqueAtual.toLocaleString('pt-BR')}{' '}
-                      <span className="text-[10px] font-normal text-slate-500">{unidadeFormatada}</span>
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-                      Mín: {item.estoqueSeguranca.toLocaleString('pt-BR')} {unidadeFormatada}
-                    </span>
+                <td className="py-2.5 px-3">
+                  <div className="w-full max-w-[210px]">
+                    {/* Linha 1: 48 / 20 un mín */}
+                    <div className="text-xs font-medium tabular-nums text-slate-800 dark:text-slate-200 mb-1 leading-none">
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        {item.estoqueAtual.toLocaleString('pt-BR')}
+                      </span>
+                      <span className="text-slate-500 dark:text-slate-400 font-normal">
+                        {' '}/ {item.estoqueSeguranca.toLocaleString('pt-BR')} {unidadeFormatada} mín
+                      </span>
+                    </div>
+
+                    {/* Linha 2: Barra compacta + percentual ou falta */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <StockGauge
+                          estoqueAtual={item.estoqueAtual}
+                          estoqueSeguranca={item.estoqueSeguranca}
+                          capacidadeMaxima={item.capacidadeMaxima}
+                          unidade={unidadeFormatada}
+                          size="sm"
+                        />
+                      </div>
+                      <span
+                        className={`text-xs tabular-nums font-medium shrink-0 ${
+                          deficit > 0
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        {deficit > 0
+                          ? formatarTextoFalta(deficit, item.unidade, { sufixo: '' })
+                          : `${Math.min(100, Math.round((item.estoqueAtual / Math.max(item.capacidadeMaxima, item.estoqueSeguranca, 1)) * 100))}%`}
+                      </span>
+                    </div>
                   </div>
-                  <StockGauge
-                    estoqueAtual={item.estoqueAtual}
-                    estoqueSeguranca={item.estoqueSeguranca}
-                    capacidadeMaxima={item.capacidadeMaxima}
-                    unidade={unidadeFormatada}
-                  />
-                  {deficit > 0 && (
-                    <span className="text-[10px] text-rose-600 dark:text-rose-400 font-medium block mt-0.5">
-                      {formatarTextoFalta(deficit, item.unidade)}
-                    </span>
-                  )}
                 </td>
 
                 {/* Situação Discreta */}
-                <td className="py-2 px-3 whitespace-nowrap">
+                <td className="py-2.5 px-3 whitespace-nowrap">
                   <StockStatusBadge
                     estoqueAtual={item.estoqueAtual}
                     estoqueSeguranca={item.estoqueSeguranca}
@@ -131,13 +146,13 @@ export function StockTable({
                 </td>
 
                 {/* Gatilhos Operacionais por Linha */}
-                <td className="py-2 px-3 text-right whitespace-nowrap">
+                <td className="py-2.5 px-3 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1">
                     <button
                       type="button"
                       onClick={() => onSelectItem(item)}
                       title="Abrir detalhes técnicos e extrato"
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                     >
                       <FileText className="w-3 h-3 text-slate-500" />
                       <span>Detalhes</span>
@@ -147,7 +162,7 @@ export function StockTable({
                       type="button"
                       onClick={() => (onRegistrarBaixaRapida ? onRegistrarBaixaRapida(item) : onSelectItem(item))}
                       title="Registrar baixa / saída rápida"
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                     >
                       <ArrowDownRight className="w-3 h-3 text-rose-600" />
                       <span>Baixa</span>
