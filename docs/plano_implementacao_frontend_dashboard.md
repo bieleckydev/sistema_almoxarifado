@@ -220,11 +220,11 @@ flowchart LR
 ### Fase 6: Montagem da Página Principal e Validação Completa
 > **Objetivo:** Conectar todos os componentes na página principal [`src/web/app/page.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/app/page.tsx), validar visualmente o tema e executar verificações de compilação.
 
-- [ ] **6.1** Substituir a tela estática em [`src/web/app/page.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/app/page.tsx) pela orquestração dos componentes do dashboard do Almoxarifado.
-- [ ] **6.2** Sincronizar o seletor de tema com a classe `dark` no elemento HTML e com o store Zustand [`useAppStore`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/core/store/useAppStore.ts).
-- [ ] **6.3** Adicionar indicador sutil no rodapé ou cabeçalho sinalizando quando o sistema estiver conectado à API real vs. operando no modo demonstração.
-- [ ] **6.4** Executar `npm run typecheck` para garantir que 100% dos tipos TypeScript estão válidos.
-- [ ] **6.5** Iniciar o servidor com `npm run dev` e testar interativamente a navegação por abas, filtros de busca, abertura do Drawer e alternância de temas.
+- [x] **6.1** Substituir a tela estática em [`src/web/app/page.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/app/page.tsx) pela orquestração dos componentes do dashboard do Almoxarifado.
+- [x] **6.2** Sincronizar o seletor de tema com a classe `dark` no elemento HTML e com o store Zustand [`useAppStore`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/core/store/useAppStore.ts).
+- [x] **6.3** Adicionar indicador sutil no rodapé ou cabeçalho sinalizando quando o sistema estiver conectado à API real vs. operando no modo demonstração.
+- [x] **6.4** Executar `npm run typecheck` para garantir que 100% dos tipos TypeScript estão válidos.
+- [x] **6.5** Iniciar o servidor com `npm run dev` e testar interativamente a navegação por abas, filtros de busca, abertura do Drawer e alternância de temas.
 
 ---
 
