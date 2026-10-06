@@ -11,6 +11,7 @@ import {
 import { useItensEstoque } from '@/web/hooks/useItensEstoque';
 import { useDebounce } from '@/web/hooks/useDebounce';
 import { AppSidebar } from '@/web/components/layout/AppSidebar';
+import { ThemeToggle } from '@/web/components/layout/ThemeToggle';
 import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards';
 import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
 import { StockTable } from '@/web/components/dashboard/StockTable';
@@ -98,12 +99,14 @@ export default function AlmoxarifadoDashboardPage() {
               type="button"
               onClick={() => refetch()}
               disabled={isLoading}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
               title="Recarregar dados do estoque"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Atualizar</span>
             </button>
+
+            <ThemeToggle />
           </div>
         </header>
 
