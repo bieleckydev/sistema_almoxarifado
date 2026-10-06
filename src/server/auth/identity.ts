@@ -65,11 +65,21 @@ export async function authenticateIdentity(
 
   let userSnapshot;
   try {
+    if (!dependencies.db || typeof dependencies.db.collection !== 'function') {
+      throw new Error('Firestore adminDb não inicializado (sem credenciais de service account)');
+    }
     userSnapshot = await dependencies.db.collection('users').doc(decodedToken.uid).get();
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : '';
     // Se o backend estiver rodando sem credenciais de service account configuradas para o Firestore Admin
-    if (msg.includes('credentials') || msg.includes('default credentials') || msg.includes('permission')) {
+    if (
+      !dependencies.db ||
+      typeof dependencies.db?.collection !== 'function' ||
+      msg.includes('credentials') ||
+      msg.includes('default credentials') ||
+      msg.includes('permission') ||
+      msg.includes('não inicializado')
+    ) {
       const isMestre = decodedToken.email === 'eduardombielecky@gmail.com';
       const fallbackUser: User = {
         id: decodedToken.uid,
