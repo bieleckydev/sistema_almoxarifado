@@ -1,6 +1,6 @@
 import { IEstoqueRepository } from './estoque.repository.interface';
 import { Item, ItemFiltros } from '../domain/item.schema';
-import { Colaborador, ColaboradorFiltros } from '../domain/colaborador.schema';
+import { Colaborador, ColaboradorFiltros, normalizarMatricula } from '../domain/colaborador.schema';
 import { Movimentacao, MovimentacaoFiltros } from '../domain/movimentacao.schema';
 import { determinarStatusEstoque } from '../services/estoque-calculator';
 
@@ -109,8 +109,9 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     const colab = this.colaboradores.get(idOrMatricula);
     if (colab) return { ...colab };
 
+    const norm = normalizarMatricula(idOrMatricula);
     for (const c of this.colaboradores.values()) {
-      if (c.matricula === idOrMatricula) {
+      if (c.matricula === idOrMatricula || (norm && c.matricula === norm)) {
         return { ...c };
       }
     }

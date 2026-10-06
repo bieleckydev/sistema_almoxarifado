@@ -95,13 +95,13 @@ flowchart TD
 > **Objetivo:** Expor endpoints para validação rápida de operadores autorizados na retirada de materiais.
 
 - **Micro-tarefas:**
-  - [ ] **3.1** Criar `src/web/app/api/colaboradores/route.ts`:
+  - [x] **3.1** Criar `src/web/app/api/colaboradores/route.ts`:
     - `GET`: filtros de colaboradores por setor, busca e status ativo.
     - `POST`: cadastro com `CreateColaboradorSchema` e verificação de matrícula duplicada.
-  - [ ] **3.2** Criar `src/web/app/api/colaboradores/[id]/route.ts`:
+  - [x] **3.2** Criar `src/web/app/api/colaboradores/[id]/route.ts`:
     - `GET`: busca colaborador por ID.
     - `PATCH`: atualização de colaborador com `UpdateColaboradorSchema`.
-  - [ ] **3.3** Criar `src/web/app/api/colaboradores/matricula/[matricula]/route.ts`:
+  - [x] **3.3** Criar `src/web/app/api/colaboradores/matricula/[matricula]/route.ts`:
     - `GET`: busca direta por matrícula normalizada para suporte a leitores de código de barras ou bipagem.
 
 ---
@@ -132,4 +132,4 @@ flowchart TD
 
 ## 5. Próximo Passo Imediato
 
-Iniciar pela **Fase 3**: implementação das rotas de colaboradores (`/api/colaboradores`, `/api/colaboradores/[id]`, `/api/colaboradores/matricula/[matricula]`).
+Iniciar pela **Fase 4**: implementação das rotas de movimentações físicas e transações atômicas (`/api/movimentacoes/baixa-lote`, `/api/movimentacoes/entrada`, `/api/movimentacoes/extrato/[itemId]`, etc.).
