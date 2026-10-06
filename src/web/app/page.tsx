@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Database, CheckCircle2, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import {
   type AbaEstoque,
   type StatusCriticidade,
@@ -34,7 +34,6 @@ export default function AlmoxarifadoDashboardPage() {
     totalCriticos,
     contagemCriticosPorAba,
     isLoading,
-    isFallbackMode,
     refetch,
   } = useItensEstoque({
     aba: abaAtiva,
@@ -93,33 +92,17 @@ export default function AlmoxarifadoDashboardPage() {
             </p>
           </div>
 
-          {/* Status do Sistema e Sincronização */}
+          {/* Ações do Cabeçalho */}
           <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-            {isFallbackMode ? (
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60"
-                title="Catálogo de demonstração local ativo"
-              >
-                <Database className="w-3.5 h-3.5" />
-                Demonstração Local
-              </span>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
-                title="Conectado ao Backend em produção"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                API Conectada
-              </span>
-            )}
-
             <button
               type="button"
               onClick={() => refetch()}
-              className="p-1.5 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
-              title="Atualizar dados"
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+              title="Recarregar dados do estoque"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>Atualizar</span>
             </button>
           </div>
         </header>
