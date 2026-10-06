@@ -176,6 +176,24 @@ service cloud.firestore {
       }
     }
 
+    match /clients/{clientId} {
+      allow read: if signedIn();
+      allow create: if canManageCatalog()
+        && request.resource.data.id == clientId;
+      allow update: if canManageCatalog()
+        && request.resource.data.id == clientId;
+      allow delete: if isMestre();
+    }
+
+    match /orders/{orderId} {
+      allow read: if signedIn();
+      allow create: if canOperateStock()
+        && request.resource.data.id == orderId;
+      allow update: if canOperateStock()
+        && request.resource.data.id == orderId;
+      allow delete: if isMestre();
+    }
+
     // Deny any collection that has not received an explicit policy.
     match /{document=**} {
       allow read, write: if false;

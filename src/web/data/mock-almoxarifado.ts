@@ -1,5 +1,8 @@
 import type { Item } from '@/core/domain/item.schema';
 import type { TipoItem, UnidadeMedida } from '@/core/domain/types';
+import type { Cliente } from '@/core/domain/cliente.schema';
+import type { Pedido } from '@/core/domain/pedido.schema';
+
 
 export type AbaEstoque = 'mp' | 'imp' | 'motos';
 export type StatusCriticidade = 'ok' | 'low' | 'crit';
@@ -545,3 +548,262 @@ export const STATUS_LABELS: Record<StatusCriticidade, string> = {
   low: 'Abaixo do mínimo',
   crit: 'Crítico',
 };
+
+/**
+ * Tipos de tela ou aba navegáveis no sistema V2.
+ */
+export type TelaOuAba = 'inicio' | AbaEstoque | 'vendas' | 'clientes' | 'saida';
+
+/**
+ * Clientes, fornecedores e transportadoras reais cadastrados no sistema
+ * (Sincronizados com a coleção 'clients' do Firestore).
+ */
+export const CLIENTES_INICIAIS: Cliente[] = [
+  {
+    id: 'client-jaguaribe',
+    tipo: 'CLIENTE',
+    nome: 'Jaguaribe Indústria de Cadeiras de Rodas',
+    documento: '61.123.456/0001-10',
+    contato: 'Marcos Suprimentos',
+    telefone: '(16) 3300-1000',
+    cidade: 'Ribeirão Preto',
+    ativo: true,
+  },
+  {
+    id: 'client-brudden',
+    tipo: 'CLIENTE',
+    nome: 'Brudden Equipamentos Ltda',
+    documento: '54.987.654/0001-20',
+    contato: 'Carlos Compras',
+    telefone: '(14) 3452-8000',
+    cidade: 'Pompéia',
+    ativo: true,
+  },
+  {
+    id: 'client-grajau-motos',
+    tipo: 'CLIENTE',
+    nome: 'Grajaú Motos e Peças',
+    documento: '08.765.432/0001-30',
+    contato: 'Paulo Vendas',
+    telefone: '(11) 98765-4321',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'client-moto-pecas',
+    tipo: 'CLIENTE',
+    nome: 'Moto Peças Distribuidora',
+    documento: '12.345.678/0001-40',
+    contato: 'Balcão Vendas',
+    telefone: '(11) 98111-2233',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'client-protominas',
+    tipo: 'CLIENTE',
+    nome: 'Protominas Usinagem e Protótipos',
+    documento: '23.456.789/0001-50',
+    contato: 'Engenharia',
+    telefone: '(31) 3200-4000',
+    cidade: 'Belo Horizonte',
+    ativo: true,
+  },
+  {
+    id: 'client-irbas',
+    tipo: 'CLIENTE',
+    nome: 'Metalúrgica Irbas',
+    documento: '34.567.890/0001-60',
+    contato: 'Recebimento',
+    telefone: '(11) 2900-5000',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'client-nakayone',
+    tipo: 'CLIENTE',
+    nome: 'Metalúrgica Nakayone',
+    documento: '45.678.901/0001-70',
+    contato: 'Compras',
+    telefone: '(11) 2150-6000',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'client-jardim-sistemas',
+    tipo: 'CLIENTE',
+    nome: 'Jardim Sistemas e Automação',
+    documento: '56.789.012/0001-80',
+    contato: 'Almoxarifado',
+    telefone: '(11) 3780-7000',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'client-copam',
+    tipo: 'CLIENTE',
+    nome: 'Copam Autopeças',
+    documento: '67.890.123/0001-90',
+    contato: 'Planejamento PCP',
+    telefone: '(11) 2460-8000',
+    cidade: 'Guarulhos',
+    ativo: true,
+  },
+  {
+    id: 'client-galpao-matriz',
+    tipo: 'CLIENTE',
+    nome: 'Galpão Matriz Rhowert',
+    documento: '00.000.000/0001-00',
+    contato: 'Despacho Interno',
+    telefone: '(11) 90000-0001',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'supplier-borplas',
+    tipo: 'FORNECEDOR',
+    nome: 'Borplas Suprimentos Industriais',
+    documento: '11.222.333/0001-44',
+    contato: 'Vendas Borplas',
+    telefone: '(11) 3344-5566',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'supplier-braganfer',
+    tipo: 'FORNECEDOR',
+    nome: 'Braganfer Ferro e Aço',
+    documento: '22.333.444/0001-55',
+    contato: 'Comercial Aço',
+    telefone: '(11) 4032-1100',
+    cidade: 'Bragança Paulista',
+    ativo: true,
+  },
+  {
+    id: 'supplier-oximig',
+    tipo: 'FORNECEDOR',
+    nome: 'Oximig Soldas e Equipamentos',
+    documento: '33.444.555/0001-66',
+    contato: 'Técnico Solda',
+    telefone: '(15) 3243-7000',
+    cidade: 'Votorantim',
+    ativo: true,
+  },
+  {
+    id: 'supplier-parafusos-rudge',
+    tipo: 'FORNECEDOR',
+    nome: 'Parafusos Rudge Ramos',
+    documento: '55.666.777/0001-88',
+    contato: 'Fixadores',
+    telefone: '(11) 4368-2000',
+    cidade: 'São Bernardo do Campo',
+    ativo: true,
+  },
+  {
+    id: 'supplier-leoplast',
+    tipo: 'FORNECEDOR',
+    nome: 'Leoplast Comércio de Embalagens',
+    documento: '66.777.888/0001-99',
+    contato: 'Embalagens',
+    telefone: '(11) 4070-5000',
+    cidade: 'Diadema',
+    ativo: true,
+  },
+  {
+    id: 'carrier-galpao-express',
+    tipo: 'TRANSPORTADORA',
+    nome: 'Galpão Express Cargas Rápidas',
+    documento: '23.334.445/0001-66',
+    contato: 'Despacho Rápido',
+    telefone: '(11) 97777-8899',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'carrier-rapido-sul',
+    tipo: 'TRANSPORTADORA',
+    nome: 'Rápido Sul Transportes Rodoviários',
+    documento: '34.445.556/0001-77',
+    contato: 'Operações Sul',
+    telefone: '(11) 2200-9988',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+];
+
+/**
+ * Pedidos reais de venda cadastrados no sistema
+ * (Sincronizados com a coleção 'orders' do Firestore).
+ */
+export const PEDIDOS_INICIAIS: Pedido[] = [
+  {
+    id: 'order-101',
+    numeroSequencial: 101,
+    clienteId: 'client-grajau-motos',
+    prazoEntrega: '2026-10-15',
+    status: 'PENDENTE',
+    itens: [
+      { itemId: 'legacy-100-0307', quantidade: 20, observacao: 'Protetor Carenagem 160' },
+      { itemId: 'legacy-100-0405', quantidade: 50, observacao: 'Guidão Titan Cargo' },
+    ],
+    observacoes: 'Pedido para reposição de balcão Grajaú Motos',
+  },
+  {
+    id: 'order-102',
+    numeroSequencial: 102,
+    clienteId: 'client-jaguaribe',
+    prazoEntrega: '2026-10-10',
+    status: 'SEPARADO',
+    itens: [
+      { itemId: 'legacy-100-0245', quantidade: 11, observacao: 'Pedal Soldado L50 BIG' },
+      { itemId: 'legacy-100-0248', quantidade: 13, observacao: 'Assento Soldado D03584' },
+    ],
+    observacoes: 'Linha de cadeiras de rodas hospitalar',
+  },
+  {
+    id: 'order-103',
+    numeroSequencial: 103,
+    clienteId: 'client-brudden',
+    prazoEntrega: '2026-10-20',
+    status: 'PENDENTE',
+    itens: [
+      { itemId: 'legacy-100-0315', quantidade: 15, observacao: 'Articulador do Elevador' },
+    ],
+    observacoes: 'Produção programada safra agrícola',
+  },
+  {
+    id: 'order-104',
+    numeroSequencial: 104,
+    clienteId: 'client-galpao-matriz',
+    prazoEntrega: '2026-10-05',
+    status: 'ENTREGUE',
+    itens: [
+      { itemId: 'legacy-100-0411', quantidade: 500, observacao: 'Conjunto Barra Estabilizadora' },
+    ],
+    observacoes: 'Expedição Galpão Matriz - NFe 023.730',
+  },
+  {
+    id: 'order-105',
+    numeroSequencial: 105,
+    clienteId: 'client-copam',
+    prazoEntrega: '2026-10-04',
+    status: 'PENDENTE',
+    itens: [
+      { itemId: 'legacy-100-0314', quantidade: 40, observacao: 'Alça Super Alta FAN/Start' },
+    ],
+    observacoes: 'Urgência - Pedido fabril atrasado',
+  },
+  {
+    id: 'order-106',
+    numeroSequencial: 106,
+    clienteId: 'client-galpao-matriz',
+    prazoEntrega: '2026-10-02',
+    status: 'ENTREGUE',
+    itens: [
+      { itemId: 'legacy-100-0335', quantidade: 150, observacao: 'Alça Reta POP' },
+      { itemId: 'legacy-100-0422', quantidade: 50, observacao: 'Alça Pop Esportiva' },
+    ],
+    observacoes: 'Despacho Galpão Matriz - NFe 023.733 - P. 9610',
+  },
+];
+
