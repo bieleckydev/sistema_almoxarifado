@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { FileText, ArrowDownRight } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
@@ -38,6 +38,13 @@ export function StockTable({
     overscan: 25,
     getItemKey: (index) => itens[index]?.id || index,
   });
+
+  // Retorna suavemente ao topo da tabela sempre que a aba do almoxarifado for alternada
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTop = 0;
+    }
+  }, [itens[0]?.aba]);
 
   if (isLoading) {
     return <StockTableSkeleton className={className} />;

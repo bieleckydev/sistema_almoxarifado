@@ -71,3 +71,19 @@ code, kbd, samp, pre, .font-mono {
   transition-duration: 150ms;
 }
 
+/* Transição fluida e suave para alternância instantânea entre abas */
+@keyframes tabContentFadeIn {
+  0% {
+    opacity: 0.7;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tab-switch {
+  animation: tabContentFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
