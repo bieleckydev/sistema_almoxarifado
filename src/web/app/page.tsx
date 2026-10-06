@@ -84,62 +84,64 @@ export default function AlmoxarifadoDashboardPage() {
 
       {/* Conteúdo Principal Full-Width de Alta Densidade */}
       <main className="flex-1 w-full px-4 py-4 md:px-7 md:py-6 flex flex-col min-w-0">
-        {/* Cabeçalho Operacional Compacto */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-slate-900 dark:text-white">
-              {metadadosAba.titulo}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
-              {metadadosAba.subtitulo}
-            </p>
-          </div>
+        <div key={abaAtiva} className="animate-tab-switch flex-1 flex flex-col min-w-0">
+          {/* Cabeçalho Operacional Compacto */}
+          <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+            <div>
+              <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-slate-900 dark:text-white">
+                {metadadosAba.titulo}
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
+                {metadadosAba.subtitulo}
+              </p>
+            </div>
 
-          {/* Ações do Cabeçalho */}
-          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
-              title="Recarregar dados do estoque"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>Atualizar</span>
-            </button>
+            {/* Ações do Cabeçalho */}
+            <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+              <button
+                type="button"
+                onClick={() => refetch()}
+                disabled={isLoading}
+                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+                title="Recarregar dados do estoque"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                <span>Atualizar</span>
+              </button>
 
-            <ThemeToggle />
-          </div>
-        </header>
+              <ThemeToggle />
+            </div>
+          </header>
 
-        {/* Cards de Métricas Operacionais Clicáveis */}
-        <StockMetricsCards
-          totalItens={totalAba}
-          totalAbaixoMinimo={totalAbaixoMinimo}
-          totalCriticos={totalCriticos}
-          filtroAtivo={filtroSituacao}
-          onFiltrarPorStatus={setFiltroSituacao}
-          isLoading={isLoading}
-        />
+          {/* Cards de Métricas Operacionais Clicáveis */}
+          <StockMetricsCards
+            totalItens={totalAba}
+            totalAbaixoMinimo={totalAbaixoMinimo}
+            totalCriticos={totalCriticos}
+            filtroAtivo={filtroSituacao}
+            onFiltrarPorStatus={setFiltroSituacao}
+            isLoading={isLoading}
+          />
 
-        {/* Barra de Filtros e Busca Rápida */}
-        <StockFilterToolbar
-          busca={termoBusca}
-          onBuscaChange={setTermoBusca}
-          filtroSituacao={filtroSituacao}
-          onFiltroSituacaoChange={setFiltroSituacao}
-          totalFiltrados={itens.length}
-        />
+          {/* Barra de Filtros e Busca Rápida */}
+          <StockFilterToolbar
+            busca={termoBusca}
+            onBuscaChange={setTermoBusca}
+            filtroSituacao={filtroSituacao}
+            onFiltroSituacaoChange={setFiltroSituacao}
+            totalFiltrados={itens.length}
+          />
 
-        {/* Tabela de Alta Densidade com Ações Contextuais */}
-        <StockTable
-          itens={itens}
-          onSelectItem={handleSelectItem}
-          onRegistrarBaixaRapida={handleRegistrarBaixaRapida}
-          selectedItemId={itemSelecionado?.id}
-          isLoading={isLoading}
-          onClearFilters={handleClearFilters}
-        />
+          {/* Tabela de Alta Densidade com Ações Contextuais */}
+          <StockTable
+            itens={itens}
+            onSelectItem={handleSelectItem}
+            onRegistrarBaixaRapida={handleRegistrarBaixaRapida}
+            selectedItemId={itemSelecionado?.id}
+            isLoading={isLoading}
+            onClearFilters={handleClearFilters}
+          />
+        </div>
       </main>
 
       {/* Drawer Lateral de Detalhes Técnicos e Histórico */}

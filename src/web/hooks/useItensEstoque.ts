@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/core/api/client';
 import type { Item } from '@/core/domain/item.schema';
 import {
@@ -62,12 +62,69 @@ function itemToDashboardItem(item: Item): DashboardItem {
 }
 
 /**
+ * Busca de itens por aba com resiliência: API -> Firestore direto -> Mock local.
+ */
+async function fetchItensPorAba(aba: AbaEstoque): Promise<{ itens: DashboardItem[]; isFallback: boolean }> {
+  try {
+    const params: Record<string, string> = {
+      tipo: METADADOS_ABAS[aba].tipoDominio,
+      limite: '500',
+    };
+
+    const response = await api.get<{ itens: Item[]; total: number }>('/itens', {
+      params,
+    });
+
+    const itensConvertidos = response.data.itens.map(itemToDashboardItem);
+
+    return {
+      itens: itensConvertidos,
+      isFallback: false,
+    };
+  } catch (err) {
+    // Tenta buscar diretamente do Firestore no cliente autenticado
+    try {
+      const { collection, getDocs } = await import('firebase/firestore');
+      const { db } = await import('@/core/services/firebase');
+      const snap = await getDocs(collection(db, 'items'));
+      if (!snap.empty) {
+        const itensBanco = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as Item[];
+        const convertidos = itensBanco.map(itemToDashboardItem);
+        const filtradosPorAba = convertidos.filter((i) => i.aba === aba);
+        if (filtradosPorAba.length > 0) {
+          return {
+            itens: filtradosPorAba,
+            isFallback: false,
+          };
+        }
+      }
+    } catch (clientErr) {
+      console.warn('Falha na consulta direta ao Firestore no cliente:', clientErr);
+    }
+
+    // Fallback local com base completa da aba selecionada
+    const baseAba = MOCK_ITENS.filter((item) => item.aba === aba);
+
+    return {
+      itens: baseAba,
+      isFallback: true,
+    };
+  }
+}
+
+const TODAS_AS_ABAS: AbaEstoque[] = ['mp', 'imp', 'motos'];
+
+/**
  * Hook com TanStack Query para carregar a lista de materiais do almoxarifado.
  * 
- * Arquitetura Otimizada (Proposta 1):
- * - A requisição de rede busca o catálogo completo da categoria ativa ('aba') uma única vez.
- * - As métricas dos cards (total, abaixo do mínimo, críticos) permanecem sempre estáveis e consistentes.
- * - A filtragem por situação ('crit', 'low', 'ok', 'todos') e busca textual ocorre instantaneamente (0ms) em memória.
+ * Arquitetura de Troca Imediata de Abas:
+ * - Prefetching proativo em background de todas as 3 abas ('mp', 'imp', 'motos').
+ * - PlaceholderData instantâneo: a troca de abas abre imediatamente sem skeleton nem tela em branco.
+ * - Cache prolongado (5 minutos) com stale-while-revalidate transparente.
+ * - Filtragem instantânea (0ms) em memória para busca textual e filtros de situação.
  */
 export function useItensEstoque({
   aba = 'mp',
@@ -75,63 +132,33 @@ export function useItensEstoque({
   filtroSituacao = 'todos',
   enabled = true,
 }: UseItensEstoqueOptions = {}): UseItensEstoqueResult {
-  // Apenas a aba ativa define a consulta de rede. Filtros e buscas não re-disparam fetch HTTP!
+  const queryClient = useQueryClient();
   const queryKey = ['itens-estoque', aba];
+
+  // Prefetch proativo de todas as abas em background logo na inicialização
+  useEffect(() => {
+    TODAS_AS_ABAS.forEach((outraAba) => {
+      queryClient.prefetchQuery({
+        queryKey: ['itens-estoque', outraAba],
+        queryFn: () => fetchItensPorAba(outraAba),
+        staleTime: 5 * 60 * 1000,
+      });
+    });
+  }, [queryClient]);
 
   const query = useQuery({
     queryKey,
     enabled,
-    queryFn: async () => {
-      try {
-        const params: Record<string, string> = {
-          tipo: METADADOS_ABAS[aba].tipoDominio,
-          limite: '500',
-        };
-
-        const response = await api.get<{ itens: Item[]; total: number }>('/itens', {
-          params,
-        });
-
-        const itensConvertidos = response.data.itens.map(itemToDashboardItem);
-
-        return {
-          itens: itensConvertidos,
-          isFallback: false,
-        };
-      } catch (err) {
-        // Tenta buscar diretamente do Firestore no cliente autenticado
-        try {
-          const { collection, getDocs } = await import('firebase/firestore');
-          const { db } = await import('@/core/services/firebase');
-          const snap = await getDocs(collection(db, 'items'));
-          if (!snap.empty) {
-            const itensBanco = snap.docs.map((d) => ({
-              id: d.id,
-              ...d.data(),
-            })) as Item[];
-            const convertidos = itensBanco.map(itemToDashboardItem);
-            const filtradosPorAba = convertidos.filter((i) => i.aba === aba);
-            if (filtradosPorAba.length > 0) {
-              return {
-                itens: filtradosPorAba,
-                isFallback: false,
-              };
-            }
-          }
-        } catch (clientErr) {
-          console.warn('Falha na consulta direta ao Firestore no cliente:', clientErr);
-        }
-
-        // Fallback local com base completa da aba selecionada
-        const baseAba = MOCK_ITENS.filter((item) => item.aba === aba);
-
-        return {
-          itens: baseAba,
-          isFallback: true,
-        };
-      }
+    queryFn: () => fetchItensPorAba(aba),
+    // Fornece dados instantâneos ao trocar de aba se ainda não estiver em cache
+    placeholderData: (previousData) => {
+      if (previousData) return previousData;
+      return {
+        itens: MOCK_ITENS.filter((item) => item.aba === aba),
+        isFallback: false,
+      };
     },
-    staleTime: 60 * 1000, // 1 minuto de cache fresco por aba
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache fresco por aba
   });
 
   const todosItensAba = query.data?.itens || [];
