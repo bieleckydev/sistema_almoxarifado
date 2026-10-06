@@ -5,10 +5,7 @@ import { api } from '@/core/api/client';
 import type { Movimentacao } from '@/core/domain/movimentacao.schema';
 import { isMovimentacaoEntrada } from '@/core/services/estoque-calculator';
 import { formatDate } from '@/core/utils/formatters';
-import {
-  type DashboardMovimentacao,
-  MOCK_MOVIMENTACOES,
-} from '../data/mock-almoxarifado';
+import type { DashboardMovimentacao } from '../data/mock-almoxarifado';
 
 export interface UseExtratoItemOptions {
   itemId: string | null | undefined;
@@ -47,8 +44,8 @@ function movimentacaoToDashboardMovimentacao(m: Movimentacao): DashboardMoviment
 }
 
 /**
- * Hook para consultar o extrato histórico de movimentações de um item específico.
- * Consome /api/movimentacoes/extrato/[itemId] e possui fallback automático para o mock do item.
+ * Hook para consultar o extrato histórico de movimentações reais de um item específico.
+ * Consome /api/movimentacoes/extrato/[itemId] sem fallback para dados mock.
  */
 export function useExtratoItem({
   itemId,
@@ -72,17 +69,14 @@ export function useExtratoItem({
           isFallback: false,
         };
       } catch (err) {
-        console.warn(
-          `Extrato do item ${itemId} indisponível via API. Utilizando dados de demonstração (fallback):`,
+        console.error(
+          `Extrato do item ${itemId} indisponível via API:`,
           err
         );
 
-        // Fallback para movimentações mock do item selecionado
-        const mockFiltrado = MOCK_MOVIMENTACOES.filter((m) => m.itemId === itemId);
-
         return {
-          movimentacoes: mockFiltrado,
-          isFallback: true,
+          movimentacoes: [],
+          isFallback: false,
         };
       }
     },
