@@ -141,7 +141,7 @@ flowchart LR
     - `motos` -> `ACABADO`
 - [x] **2.2** Criar [`src/web/hooks/useDebounce.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/hooks/useDebounce.ts):
   - Hook genérico de debounce (300ms) para otimizar pesquisas textuais sem causar re-renders excessivos.
-- [ ] **2.3** Criar [`src/web/hooks/useItensEstoque.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/hooks/useItensEstoque.ts):
+- [x] **2.3** Criar [`src/web/hooks/useItensEstoque.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/hooks/useItensEstoque.ts):
   - Consumir a rota `GET /api/itens` com parâmetros de filtro (`tipo`, `busca`, `statusEstoque`).
   - Implementar interceptação de erro (caso retorne 401 ou erro de rede) para devolver os itens filtrados a partir do fallback com indicador booleano `isFallbackMode`.
 - [ ] **2.4** Criar [`src/web/hooks/useExtratoItem.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/hooks/useExtratoItem.ts):
