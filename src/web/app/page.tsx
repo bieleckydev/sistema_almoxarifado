@@ -55,6 +55,11 @@ export default function AlmoxarifadoDashboardPage() {
     setIsDrawerOpen(true);
   };
 
+  const handleRegistrarBaixaRapida = (item: DashboardItem) => {
+    setItemSelecionado(item);
+    setIsDrawerOpen(true);
+  };
+
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false);
   };
@@ -67,87 +72,94 @@ export default function AlmoxarifadoDashboardPage() {
   const metadadosAba = METADADOS_ABAS[abaAtiva];
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#eceff3] dark:bg-[#0e151b] text-[#17212b] dark:text-[#e6edf3]">
-      {/* Menu Lateral de Navegação */}
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#f1f4f8] dark:bg-[#0c1218] text-[#17212b] dark:text-[#e6edf3]">
+      {/* Menu Lateral de Navegação Operacional */}
       <AppSidebar
         abaAtiva={abaAtiva}
         onSelectAba={handleSelectAba}
         contagemCriticos={contagemCriticosPorAba}
       />
 
-      {/* Conteúdo Principal do Almoxarifado */}
-      <main className="flex-1 p-5 md:p-8 lg:p-10 max-w-7xl w-full mx-auto flex flex-col min-w-0">
-        {/* Cabeçalho da Categoria */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+      {/* Conteúdo Principal Full-Width de Alta Densidade */}
+      <main className="flex-1 w-full px-4 py-4 md:px-7 md:py-6 flex flex-col min-w-0">
+        {/* Cabeçalho Operacional Compacto */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {metadadosAba.titulo}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
-              {metadadosAba.subtitulo} A marca vertical na barra indica o estoque mínimo de segurança.
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {metadadosAba.titulo}
+              </h1>
+              <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                {abaAtiva.toUpperCase()}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {metadadosAba.subtitulo}
             </p>
           </div>
 
-          {/* Badge de Conexão com o Backend */}
+          {/* Status do Sistema e Sincronização */}
           <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
             {isFallbackMode ? (
               <span
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
-                title="Operando com catálogo local de demonstração (fallback resiliente)"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60"
+                title="Catálogo de demonstração local ativo"
               >
                 <Database className="w-3.5 h-3.5" />
-                Modo Demonstração
+                Demonstração Local
               </span>
             ) : (
               <span
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
-                title="Conectado com sucesso à API REST do Almoxarifado"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
+                title="Conectado ao Backend em produção"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Conectado à API
+                API Conectada
               </span>
             )}
 
             <button
               type="button"
               onClick={() => refetch()}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Recarregar dados"
+              className="p-1.5 rounded text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+              title="Atualizar dados"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
         </header>
 
-        {/* Cards de Métricas e KPIs Superiores */}
+        {/* Cards de Métricas Operacionais Clicáveis */}
         <StockMetricsCards
           totalItens={totalAba}
           totalAbaixoMinimo={totalAbaixoMinimo}
           totalCriticos={totalCriticos}
+          filtroAtivo={filtroSituacao}
+          onFiltrarPorStatus={setFiltroSituacao}
           isLoading={isLoading}
         />
 
-        {/* Barra de Filtros e Pesquisa */}
+        {/* Barra de Filtros e Busca Rápida */}
         <StockFilterToolbar
           busca={termoBusca}
           onBuscaChange={setTermoBusca}
           filtroSituacao={filtroSituacao}
           onFiltroSituacaoChange={setFiltroSituacao}
           totalFiltrados={itens.length}
-          placeholder={`Buscar em ${metadadosAba.titulo.toLowerCase()} por nome, código ou endereço...`}
         />
 
-        {/* Tabela de Materiais do Almoxarifado */}
+        {/* Tabela de Alta Densidade com Ações Contextuais */}
         <StockTable
           itens={itens}
           onSelectItem={handleSelectItem}
+          onRegistrarBaixaRapida={handleRegistrarBaixaRapida}
           selectedItemId={itemSelecionado?.id}
           isLoading={isLoading}
           onClearFilters={handleClearFilters}
         />
       </main>
 
-      {/* Drawer Lateral de Detalhes do Produto */}
+      {/* Drawer Lateral de Detalhes Técnicos e Histórico */}
       <ItemDetailsDrawer
         item={itemSelecionado}
         isOpen={isDrawerOpen}

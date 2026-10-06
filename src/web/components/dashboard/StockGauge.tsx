@@ -8,8 +8,9 @@ export interface StockGaugeProps {
   estoqueSeguranca: number;
   capacidadeMaxima: number;
   unidade?: string;
-  size?: 'sm' | 'md' | 'lg';
+  showLimits?: boolean;
   showLabels?: boolean;
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
@@ -18,8 +19,9 @@ export function StockGauge({
   estoqueSeguranca,
   capacidadeMaxima,
   unidade = 'un',
-  size = 'md',
+  showLimits = false,
   showLabels = false,
+  size = 'md',
   className = '',
 }: StockGaugeProps) {
   const capMax = Math.max(capacidadeMaxima, estoqueSeguranca, estoqueAtual, 1);
@@ -31,7 +33,7 @@ export function StockGauge({
   const heightClasses = {
     sm: 'h-1.5',
     md: 'h-2',
-    lg: 'h-3',
+    lg: 'h-2.5',
   }[size];
 
   const colorClasses = {
@@ -41,35 +43,42 @@ export function StockGauge({
   }[status];
 
   return (
-    <div className={`flex flex-col gap-1 w-full min-w-[120px] ${className}`}>
-      {showLabels && (
-        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
-          <span>{estoqueAtual.toLocaleString('pt-BR')} {unidade}</span>
-          <span>Máx: {capMax.toLocaleString('pt-BR')} {unidade}</span>
-        </div>
-      )}
-
+    <div className={`flex flex-col gap-1 w-full min-w-[140px] max-w-[220px] ${className}`}>
+      {/* Barra de progresso com marcador posicionado */}
       <div
-        className={`relative w-full ${heightClasses} bg-slate-200 dark:bg-slate-700/60 rounded-full overflow-visible`}
+        className={`relative w-full ${heightClasses} bg-slate-200 dark:bg-slate-700 rounded-sm overflow-visible`}
         role="progressbar"
         aria-valuenow={estoqueAtual}
         aria-valuemin={0}
         aria-valuemax={capMax}
-        aria-label={`${estoqueAtual.toLocaleString('pt-BR')} de ${capMax.toLocaleString('pt-BR')} ${unidade}; mínimo de segurança: ${estoqueSeguranca.toLocaleString('pt-BR')}`}
       >
-        {/* Barra preenchida de estoque atual */}
         <div
-          className={`h-full rounded-full transition-all duration-300 ease-out ${colorClasses}`}
+          className={`h-full rounded-sm transition-all duration-200 ${colorClasses}`}
           style={{ width: `${fillPercentage}%` }}
         />
-
-        {/* Marcador vertical da linha de estoque mínimo de segurança */}
+        {/* Marcador vertical da meta de segurança */}
         <div
-          className="absolute -top-1 -bottom-1 w-0.5 bg-slate-900 dark:bg-white/80 rounded-full shadow-sm z-10"
+          className="absolute -top-1 -bottom-1 w-[2px] bg-slate-900 dark:bg-slate-200 rounded-xs z-10"
           style={{ left: `${minPercentage}%` }}
-          title={`Estoque mínimo: ${estoqueSeguranca.toLocaleString('pt-BR')} ${unidade}`}
+          title={`Ponto de corte (Estoque Mínimo): ${estoqueSeguranca.toLocaleString('pt-BR')} ${unidade}`}
         />
       </div>
+
+      {/* Legenda numérica explícita dos pontos de corte */}
+      {showLimits ? (
+        <div className="flex justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-none">
+          <span>0</span>
+          <span className="text-slate-700 dark:text-slate-300 font-medium">
+            Mín: {estoqueSeguranca.toLocaleString('pt-BR')}
+          </span>
+          <span>Máx: {capMax.toLocaleString('pt-BR')}</span>
+        </div>
+      ) : (
+        <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-slate-500 leading-none">
+          <span>{fillPercentage.toFixed(0)}% ocupado</span>
+          <span>Mín: {estoqueSeguranca.toLocaleString('pt-BR')} {unidade}</span>
+        </div>
+      )}
     </div>
   );
 }
