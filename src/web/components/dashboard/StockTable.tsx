@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { FileText, ArrowDownRight, MoreHorizontal } from 'lucide-react';
+import React, { useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { FileText, ArrowDownRight } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { formatarTextoFalta } from '@/web/utils/pluralization';
 import { StockGauge } from './StockGauge';
@@ -28,6 +29,15 @@ export function StockTable({
   onClearFilters,
   className = '',
 }: StockTableProps) {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: itens.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 54,
+    overscan: 6,
+  });
+
   if (isLoading) {
     return <StockTableSkeleton className={className} />;
   }
@@ -43,23 +53,43 @@ export function StockTable({
     );
   }
 
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const totalSize = rowVirtualizer.getTotalSize();
+
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? totalSize - virtualRows[virtualRows.length - 1].end
+      : 0;
+
   return (
     <div
-      className={`overflow-x-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs transition-colors ${className}`}
+      ref={tableContainerRef}
+      className={`overflow-auto max-h-[calc(100vh-275px)] min-h-[360px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs transition-colors ${className}`}
     >
       <table className="w-full text-left border-collapse min-w-[760px]">
-        <thead>
-          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            <th className="py-2.5 px-3 w-28">Código</th>
-            <th className="py-2.5 px-3">Descrição / Categoria</th>
-            <th className="py-2.5 px-3 w-24">Endereço</th>
-            <th className="py-2.5 px-3 min-w-[200px]">Saldo & Cobertura</th>
-            <th className="py-2.5 px-3 w-32">Situação</th>
-            <th className="py-2.5 px-3 text-right w-36">Ações</th>
+        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs">
+          <tr className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <th className="py-2.5 px-3 w-28 bg-slate-50 dark:bg-slate-900">Código</th>
+            <th className="py-2.5 px-3 bg-slate-50 dark:bg-slate-900">Descrição / Categoria</th>
+            <th className="py-2.5 px-3 w-24 bg-slate-50 dark:bg-slate-900">Endereço</th>
+            <th className="py-2.5 px-3 min-w-[200px] bg-slate-50 dark:bg-slate-900">Saldo & Cobertura</th>
+            <th className="py-2.5 px-3 w-32 bg-slate-50 dark:bg-slate-900">Situação</th>
+            <th className="py-2.5 px-3 text-right w-36 bg-slate-50 dark:bg-slate-900">Ações</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-          {itens.map((item) => {
+          {paddingTop > 0 && (
+            <tr aria-hidden="true">
+              <td
+                colSpan={6}
+                style={{ height: `${paddingTop}px`, padding: 0, border: 0 }}
+              />
+            </tr>
+          )}
+          {virtualRows.map((virtualRow) => {
+            const item = itens[virtualRow.index];
+            if (!item) return null;
             const isSelected = selectedItemId === item.id;
             const unidadeFormatada = UNIDADE_LABELS[item.unidade] || item.unidade.toLowerCase();
             const deficit = item.estoqueSeguranca - item.estoqueAtual;
@@ -67,6 +97,8 @@ export function StockTable({
             return (
               <tr
                 key={item.id}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
                 tabIndex={0}
                 className={`transition-colors outline-none focus-within:bg-slate-50/80 dark:focus-within:bg-slate-800/40 ${
                   isSelected
@@ -172,6 +204,14 @@ export function StockTable({
               </tr>
             );
           })}
+          {paddingBottom > 0 && (
+            <tr aria-hidden="true">
+              <td
+                colSpan={6}
+                style={{ height: `${paddingBottom}px`, padding: 0, border: 0 }}
+              />
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
