@@ -124,12 +124,12 @@ flowchart TD
 > **Objetivo:** Garantir cobertura e estabilidade das rotas com testes de integração e validação de segurança.
 
 - **Micro-tarefas:**
-  - [ ] **5.1** Criar testes automatizados para os route handlers cobrindo autenticação, autorização (401/403) e validação Zod (400).
-  - [ ] **5.2** Criar testes de integração da rota `/api/movimentacoes/baixa-lote` validando transação atômica e rollback em caso de saldo insuficiente.
-  - [ ] **5.3** Executar `npm run typecheck` e `npm test` garantindo conformidade de 100%.
+  - [x] **5.1** Criar testes automatizados para os route handlers cobrindo autenticação, autorização (401/403) e validação Zod (400).
+  - [x] **5.2** Criar testes de integração da rota `/api/movimentacoes/baixa-lote` validando transação atômica e rollback em caso de saldo insuficiente.
+  - [x] **5.3** Executar `npm run typecheck` e `npm test` garantindo conformidade de 100%.
 
 ---
 
-## 5. Próximo Passo Imediato
+## 5. Status do Plano
 
-Iniciar pela **Fase 5**: consolidação de testes automatizados, validação global de segurança e build do BFF.
+**Plano 100% Concluído com Sucesso.** Todas as 5 fases foram implementadas, validadas com 222 testes automatizados e 0 erros de tipagem TypeScript. As rotas do BFF estão prontas para consumo pelas interfaces Web e Mobile.
