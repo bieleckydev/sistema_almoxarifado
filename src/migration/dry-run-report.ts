@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { mapImprodutivosCollaborators } from './adapters/improdutivos-collaborators.adapter';
 import { mapImprodutivosItems } from './adapters/improdutivos-items.adapter';
 import type { ClassifiedMigrationIssue } from './issue-classification';
@@ -131,6 +132,10 @@ function main(): void {
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMain =
+  Boolean(process.argv[1]) &&
+  fileURLToPath(import.meta.url).toLowerCase() === resolve(process.argv[1]).toLowerCase();
+
+if (isMain) {
   main();
 }

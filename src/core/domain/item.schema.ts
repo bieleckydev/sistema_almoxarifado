@@ -10,9 +10,10 @@ import {
  * - 10-XXX: Matéria-prima produtiva (tubos de aço, perfis NBR/SAE)
  * - 90-XXXX: Materiais improdutivos e consumíveis (flap, solda, brocas, EPIs)
  * - 100-XXXX: Peças acabadas e prontas para entrega
- * Também aceita códigos corporativos alfanuméricos com os prefixos permitidos.
+ * - 900-XXXX: Materiais de embalagem e expedição
+ * Também aceita códigos corporativos alfanuméricos com os prefixos permitidos e ponto/hífen.
  */
-export const ITEM_CODIGO_REGEX = /^(10|90|100)-[A-Za-z0-9\-]+$/;
+export const ITEM_CODIGO_REGEX = /^(10|90|100|900)-[A-Za-z0-9\-\.]+$/;
 
 /**
  * Detalhes de embalagem e fator multiplicador para conversão de compra vs consumo.
@@ -45,7 +46,7 @@ export const ItemSchema = z.object({
     .toUpperCase()
     .regex(
       ITEM_CODIGO_REGEX,
-      'Código de item inválido. Deve seguir o padrão com prefixo (10-XXX, 90-XXXX ou 100-XXXX)'
+      'Código de item inválido. Deve seguir o padrão com prefixo (10-XXX, 90-XXXX, 100-XXXX ou 900-XXXX)'
     ),
   descricao: z
     .string()

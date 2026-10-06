@@ -54,6 +54,12 @@ const UNIT_ALIASES: Record<string, string> = {
   LT: 'LITRO',
   LITRO: 'LITRO',
   LITROS: 'LITRO',
+  RL: 'UNIDADE',
+  ROLO: 'UNIDADE',
+  ROLOS: 'UNIDADE',
+  FD: 'UNIDADE',
+  FARDO: 'UNIDADE',
+  FARDOS: 'UNIDADE',
 };
 
 const DATE_FIELD_PATTERN = /(data|date|emiss|receb|moviment|lan[cç]amento|dia)/i;
@@ -91,11 +97,11 @@ export function normalizeCode(value: SourceCellValue, field: string): Normalized
 
   if (!normalized) {
     issues.push({ field, severity: 'error', message: 'Código vazio após normalização.' });
-  } else if (!/^(10|90|100)-[A-Z0-9-]+$/.test(normalized)) {
+  } else if (!/^(10|90|100|900)-[A-Z0-9\-\.]+$/.test(normalized)) {
     issues.push({
       field,
       severity: 'warning',
-      message: `Código "${normalized}" não segue o padrão esperado de prefixos 10, 90 ou 100.`,
+      message: `Código "${normalized}" não segue o padrão esperado de prefixos 10, 90, 100 ou 900.`,
     });
   }
 
@@ -114,8 +120,8 @@ export function normalizeRegistration(value: SourceCellValue, field: string): No
 
   if (!normalized) {
     issues.push({ field, severity: 'error', message: 'Matrícula vazia após normalização.' });
-  } else if (!/^\d{3,4}$/.test(normalized)) {
-    issues.push({ field, severity: 'error', message: 'Matrícula deve conter de 3 a 4 dígitos.' });
+  } else if (!/^\d{3,5}$/.test(normalized)) {
+    issues.push({ field, severity: 'error', message: 'Matrícula deve conter de 3 a 5 dígitos.' });
   }
 
   return {

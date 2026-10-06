@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { DryRunIssue, DryRunReport } from './dry-run-report';
 
 const DEFAULT_INPUT = resolve('migration-reports/improdutivos-dry-run.json');
@@ -81,6 +82,10 @@ function main(): void {
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMain =
+  Boolean(process.argv[1]) &&
+  fileURLToPath(import.meta.url).toLowerCase() === resolve(process.argv[1]).toLowerCase();
+
+if (isMain) {
   main();
 }
