@@ -8,12 +8,15 @@ import {
 /**
  * Regex para validação de códigos padronizados do almoxarifado:
  * - 10-XXX: Matéria-prima produtiva (tubos de aço, perfis NBR/SAE)
+ * - 20-XXX: Matéria-prima metálica (chapas e barras de aço/alumínio)
  * - 90-XXXX: Materiais improdutivos e consumíveis (flap, solda, brocas, EPIs)
  * - 100-XXXX: Peças acabadas e prontas para entrega
+ * - 200-XXXX: Suportes e subconjuntos mecânicos
+ * - 500-XXXX: Componentes e fixadores (eixos, buchas, pinos, parafusos)
  * - 900-XXXX: Materiais de embalagem e expedição
  * Também aceita códigos corporativos alfanuméricos com os prefixos permitidos e ponto/hífen.
  */
-export const ITEM_CODIGO_REGEX = /^(10|90|100|900)-[A-Za-z0-9\-\.]+$/;
+export const ITEM_CODIGO_REGEX = /^(10|20|90|100|200|500|900)-[A-Za-z0-9\-\.]+$/;
 
 /**
  * Detalhes de embalagem e fator multiplicador para conversão de compra vs consumo.
@@ -46,7 +49,7 @@ export const ItemSchema = z.object({
     .toUpperCase()
     .regex(
       ITEM_CODIGO_REGEX,
-      'Código de item inválido. Deve seguir o padrão com prefixo (10-XXX, 90-XXXX, 100-XXXX ou 900-XXXX)'
+      'Código de item inválido. Deve seguir o padrão com prefixo fabril cadastrado'
     ),
   descricao: z
     .string()

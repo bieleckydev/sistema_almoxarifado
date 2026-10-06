@@ -97,11 +97,11 @@ export function normalizeCode(value: SourceCellValue, field: string): Normalized
 
   if (!normalized) {
     issues.push({ field, severity: 'error', message: 'Código vazio após normalização.' });
-  } else if (!/^(10|90|100|900)-[A-Z0-9\-\.]+$/.test(normalized)) {
+  } else if (!/^(10|20|90|100|200|500|900)-[A-Z0-9\-\.]+$/.test(normalized)) {
     issues.push({
       field,
       severity: 'warning',
-      message: `Código "${normalized}" não segue o padrão esperado de prefixos 10, 90, 100 ou 900.`,
+      message: `Código "${normalized}" não segue o padrão de prefixos fabris cadastrados.`,
     });
   }
 

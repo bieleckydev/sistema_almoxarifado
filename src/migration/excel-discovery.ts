@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as XLSX from 'xlsx';
 
 const SUPPORTED_EXTENSIONS = new Set(['.xlsx', '.xls', '.xlsm']);
@@ -253,6 +254,10 @@ function main(): void {
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMain =
+  Boolean(process.argv[1]) &&
+  fileURLToPath(import.meta.url).toLowerCase() === resolve(process.argv[1]).toLowerCase();
+
+if (isMain) {
   main();
 }
