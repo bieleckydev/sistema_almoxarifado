@@ -28,7 +28,7 @@ export default function AlmoxarifadoDashboardPage() {
   // Otimização de busca com debounce de 300ms
   const buscaDebounced = useDebounce(termoBusca, 300);
 
-  // Hook consolidado com TanStack Query e fallback
+  // Hook consolidado com TanStack Query para dados reais
   const {
     itens,
     totalAba,
@@ -36,6 +36,7 @@ export default function AlmoxarifadoDashboardPage() {
     totalCriticos,
     contagemCriticosPorAba,
     isLoading,
+    isFetching,
     refetch,
   } = useItensEstoque({
     aba: abaAtiva,
@@ -101,11 +102,11 @@ export default function AlmoxarifadoDashboardPage() {
               <button
                 type="button"
                 onClick={() => refetch()}
-                disabled={isLoading}
+                disabled={isLoading || isFetching}
                 className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
                 title="Recarregar dados do estoque"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
                 <span>Atualizar</span>
               </button>
 

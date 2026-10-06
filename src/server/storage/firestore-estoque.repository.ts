@@ -55,10 +55,7 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       }
       return itemFromFirestore(docSnap.id, docSnap.data() || {});
     } catch {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
-      const mock = MOCK_ITENS.find((m: any) => m.id === id);
-      return mock ? (mock as Item) : null;
+      return null;
     }
   }
 
@@ -81,10 +78,7 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       const doc = snap.docs[0];
       return itemFromFirestore(doc.id, doc.data());
     } catch {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
-      const mock = MOCK_ITENS.find((m: any) => m.codigo.toUpperCase() === upperCode);
-      return mock ? (mock as Item) : null;
+      return null;
     }
   }
 
@@ -112,7 +106,7 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       const snap = await query.get();
       lista = snap.docs.map((d) => itemFromFirestore(d.id, d.data()));
     } catch {
-      // 1. Tenta recuperar itens REAIS do Firestore via API REST usando o Bearer Token do usuário
+      // Tenta recuperar itens REAIS do Firestore via API REST usando o Bearer Token do usuário
       if (authToken) {
         try {
           const itensReais = await fetchFirestoreCollectionRest<Item>('items', authToken);
@@ -120,26 +114,8 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
             lista = itensReais;
           }
         } catch {
-          // Fallback subsequente
+          // Sem conexão remota
         }
-      }
-
-      // 2. Se nenhuma fonte remota respondeu, recorre ao catálogo mock
-      if (lista.length === 0) {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
-        lista = MOCK_ITENS.map((m: any) => ({
-          id: m.id,
-          codigo: m.codigo,
-          descricao: m.descricao,
-          tipo: m.tipo,
-          unidade: m.unidade,
-          estoqueAtual: m.estoqueAtual,
-          estoqueSeguranca: m.estoqueSeguranca,
-          localizacaoFisica: m.localizacaoFisica,
-          ativo: m.ativo ?? true,
-          clienteDestino: m.clienteDestino,
-        }));
       }
 
       if (filtros?.apenasAtivos !== false) {

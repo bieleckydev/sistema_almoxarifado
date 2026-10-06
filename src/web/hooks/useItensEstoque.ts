@@ -8,10 +8,8 @@ import {
   type DashboardItem,
   type AbaEstoque,
   type StatusCriticidade,
-  MOCK_ITENS,
   METADADOS_ABAS,
   calcularStatusCriticidade,
-  ESPECIFICACOES_ITENS,
 } from '../data/mock-almoxarifado';
 
 export interface UseItensEstoqueOptions {
@@ -29,6 +27,7 @@ export interface UseItensEstoqueResult {
   totalCriticos: number;
   contagemCriticosPorAba: Record<AbaEstoque, number>;
   isLoading: boolean;
+  isFetching: boolean;
   isError: boolean;
   isFallbackMode: boolean;
   error: Error | null;
@@ -46,23 +45,35 @@ function itemToDashboardItem(item: Item): DashboardItem {
     aba = 'motos';
   }
 
-  // Tenta recuperar especificações salvas no catálogo mock por ID ou código
-  const mockCorrespondente = MOCK_ITENS.find(
-    (m) => m.id === item.id || m.codigo === item.codigo
-  );
+  const raw = item as Record<string, unknown>;
+  const categoria =
+    (typeof raw.categoria === 'string' && raw.categoria) ||
+    item.clienteDestino ||
+    (aba === 'mp' ? 'Matéria-prima' : aba === 'imp' ? 'Consumíveis' : 'Peças');
+
+  const capacidadeMaxima =
+    typeof raw.capacidadeMaxima === 'number' && raw.capacidadeMaxima > 0
+      ? raw.capacidadeMaxima
+      : Math.max(item.estoqueSeguranca * 3, item.estoqueAtual * 1.5, 50);
+
+  const especificacoes =
+    raw.especificacoes && typeof raw.especificacoes === 'object'
+      ? (raw.especificacoes as Record<string, string>)
+      : item.observacoes
+        ? { Observações: item.observacoes }
+        : {};
 
   return {
     ...item,
     aba,
-    categoria: mockCorrespondente?.categoria || item.clienteDestino || 'Geral',
-    capacidadeMaxima:
-      mockCorrespondente?.capacidadeMaxima || Math.max(item.estoqueSeguranca * 3, item.estoqueAtual * 1.5, 50),
-    especificacoes: mockCorrespondente?.especificacoes || ESPECIFICACOES_ITENS[item.id] || {},
+    categoria,
+    capacidadeMaxima,
+    especificacoes,
   };
 }
 
 /**
- * Busca de itens por aba com resiliência: API -> Firestore direto -> Mock local.
+ * Busca de itens por aba: API -> Firestore direto como redundância de rede.
  */
 async function fetchItensPorAba(aba: AbaEstoque): Promise<{ itens: DashboardItem[]; isFallback: boolean }> {
   try {
@@ -84,34 +95,30 @@ async function fetchItensPorAba(aba: AbaEstoque): Promise<{ itens: DashboardItem
   } catch (err) {
     // Tenta buscar diretamente do Firestore no cliente autenticado
     try {
-      const { collection, getDocs } = await import('firebase/firestore');
+      const { collection, getDocs, query, where } = await import('firebase/firestore');
       const { db } = await import('@/core/services/firebase');
-      const snap = await getDocs(collection(db, 'items'));
+      const q = query(
+        collection(db, 'items'),
+        where('tipo', '==', METADADOS_ABAS[aba].tipoDominio)
+      );
+      const snap = await getDocs(q);
       if (!snap.empty) {
         const itensBanco = snap.docs.map((d) => ({
           id: d.id,
           ...d.data(),
         })) as Item[];
         const convertidos = itensBanco.map(itemToDashboardItem);
-        const filtradosPorAba = convertidos.filter((i) => i.aba === aba);
-        if (filtradosPorAba.length > 0) {
-          return {
-            itens: filtradosPorAba,
-            isFallback: false,
-          };
-        }
+        return {
+          itens: convertidos,
+          isFallback: false,
+        };
       }
     } catch (clientErr) {
       console.warn('Falha na consulta direta ao Firestore no cliente:', clientErr);
     }
 
-    // Fallback local com base completa da aba selecionada
-    const baseAba = MOCK_ITENS.filter((item) => item.aba === aba);
-
-    return {
-      itens: baseAba,
-      isFallback: true,
-    };
+    console.error(`Erro ao carregar itens da aba ${aba}:`, err);
+    throw err;
   }
 }
 
@@ -120,11 +127,11 @@ const TODAS_AS_ABAS: AbaEstoque[] = ['mp', 'imp', 'motos'];
 /**
  * Hook com TanStack Query para carregar a lista de materiais do almoxarifado.
  * 
- * Arquitetura de Troca Imediata de Abas:
- * - Prefetching proativo em background de todas as 3 abas ('mp', 'imp', 'motos').
- * - PlaceholderData instantâneo: a troca de abas abre imediatamente sem skeleton nem tela em branco.
- * - Cache prolongado (5 minutos) com stale-while-revalidate transparente.
- * - Filtragem instantânea (0ms) em memória para busca textual e filtros de situação.
+ * Arquitetura Reativa com Dados Reais:
+ * - Carregamento real via API / Firestore sem qualquer exibição de dados mock.
+ * - Prefetching proativo de todas as 3 abas ('mp', 'imp', 'motos') com cache de 5 minutos.
+ * - PlaceholderData mantém dados anteriores apenas quando já existem (troca instantânea de abas).
+ * - Exibição de skeleton / loading enquanto os dados reais do banco são consultados.
  */
 export function useItensEstoque({
   aba = 'mp',
@@ -132,18 +139,11 @@ export function useItensEstoque({
   filtroSituacao = 'todos',
   enabled = true,
 }: UseItensEstoqueOptions = {}): UseItensEstoqueResult {
-  // Carrega todas as 3 abas em paralelo com useQueries para manter badges globais sincronizados
   const queries = useQueries({
     queries: TODAS_AS_ABAS.map((chaveAba) => ({
       queryKey: ['itens-estoque', chaveAba],
       queryFn: () => fetchItensPorAba(chaveAba),
-      placeholderData: (previousData: { itens: DashboardItem[]; isFallback: boolean } | undefined) => {
-        if (previousData) return previousData;
-        return {
-          itens: MOCK_ITENS.filter((item) => item.aba === chaveAba),
-          isFallback: false,
-        };
-      },
+      placeholderData: (previousData: { itens: DashboardItem[]; isFallback: boolean } | undefined) => previousData,
       staleTime: 5 * 60 * 1000, // 5 minutos de cache fresco por aba
       enabled,
     })),
@@ -223,7 +223,8 @@ export function useItensEstoque({
     totalAbaixoMinimo,
     totalCriticos,
     contagemCriticosPorAba,
-    isLoading: queryAtiva.isLoading && !queryAtiva.data,
+    isLoading: queryAtiva.isLoading,
+    isFetching: queryAtiva.isFetching,
     isError: queryAtiva.isError,
     isFallbackMode,
     error: (queryAtiva.error as Error) || null,
