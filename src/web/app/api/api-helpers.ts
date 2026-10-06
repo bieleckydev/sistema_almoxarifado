@@ -170,8 +170,12 @@ export function toErrorResponse(error: unknown): NextResponse {
 
   // Erro interno não tratado (500 Internal Server Error)
   console.error('Erro interno na API:', error);
+  const errorMessage = error instanceof Error ? error.message : 'Erro interno ao processar a solicitação.';
   return NextResponse.json(
-    { error: 'Erro interno ao processar a solicitação.' },
+    {
+      error: 'Erro interno ao processar a solicitação.',
+      mensagemInterna: errorMessage,
+    },
     { status: 500 }
   );
 }
