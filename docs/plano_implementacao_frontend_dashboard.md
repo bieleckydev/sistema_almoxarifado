@@ -133,7 +133,7 @@ flowchart LR
 ### Fase 2: Dataset de Fallback e Camada de Hooks com TanStack Query
 > **Objetivo:** Criar os hooks de integração com a API e o repositório de fallback, garantindo que a interface funcione tanto conectada ao backend com token quanto em modo demonstração desacoplado.
 
-- [ ] **2.1** Criar [`src/web/data/mock-almoxarifado.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/data/mock-almoxarifado.ts):
+- [x] **2.1** Criar [`src/web/data/mock-almoxarifado.ts`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/data/mock-almoxarifado.ts):
   - Exportar os itens e movimentações do protótipo estático original, adaptando-os para os contratos de tipagem do Core ([`Item`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/core/domain/item.schema.ts) e [`Movimentacao`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/core/domain/movimentacao.schema.ts)).
   - Mapear categorias para os tipos do domínio:
     - `mp` -> `PRODUTIVO_MATERIA_PRIMA`
