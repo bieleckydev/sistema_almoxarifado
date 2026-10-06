@@ -25,6 +25,18 @@ export function StockMetricsCards({
   const percentualAbaixo = totalItens > 0 ? ((totalAbaixoMinimo / totalItens) * 100).toFixed(0) : '0';
   const percentualCritico = totalItens > 0 ? ((totalCriticos / totalItens) * 100).toFixed(0) : '0';
 
+  const handleCardClick = (status: 'todos' | StatusCriticidade) => {
+    if (!onFiltrarPorStatus) return;
+    if (status === 'todos') {
+      onFiltrarPorStatus('todos');
+    } else if (filtroAtivo === status) {
+      // Toggle: se clicar no card que já está filtrando, remove o filtro
+      onFiltrarPorStatus('todos');
+    } else {
+      onFiltrarPorStatus(status);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 ${className}`}>
@@ -49,11 +61,12 @@ export function StockMetricsCards({
       {/* Total de Itens */}
       <button
         type="button"
-        onClick={() => onFiltrarPorStatus?.('todos')}
+        onClick={() => handleCardClick('todos')}
         aria-pressed={filtroAtivo === 'todos'}
-        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
+        title={filtroAtivo === 'todos' ? 'Exibindo todos os itens do catálogo' : 'Clique para exibir todos os itens'}
+        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer relative ${
           filtroAtivo === 'todos'
-            ? 'bg-slate-50 dark:bg-slate-800/80 border-slate-400 dark:border-slate-600 ring-1 ring-slate-400 dark:ring-slate-600'
+            ? 'bg-slate-50 dark:bg-slate-800/80 border-slate-400 dark:border-slate-600 ring-1 ring-slate-400 dark:ring-slate-600 shadow-xs'
             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
         }`}
       >
@@ -65,19 +78,24 @@ export function StockMetricsCards({
             100% catálogo
           </span>
         </div>
-        <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          {totalItens === 1 ? 'Item cadastrado nesta categoria' : 'Itens cadastrados nesta categoria'}
+        <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-400">
+          <span>{totalItens === 1 ? 'Item cadastrado nesta categoria' : 'Itens cadastrados nesta categoria'}</span>
         </div>
       </button>
 
       {/* Abaixo do Mínimo */}
       <button
         type="button"
-        onClick={() => onFiltrarPorStatus?.('low')}
+        onClick={() => handleCardClick('low')}
         aria-pressed={filtroAtivo === 'low'}
-        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
+        title={
           filtroAtivo === 'low'
-            ? 'bg-amber-50/60 dark:bg-amber-950/40 border-amber-500 dark:border-amber-500 ring-1 ring-amber-500'
+            ? 'Filtro ativo. Clique novamente para limpar e ver todos'
+            : 'Clique para filtrar itens em atenção (abaixo do estoque de segurança)'
+        }
+        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer relative ${
+          filtroAtivo === 'low'
+            ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-500 dark:border-amber-500 ring-2 ring-amber-500 shadow-xs'
             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700'
         }`}
       >
@@ -89,19 +107,29 @@ export function StockMetricsCards({
             {percentualAbaixo}% em atenção
           </span>
         </div>
-        <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Abaixo do estoque de segurança
+        <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-400">
+          <span>Abaixo do estoque de segurança</span>
+          {filtroAtivo === 'low' && (
+            <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 rounded">
+              Filtro ativo ✕
+            </span>
+          )}
         </div>
       </button>
 
       {/* Nível Crítico */}
       <button
         type="button"
-        onClick={() => onFiltrarPorStatus?.('crit')}
+        onClick={() => handleCardClick('crit')}
         aria-pressed={filtroAtivo === 'crit'}
-        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
+        title={
           filtroAtivo === 'crit'
-            ? 'bg-rose-50/60 dark:bg-rose-950/40 border-rose-500 dark:border-rose-500 ring-1 ring-rose-500'
+            ? 'Filtro ativo. Clique novamente para limpar e ver todos'
+            : 'Clique para filtrar itens em nível crítico/zerado'
+        }
+        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer relative ${
+          filtroAtivo === 'crit'
+            ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-500 dark:border-rose-500 ring-2 ring-rose-500 shadow-xs'
             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700'
         }`}
       >
@@ -113,8 +141,13 @@ export function StockMetricsCards({
             {percentualCritico}% em ruptura
           </span>
         </div>
-        <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Nível crítico (requer reposição imediata)
+        <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-400">
+          <span>Nível crítico (requer reposição)</span>
+          {filtroAtivo === 'crit' && (
+            <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/50 px-1.5 py-0.5 rounded">
+              Filtro ativo ✕
+            </span>
+          )}
         </div>
       </button>
     </section>
