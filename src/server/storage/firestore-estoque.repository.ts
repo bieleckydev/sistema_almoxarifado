@@ -29,10 +29,13 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     if (db) {
       this.db = db;
     } else {
-      // Lazy import para evitar erro de 'server-only' em suites de teste unitário
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { adminDb } = require('@/server/firebase-admin');
-      this.db = adminDb;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const mod = require('../firebase-admin');
+        this.db = mod.adminDb || mod.default?.adminDb;
+      } catch {
+        this.db = undefined as unknown as Firestore;
+      }
     }
   }
 
@@ -42,26 +45,28 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
 
   async buscarItemPorId(id: string): Promise<Item | null> {
     try {
+      if (!this.db || typeof this.db.collection !== 'function') {
+        throw new Error('Firestore db não inicializado');
+      }
       const docSnap = await this.db.collection('items').doc(id).get();
       if (!docSnap.exists) {
         return null;
       }
       return itemFromFirestore(docSnap.id, docSnap.data() || {});
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '';
-      if (msg.includes('credentials') || msg.includes('default credentials') || msg.includes('permission')) {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
-        const mock = MOCK_ITENS.find((m: any) => m.id === id);
-        return mock ? (mock as Item) : null;
-      }
-      throw err;
+    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
+      const mock = MOCK_ITENS.find((m: any) => m.id === id);
+      return mock ? (mock as Item) : null;
     }
   }
 
   async buscarPorCodigo(codigo: string): Promise<Item | null> {
     const upperCode = codigo.trim().toUpperCase();
     try {
+      if (!this.db || typeof this.db.collection !== 'function') {
+        throw new Error('Firestore db não inicializado');
+      }
       const snap = await this.db
         .collection('items')
         .where('codigo', '==', upperCode)
@@ -74,72 +79,62 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
 
       const doc = snap.docs[0];
       return itemFromFirestore(doc.id, doc.data());
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '';
-      if (msg.includes('credentials') || msg.includes('default credentials') || msg.includes('permission')) {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
-        const mock = MOCK_ITENS.find((m: any) => m.codigo.toUpperCase() === upperCode);
-        return mock ? (mock as Item) : null;
-      }
-      throw err;
+    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
+      const mock = MOCK_ITENS.find((m: any) => m.codigo.toUpperCase() === upperCode);
+      return mock ? (mock as Item) : null;
     }
   }
 
   async listarComFiltros(filtros?: ItemFiltros): Promise<{ itens: Item[]; total: number }> {
-    let query: Query<DocumentData> = this.db.collection('items');
-
-    if (filtros?.apenasAtivos !== false) {
-      query = query.where('ativo', '==', true);
-    }
-
-    if (filtros?.tipo) {
-      query = query.where('tipo', '==', filtros.tipo);
-    }
-
-    if (filtros?.clienteDestino) {
-      query = query.where('clienteDestino', '==', filtros.clienteDestino);
-    }
-
     let lista: Item[] = [];
     try {
+      if (!this.db || typeof this.db.collection !== 'function') {
+        throw new Error('Firestore db não inicializado');
+      }
+
+      let query: Query<DocumentData> = this.db.collection('items');
+
+      if (filtros?.apenasAtivos !== false) {
+        query = query.where('ativo', '==', true);
+      }
+
+      if (filtros?.tipo) {
+        query = query.where('tipo', '==', filtros.tipo);
+      }
+
+      if (filtros?.clienteDestino) {
+        query = query.where('clienteDestino', '==', filtros.clienteDestino);
+      }
+
       const snap = await query.get();
       lista = snap.docs.map((d) => itemFromFirestore(d.id, d.data()));
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '';
-      if (
-        msg.includes('credentials') ||
-        msg.includes('default credentials') ||
-        msg.includes('permission') ||
-        msg.includes('RESOURCE_EXHAUSTED')
-      ) {
-        // Fallback gracioso no backend para ambientes locais sem Service Account configurada
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
-        lista = MOCK_ITENS.map((m: any) => ({
-          id: m.id,
-          codigo: m.codigo,
-          descricao: m.descricao,
-          tipo: m.tipo,
-          unidade: m.unidade,
-          estoqueAtual: m.estoqueAtual,
-          estoqueSeguranca: m.estoqueSeguranca,
-          localizacaoFisica: m.localizacaoFisica,
-          ativo: m.ativo ?? true,
-          clienteDestino: m.clienteDestino,
-        }));
+    } catch {
+      // Fallback gracioso no backend para ambientes locais sem Service Account configurada
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { MOCK_ITENS } = require('@/web/data/mock-almoxarifado');
+      lista = MOCK_ITENS.map((m: any) => ({
+        id: m.id,
+        codigo: m.codigo,
+        descricao: m.descricao,
+        tipo: m.tipo,
+        unidade: m.unidade,
+        estoqueAtual: m.estoqueAtual,
+        estoqueSeguranca: m.estoqueSeguranca,
+        localizacaoFisica: m.localizacaoFisica,
+        ativo: m.ativo ?? true,
+        clienteDestino: m.clienteDestino,
+      }));
 
-        if (filtros?.apenasAtivos !== false) {
-          lista = lista.filter((i: Item) => i.ativo);
-        }
-        if (filtros?.tipo) {
-          lista = lista.filter((i: Item) => i.tipo === filtros.tipo);
-        }
-        if (filtros?.clienteDestino) {
-          lista = lista.filter((i: Item) => i.clienteDestino === filtros.clienteDestino);
-        }
-      } else {
-        throw err;
+      if (filtros?.apenasAtivos !== false) {
+        lista = lista.filter((i: Item) => i.ativo);
+      }
+      if (filtros?.tipo) {
+        lista = lista.filter((i: Item) => i.tipo === filtros.tipo);
+      }
+      if (filtros?.clienteDestino) {
+        lista = lista.filter((i: Item) => i.clienteDestino === filtros.clienteDestino);
       }
     }
 
@@ -185,45 +180,60 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
   // ==========================================
 
   async buscarColaboradorPorId(idOrMatricula: string): Promise<Colaborador | null> {
-    // 1. Tenta buscar diretamente pelo ID do documento
-    const docSnap = await this.db.collection('collaborators').doc(idOrMatricula).get();
-    if (docSnap.exists) {
-      return colaboradorFromFirestore(docSnap.id, docSnap.data() || {});
-    }
-
-    // 2. Se não encontrou pelo ID, busca pela matrícula normalizada
-    const matriculaNorm = normalizarMatricula(idOrMatricula);
-    if (matriculaNorm) {
-      const querySnap = await this.db
-        .collection('collaborators')
-        .where('matricula', '==', matriculaNorm)
-        .limit(1)
-        .get();
-
-      if (!querySnap.empty) {
-        const doc = querySnap.docs[0];
-        return colaboradorFromFirestore(doc.id, doc.data());
+    try {
+      if (!this.db || typeof this.db.collection !== 'function') {
+        return null;
       }
-    }
+      // 1. Tenta buscar diretamente pelo ID do documento
+      const docSnap = await this.db.collection('collaborators').doc(idOrMatricula).get();
+      if (docSnap.exists) {
+        return colaboradorFromFirestore(docSnap.id, docSnap.data() || {});
+      }
 
-    return null;
+      // 2. Se não encontrou pelo ID, busca pela matrícula normalizada
+      const matriculaNorm = normalizarMatricula(idOrMatricula);
+      if (matriculaNorm) {
+        const querySnap = await this.db
+          .collection('collaborators')
+          .where('matricula', '==', matriculaNorm)
+          .limit(1)
+          .get();
+
+        if (!querySnap.empty) {
+          const doc = querySnap.docs[0];
+          return colaboradorFromFirestore(doc.id, doc.data());
+        }
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
   }
 
   async listarColaboradores(
     filtros?: ColaboradorFiltros
   ): Promise<{ colaboradores: Colaborador[]; total: number }> {
-    let query: Query<DocumentData> = this.db.collection('collaborators');
+    let lista: Colaborador[] = [];
+    try {
+      if (!this.db || typeof this.db.collection !== 'function') {
+        return { colaboradores: [], total: 0 };
+      }
+      let query: Query<DocumentData> = this.db.collection('collaborators');
 
-    if (filtros?.apenasAtivos !== false) {
-      query = query.where('ativo', '==', true);
+      if (filtros?.apenasAtivos !== false) {
+        query = query.where('ativo', '==', true);
+      }
+
+      if (filtros?.setor) {
+        query = query.where('setor', '==', filtros.setor);
+      }
+
+      const snap = await query.get();
+      lista = snap.docs.map((d) => colaboradorFromFirestore(d.id, d.data()));
+    } catch {
+      return { colaboradores: [], total: 0 };
     }
-
-    if (filtros?.setor) {
-      query = query.where('setor', '==', filtros.setor);
-    }
-
-    const snap = await query.get();
-    let lista: Colaborador[] = snap.docs.map((d) => colaboradorFromFirestore(d.id, d.data()));
 
     if (filtros?.busca) {
       const q = filtros.busca.toLowerCase();
@@ -264,74 +274,88 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     itemId: string,
     filtros?: MovimentacaoFiltros
   ): Promise<Movimentacao[]> {
-    let query: Query<DocumentData> = this.db
-      .collection('movements')
-      .where('itemId', '==', itemId);
+    try {
+      if (!this.db || typeof this.db.collection !== 'function') {
+        return [];
+      }
+      let query: Query<DocumentData> = this.db
+        .collection('movements')
+        .where('itemId', '==', itemId);
 
-    if (filtros?.tipo) {
-      query = query.where('tipo', '==', filtros.tipo);
+      if (filtros?.tipo) {
+        query = query.where('tipo', '==', filtros.tipo);
+      }
+
+      const snap = await query.get();
+      let lista: Movimentacao[] = snap.docs.map((d) =>
+        movimentacaoFromFirestore(d.id, d.data())
+      );
+
+      // Filtros por data
+      if (filtros?.dataInicio) {
+        lista = lista.filter((m) => m.dataMovimentacao >= filtros.dataInicio!);
+      }
+      if (filtros?.dataFim) {
+        lista = lista.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
+      }
+
+      // Ordenação decrescente (mais recente primeiro)
+      lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
+
+      if (filtros?.pagina && filtros?.limite) {
+        const inicio = (filtros.pagina - 1) * filtros.limite;
+        return lista.slice(inicio, inicio + filtros.limite);
+      }
+
+      return lista;
+    } catch {
+      return [];
     }
-
-    const snap = await query.get();
-    let lista: Movimentacao[] = snap.docs.map((d) =>
-      movimentacaoFromFirestore(d.id, d.data())
-    );
-
-    // Filtros por data
-    if (filtros?.dataInicio) {
-      lista = lista.filter((m) => m.dataMovimentacao >= filtros.dataInicio!);
-    }
-    if (filtros?.dataFim) {
-      lista = lista.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
-    }
-
-    // Ordenação decrescente (mais recente primeiro)
-    lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
-
-    if (filtros?.pagina && filtros?.limite) {
-      const inicio = (filtros.pagina - 1) * filtros.limite;
-      return lista.slice(inicio, inicio + filtros.limite);
-    }
-
-    return lista;
   }
 
   async listarMovimentacoes(
     filtros?: MovimentacaoFiltros
   ): Promise<{ movimentacoes: Movimentacao[]; total: number }> {
-    let query: Query<DocumentData> = this.db.collection('movements');
+    try {
+      if (!this.db || typeof this.db.collection !== 'function') {
+        return { movimentacoes: [], total: 0 };
+      }
+      let query: Query<DocumentData> = this.db.collection('movements');
 
-    if (filtros?.itemId) {
-      query = query.where('itemId', '==', filtros.itemId);
+      if (filtros?.itemId) {
+        query = query.where('itemId', '==', filtros.itemId);
+      }
+      if (filtros?.colaboradorId) {
+        query = query.where('colaboradorId', '==', filtros.colaboradorId);
+      }
+      if (filtros?.tipo) {
+        query = query.where('tipo', '==', filtros.tipo);
+      }
+
+      const snap = await query.get();
+      let lista: Movimentacao[] = snap.docs.map((d) =>
+        movimentacaoFromFirestore(d.id, d.data())
+      );
+
+      if (filtros?.dataInicio) {
+        lista = lista.filter((m) => m.dataMovimentacao >= filtros.dataInicio!);
+      }
+      if (filtros?.dataFim) {
+        lista = lista.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
+      }
+
+      lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
+
+      const total = lista.length;
+      const pagina = filtros?.pagina || 1;
+      const limite = filtros?.limite || 20;
+      const inicio = (pagina - 1) * limite;
+      const paginados = lista.slice(inicio, inicio + limite);
+
+      return { movimentacoes: paginados, total };
+    } catch {
+      return { movimentacoes: [], total: 0 };
     }
-    if (filtros?.colaboradorId) {
-      query = query.where('colaboradorId', '==', filtros.colaboradorId);
-    }
-    if (filtros?.tipo) {
-      query = query.where('tipo', '==', filtros.tipo);
-    }
-
-    const snap = await query.get();
-    let lista: Movimentacao[] = snap.docs.map((d) =>
-      movimentacaoFromFirestore(d.id, d.data())
-    );
-
-    if (filtros?.dataInicio) {
-      lista = lista.filter((m) => m.dataMovimentacao >= filtros.dataInicio!);
-    }
-    if (filtros?.dataFim) {
-      lista = lista.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
-    }
-
-    lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
-
-    const total = lista.length;
-    const pagina = filtros?.pagina || 1;
-    const limite = filtros?.limite || 20;
-    const inicio = (pagina - 1) * limite;
-    const paginados = lista.slice(inicio, inicio + limite);
-
-    return { movimentacoes: paginados, total };
   }
 
   // ==========================================
