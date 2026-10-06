@@ -1,139 +1,158 @@
 'use client';
 
-import React from 'react';
-import { Package, Layers, ShieldCheck, Smartphone, Globe, CheckCircle2 } from 'lucide-react';
-import { useAppStore } from '@/core/store/useAppStore';
-import { formatDate, formatCurrency } from '@/core/utils/formatters';
+import React, { useState } from 'react';
+import { Database, CheckCircle2, RefreshCw } from 'lucide-react';
+import {
+  type AbaEstoque,
+  type StatusCriticidade,
+  type DashboardItem,
+  METADADOS_ABAS,
+} from '@/web/data/mock-almoxarifado';
+import { useItensEstoque } from '@/web/hooks/useItensEstoque';
+import { useDebounce } from '@/web/hooks/useDebounce';
+import { AppSidebar } from '@/web/components/layout/AppSidebar';
+import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards';
+import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
+import { StockTable } from '@/web/components/dashboard/StockTable';
+import { ItemDetailsDrawer } from '@/web/components/dashboard/ItemDetailsDrawer';
 
-export default function HomePage() {
-  const { isSidebarOpen, toggleSidebar } = useAppStore();
-  const currentDate = formatDate(new Date().toISOString());
-  const sampleBalance = formatCurrency(12450.75);
+export default function AlmoxarifadoDashboardPage() {
+  const [abaAtiva, setAbaAtiva] = useState<AbaEstoque>('mp');
+  const [termoBusca, setTermoBusca] = useState('');
+  const [filtroSituacao, setFiltroSituacao] = useState<'todos' | StatusCriticidade>('todos');
+  const [itemSelecionado, setItemSelecionado] = useState<DashboardItem | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Otimização de busca com debounce de 300ms
+  const buscaDebounced = useDebounce(termoBusca, 300);
+
+  // Hook consolidado com TanStack Query e fallback
+  const {
+    itens,
+    totalAba,
+    totalAbaixoMinimo,
+    totalCriticos,
+    contagemCriticosPorAba,
+    isLoading,
+    isFallbackMode,
+    refetch,
+  } = useItensEstoque({
+    aba: abaAtiva,
+    busca: buscaDebounced,
+    filtroSituacao,
+  });
+
+  const handleSelectAba = (novaAba: AbaEstoque) => {
+    setAbaAtiva(novaAba);
+    setTermoBusca('');
+    setFiltroSituacao('todos');
+    setItemSelecionado(null);
+    setIsDrawerOpen(false);
+  };
+
+  const handleSelectItem = (item: DashboardItem) => {
+    setItemSelecionado(item);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+  };
+
+  const handleClearFilters = () => {
+    setTermoBusca('');
+    setFiltroSituacao('todos');
+  };
+
+  const metadadosAba = METADADOS_ABAS[abaAtiva];
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-6xl mx-auto flex flex-col gap-8">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-600 text-white rounded-xl shadow-md shadow-blue-500/20">
-            <Package className="w-8 h-8" />
-          </div>
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#eceff3] dark:bg-[#0e151b] text-[#17212b] dark:text-[#e6edf3]">
+      {/* Menu Lateral de Navegação */}
+      <AppSidebar
+        abaAtiva={abaAtiva}
+        onSelectAba={handleSelectAba}
+        contagemCriticos={contagemCriticosPorAba}
+      />
+
+      {/* Conteúdo Principal do Almoxarifado */}
+      <main className="flex-1 p-5 md:p-8 lg:p-10 max-w-7xl w-full mx-auto flex flex-col min-w-0">
+        {/* Cabeçalho da Categoria */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Sistema de Almoxarifado
+              {metadadosAba.titulo}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Arquitetura Multiplataforma: Core Agnóstico & Apresentação Especializada
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+              {metadadosAba.subtitulo} A marca vertical na barra indica o estoque mínimo de segurança.
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Fase 1: Web First
-          </span>
-        </div>
-      </header>
 
-      {/* Architecture Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Core Card */}
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 rounded-xl">
-              <Layers className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Core Agnóstico (src/core)</h2>
-              <p className="text-xs text-slate-500">100% isolado de APIs do DOM e navegadores</p>
-            </div>
+          {/* Badge de Conexão com o Backend */}
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+            {isFallbackMode ? (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                title="Operando com catálogo local de demonstração (fallback resiliente)"
+              >
+                <Database className="w-3.5 h-3.5" />
+                Modo Demonstração
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                title="Conectado com sucesso à API REST do Almoxarifado"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Conectado à API
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Recarregar dados"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <ul className="text-sm space-y-2 text-slate-600 dark:text-slate-300">
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <strong>api/:</strong> Axios desacoplado com injeção de Storage Adapter
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <strong>domain/:</strong> Modelos e Schemas Zod para validação
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <strong>hooks/:</strong> Custom Hooks universais (TanStack Query)
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <strong>services/:</strong> Regras de negócio e chamadas de API
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <strong>store/:</strong> Estado global agnóstico via Zustand
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <strong>storage/:</strong> Contrato/Interface <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">IStorageAdapter</code>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <strong>utils/:</strong> Formatadores puros com date-fns e Intl
-            </li>
-          </ul>
-        </div>
+        </header>
 
-        {/* Presentation Card */}
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-950 text-blue-600 rounded-xl">
-              <Globe className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Apresentação Web (src/web)</h2>
-              <p className="text-xs text-slate-500">Next.js App Router, Tailwind CSS e Adapters</p>
-            </div>
-          </div>
-          <ul className="text-sm space-y-2 text-slate-600 dark:text-slate-300">
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <strong>app/:</strong> Next.js App Router (Layouts e Páginas)
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <strong>components/:</strong> Componentes visuais com Tailwind CSS
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <strong>adapters/:</strong> Implementação concreta do Storage (LocalStorage)
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <strong>hooks/:</strong> Hooks exclusivos de navegador (ex.: useMediaQuery)
-            </li>
-          </ul>
+        {/* Cards de Métricas e KPIs Superiores */}
+        <StockMetricsCards
+          totalItens={totalAba}
+          totalAbaixoMinimo={totalAbaixoMinimo}
+          totalCriticos={totalCriticos}
+          isLoading={isLoading}
+        />
 
-          <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs text-slate-400">
-            <Smartphone className="w-4 h-4 text-emerald-500" />
-            <span>Pronto para Fase 2: Mobile com Expo / React Native reutilizando o Core</span>
-          </div>
-        </div>
-      </section>
+        {/* Barra de Filtros e Pesquisa */}
+        <StockFilterToolbar
+          busca={termoBusca}
+          onBuscaChange={setTermoBusca}
+          filtroSituacao={filtroSituacao}
+          onFiltroSituacaoChange={setFiltroSituacao}
+          totalFiltrados={itens.length}
+          placeholder={`Buscar em ${metadadosAba.titulo.toLowerCase()} por nome, código ou endereço...`}
+        />
 
-      {/* Live Test of Agnostic State & Utilities */}
-      <section className="p-6 bg-slate-100 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-600" />
-            Ambiente Inicial Configurado
-          </h3>
-          <p className="text-sm text-slate-500">
-            Data atual ({currentDate}) • Amostra de saldo: {sampleBalance} • Estado do Store: {isSidebarOpen ? 'Sidebar Aberta' : 'Sidebar Recolhida'}
-          </p>
-        </div>
-        <button
-          onClick={toggleSidebar}
-          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 text-sm font-medium rounded-lg transition-colors cursor-pointer"
-        >
-          Alternar Estado do Store
-        </button>
-      </section>
-    </main>
+        {/* Tabela de Materiais do Almoxarifado */}
+        <StockTable
+          itens={itens}
+          onSelectItem={handleSelectItem}
+          selectedItemId={itemSelecionado?.id}
+          isLoading={isLoading}
+          onClearFilters={handleClearFilters}
+        />
+      </main>
+
+      {/* Drawer Lateral de Detalhes do Produto */}
+      <ItemDetailsDrawer
+        item={itemSelecionado}
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+      />
+    </div>
   );
 }
