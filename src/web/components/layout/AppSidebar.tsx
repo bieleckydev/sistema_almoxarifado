@@ -1,15 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Package,
   Layers,
   Wrench,
   Bike,
-  Sun,
-  Moon,
 } from 'lucide-react';
-import { useAppStore } from '@/core/store/useAppStore';
 import { type AbaEstoque, METADADOS_ABAS } from '@/web/data/mock-almoxarifado';
 
 export interface AppSidebarProps {
@@ -31,68 +28,6 @@ export function AppSidebar({
   contagemCriticos = { mp: 0, imp: 0, motos: 0 },
   className = '',
 }: AppSidebarProps) {
-  const { setThemeMode } = useAppStore();
-  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(false);
-  const [mounted, setMounted] = React.useState<boolean>(false);
-
-  // Inicializa tema no cliente respeitando localStorage ou preferência do SO
-  useEffect(() => {
-    setMounted(true);
-    const root = document.documentElement;
-    const stored = localStorage.getItem('almoxarifado_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialDark = stored ? stored === 'dark' : prefersDark;
-
-    setIsDarkMode(initialDark);
-    setThemeMode(initialDark ? 'dark' : 'light');
-
-    if (initialDark) {
-      root.classList.add('dark');
-      root.setAttribute('data-theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      root.setAttribute('data-theme', 'light');
-    }
-
-    // Escuta alterações de tema do sistema operacional se o usuário não definiu escolha manual
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('almoxarifado_theme')) {
-        setIsDarkMode(e.matches);
-        setThemeMode(e.matches ? 'dark' : 'light');
-        if (e.matches) {
-          root.classList.add('dark');
-          root.setAttribute('data-theme', 'dark');
-        } else {
-          root.classList.remove('dark');
-          root.setAttribute('data-theme', 'light');
-        }
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleSystemChange);
-    return () => mediaQuery.removeEventListener('change', handleSystemChange);
-  }, [setThemeMode]);
-
-  const toggleTheme = () => {
-    const nextDark = !isDarkMode;
-    setIsDarkMode(nextDark);
-    const nextTheme = nextDark ? 'dark' : 'light';
-    setThemeMode(nextTheme);
-
-    try {
-      localStorage.setItem('almoxarifado_theme', nextTheme);
-    } catch (_) {}
-
-    const root = document.documentElement;
-    if (nextDark) {
-      root.classList.add('dark');
-      root.setAttribute('data-theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      root.setAttribute('data-theme', 'light');
-    }
-  };
 
   return (
     <aside
@@ -151,28 +86,6 @@ export function AppSidebar({
             );
           })}
         </nav>
-      </div>
-
-      {/* Rodapé com Alternância de Tema */}
-      <div className="pt-6 border-t border-white/10 mt-6">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={mounted && isDarkMode ? 'Alternar para tema claro' : 'Alternar para tema escuro'}
-          className="w-full flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-[#d5e4ec]/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
-        >
-          {mounted && isDarkMode ? (
-            <>
-              <Sun className="w-3.5 h-3.5 text-amber-300" />
-              <span>Tema Claro</span>
-            </>
-          ) : (
-            <>
-              <Moon className="w-3.5 h-3.5 text-cyan-300" />
-              <span>Tema Escuro</span>
-            </>
-          )}
-        </button>
       </div>
     </aside>
   );
