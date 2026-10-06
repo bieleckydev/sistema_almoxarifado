@@ -7,3 +7,5 @@ export * from './colaborador.schema';
 export * from './movimentacao.schema';
 export * from './inventario.schema';
 export * from './nfe.schema';
+export * from './cliente.schema';
+
