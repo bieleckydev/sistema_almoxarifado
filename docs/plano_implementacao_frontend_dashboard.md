@@ -173,18 +173,18 @@ flowchart LR
 ### Fase 4: Tabela de Itens, Barra de Filtros e Cards de Métricas
 > **Objetivo:** Construir o painel principal de monitoração do estoque com alta responsividade e performance.
 
-- [ ] **4.1** Criar [`src/web/components/dashboard/StockMetricsCards.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockMetricsCards.tsx):
+- [x] **4.1** Criar [`src/web/components/dashboard/StockMetricsCards.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockMetricsCards.tsx):
   - 3 cards superiores:
     1. Total de itens cadastrados na categoria atual.
     2. Quantidade de itens em ponto de pedido (abaixo do estoque mínimo).
     3. Quantidade de itens em nível crítico/zerado (com destaque em vermelho).
   - Ícones semânticos para cada indicador (`Layers`, `AlertTriangle`, `AlertOctagon`).
-- [ ] **4.2** Criar [`src/web/components/dashboard/StockFilterToolbar.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockFilterToolbar.tsx):
+- [x] **4.2** Criar [`src/web/components/dashboard/StockFilterToolbar.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockFilterToolbar.tsx):
   - Input de busca textual com ícone `Search` e botão de limpar busca.
   - Botões do tipo Chip para filtro de situação: "Todos", "Normal", "Abaixo do mínimo", "Crítico".
-- [ ] **4.3** Criar [`src/web/components/dashboard/StockTableSkeleton.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockTableSkeleton.tsx):
+- [x] **4.3** Criar [`src/web/components/dashboard/StockTableSkeleton.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockTableSkeleton.tsx):
   - Efeito visual de carregamento (Skeleton Shimmer) durante o fetch de dados.
-- [ ] **4.4** Criar [`src/web/components/dashboard/StockTable.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockTable.tsx):
+- [x] **4.4** Criar [`src/web/components/dashboard/StockTable.tsx`](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockTable.tsx):
   - Tabela com colunas:
     - **Item:** Nome em destaque, código SKU e categoria.
     - **Endereço:** Localização física no almoxarifado (ex: `E-00-01`).
