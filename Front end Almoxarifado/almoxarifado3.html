@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Almoxarifado · Monitoração de estoque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9eff7;--surface:#fff;--side:#0b0c0f;--side-ink:#d5e4ec;--ink:#17212b;--muted:#5b6876;--line:#d9dfe5;--brand:#1d4ea3;--brand-ink:#fff;--ok:#2e7d4f;--low:#a85f00;--crit:#c8322b;--red:#d9372f;--okbg:#e1f1e8;--lowbg:#fbecd0;--critbg:#f8dedb;--track:#e3e8ed;--sky:#4fa8e0;--yellow:#f2b705;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151b;--surface:#17212a;--side:#050607;--side-ink:#b9c9d3;--ink:#e6edf3;--muted:#9aa8b5;--line:#2a3743;--brand:#5aa9ea;--brand-ink:#06182e;--ok:#5ec58a;--low:#e9a23b;--crit:#f0796b;--red:#f0796b;--okbg:#18372a;--lowbg:#3b2f17;--critbg:#40201d;--track:#27333d;--sky:#7cc3f2;--yellow:#f5c431}}
+:root[data-theme="dark"]{--bg:#0e151b;--surface:#17212a;--side:#050607;--side-ink:#b9c9d3;--ink:#e6edf3;--muted:#9aa8b5;--line:#2a3743;--brand:#5aa9ea;--brand-ink:#06182e;--ok:#5ec58a;--low:#e9a23b;--crit:#f0796b;--red:#f0796b;--okbg:#18372a;--lowbg:#3b2f17;--critbg:#40201d;--track:#27333d;--sky:#7cc3f2;--yellow:#f5c431}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--side);color:var(--side-ink);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.logo{font-weight:700;font-size:17px;color:#fff;padding:0 10px 18px}
+.logo small{display:block;font-weight:400;font-size:12.5px;color:var(--side-ink);opacity:.8}
+.nav{background:none;border:0;text-align:left;padding:10px 12px;border-radius:8px;color:inherit;display:flex;justify-content:space-between;align-items:center}
+.nav:hover{background:rgba(255,255,255,.07)}
+.nav[aria-current="page"]{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.badge{background:var(--crit);color:#fff;border-radius:99px;font-size:12px;padding:0 8px;font-weight:600}
+.theme{margin-top:auto;background:none;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px;color:inherit}
+main{padding:28px clamp(16px,3vw,40px) 48px;max-width:1180px;width:100%}
+h1{font-size:clamp(24px,3.2vw,34px);line-height:1.2;margin:0 0 6px;font-weight:600;max-width:24ch}
+.sub{color:var(--muted);margin:0 0 24px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat b{display:block;font-size:28px;font-weight:600;line-height:1.1}
+.stat span{color:var(--muted);font-size:13.5px}
+.stat.crit b{color:var(--crit)}.stat.low b{color:var(--low)}
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.panel h2{font-size:16px;margin:0 0 10px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+input[type=search]{flex:1 1 240px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 14px}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:500;color:var(--muted);font-size:13.5px}
+tbody tr:last-child td{border-bottom:0}
+tr.row{cursor:pointer}tr.row:hover{background:var(--bg)}
+td small{display:block;color:var(--muted)}
+.gauge{position:relative;height:8px;background:var(--track);border-radius:4px;min-width:120px}
+.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.gauge u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.55}
+.s-ok i{background:var(--ok)}.s-low i{background:var(--low)}.s-crit i{background:var(--crit)}
+.tag{display:inline-block;border-radius:6px;padding:2px 9px;font-size:13px;font-weight:600}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.low{background:var(--lowbg);color:var(--low)}.tag.crit{background:var(--critbg);color:var(--crit)}
+.li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.li:last-child{border:0}
+.li button{background:none;border:0;text-align:left;padding:0}
+.in{color:var(--ok)}.out{color:var(--crit)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .22s;padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px));overflow-y:auto}
+body.open .scrim{opacity:1;pointer-events:auto}body.open .drawer{transform:none}
+.drawer h2{margin:6px 0 2px;font-size:22px}
+.close{float:right;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:18px 0}dt{color:var(--muted)}dd{margin:0}
+.big{font-size:40px;font-weight:600;line-height:1}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:8px;padding:10px 16px;font-weight:600;white-space:nowrap}
+form label{display:block;margin:0 0 12px;font-size:13.5px;color:var(--muted)}
+form input,form select{display:block;width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sec{font-size:15px;margin:18px 0 10px}
+.err{color:var(--crit);min-height:1.4em;margin:0 0 8px}
+.ficha{border:1px solid var(--line);border-radius:10px;margin:12px 0 18px}
+.ficha div{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.ficha div:last-child{border:0}.ficha span{color:var(--muted)}.ficha b{font-weight:500;text-align:right}
+.logo::after{content:"";display:block;height:3px;margin-top:14px;background:linear-gradient(90deg,var(--sky) 0 55%,var(--red) 55% 78%,var(--yellow) 78%)}
+.nav[aria-current="page"]{box-shadow:inset 3px 0 var(--yellow)}
+.grp{font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.6;padding:16px 12px 4px}
+.stat{border-top:3px solid var(--sky)}.stat.low{border-top-color:var(--yellow)}.stat.crit{border-top-color:var(--red)}
+.wrap{border-top:3px solid var(--brand)}
+.tag.info{background:color-mix(in srgb,var(--sky) 22%,transparent);color:var(--brand)}
+.row3{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.chips{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.acoes{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--sky);border-radius:10px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:2px;color:var(--ink)}
+.card:hover{border-top-color:var(--yellow);box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.card b{font-size:34px;font-weight:600;line-height:1.1}
+.card>span{color:var(--muted)}.card>.card-t{color:var(--ink);font-weight:600;font-size:17px}
+.card-s{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.sec2{font-size:18px;margin:6px 0 12px}
+@media (max-width:860px){.grp{display:none}}
+@media (max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;padding:12px}.logo{width:100%;padding:0 6px 4px}.theme{margin:0 0 0 auto}.cols{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.drawer,.scrim{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="logo">Almoxarifado<small>Monitoração de estoque</small></div>
+    <div id="nav" style="display:contents"></div>
+    <button class="theme" id="theme">Alternar tema</button>
+  </aside>
+  <main id="main"></main>
+</div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Detalhes do produto" aria-hidden="true"></aside>
+
+<script>
+/* ---- DADOS DE EXEMPLO ----
+   Troque por chamadas ao seu back end, por exemplo:
+   produtos = await (await fetch('/api/produtos')).json();
+   movs     = await (await fetch('/api/movimentacoes')).json();
+   Campos esperados: id, aba (mp | imp | motos), nome, sku, cat, qtd, min, max, un
+   e info (opcional): objeto com as informações específicas do item */
+let produtos = [
+ {id:1,aba:'mp',nome:'Chapa de aço 3 mm',sku:'CHP-0300',cat:'Chapas',qtd:48,min:20,max:90,un:'un'},
+ {id:2,aba:'mp',nome:'Barra redonda SAE 1045 Ø25',sku:'BAR-1045',cat:'Barras',qtd:14,min:15,max:60,un:'un'},
+ {id:3,aba:'mp',nome:'Tubo industrial 40 x 40',sku:'TUB-4040',cat:'Tubos',qtd:62,min:30,max:120,un:'un'},
+ {id:4,aba:'mp',nome:'Eletrodo E6013 2,5 mm',sku:'SOL-6013',cat:'Soldagem',qtd:12,min:20,max:80,un:'kg'},
+ {id:5,aba:'mp',nome:'Cantoneira 1"',sku:'CAN-0100',cat:'Perfis',qtd:6,min:20,max:70,un:'un'},
+ {id:6,aba:'mp',nome:'Arame MIG 0,8 mm',sku:'SOL-0800',cat:'Soldagem',qtd:90,min:40,max:160,un:'kg'},
+ {id:7,aba:'imp',nome:'Luva de raspa',sku:'EPI-0112',cat:'EPI',qtd:38,min:40,max:120,un:'par'},
+ {id:8,aba:'imp',nome:'Óculos de proteção',sku:'EPI-0120',cat:'EPI',qtd:9,min:30,max:90,un:'un'},
+ {id:9,aba:'imp',nome:'Disco de corte 7"',sku:'ABR-0710',cat:'Abrasivos',qtd:64,min:50,max:200,un:'un'},
+ {id:10,aba:'imp',nome:'Graxa multiuso',sku:'LUB-0300',cat:'Lubrificantes',qtd:5,min:12,max:30,un:'kg'},
+ {id:11,aba:'imp',nome:'Fita isolante',sku:'ELE-0010',cat:'Elétrica',qtd:140,min:40,max:200,un:'un'},
+ {id:12,aba:'imp',nome:'Broca HSS 10 mm',sku:'FER-1010',cat:'Ferramentas',qtd:7,min:10,max:30,un:'un'},
+ {id:13,aba:'motos',nome:'Pastilha de freio',sku:'PEC-1601',cat:'CG 160 · Freios',qtd:18,min:12,max:60,un:'jogo'},
+ {id:14,aba:'motos',nome:'Kit relação',sku:'PEC-1602',cat:'CG 160 · Transmissão',qtd:4,min:8,max:30,un:'kit'},
+ {id:15,aba:'motos',nome:'Vela de ignição',sku:'PEC-0310',cat:'Universal · Elétrica',qtd:46,min:30,max:120,un:'un'},
+ {id:16,aba:'motos',nome:'Filtro de óleo',sku:'PEC-3001',cat:'XRE 300 · Filtros',qtd:9,min:10,max:40,un:'un'},
+ {id:17,aba:'motos',nome:'Câmara de ar aro 18',sku:'PEC-1800',cat:'Universal · Pneus',qtd:22,min:10,max:40,un:'un'},
+ {id:18,aba:'motos',nome:'Cabo de embreagem',sku:'PEC-0220',cat:'Universal · Cabos',qtd:0,min:6,max:24,un:'un'}
+];
+let movs = [
+ {hora:'Hoje, 09:42',tipo:'Saída',p:8,q:6,quem:'Manutenção'},
+ {hora:'Hoje, 09:15',tipo:'Saída',p:10,q:3,quem:'Produção'},
+ {hora:'Hoje, 08:30',tipo:'Entrada',p:1,q:20,quem:'Recebimento'},
+ {hora:'Ontem, 17:10',tipo:'Saída',p:18,q:4,quem:'Oficina'},
+ {hora:'Ontem, 16:58',tipo:'Saída',p:5,q:12,quem:'Serralheria'},
+ {hora:'Ontem, 15:20',tipo:'Saída',p:4,q:8,quem:'Soldagem'},
+ {hora:'Ontem, 11:05',tipo:'Entrada',p:13,q:24,quem:'Recebimento'},
+ {hora:'Ontem, 08:47',tipo:'Saída',p:14,q:3,quem:'Balcão'}
+];
+
+/* Informações específicas de cada item: objeto livre {rótulo: valor}.
+   O site mostra todos os campos que o back end enviar em "info" no painel do item. */
+const INFO={
+ 1:{'Lote':'L2409-118','Certificado':'Cert. 4821/26','NF-e':'123456','Fornecedor':'Aços Santa Rita'},
+ 2:{'Lote':'L2409-120','Certificado':'Cert. 4822/26','NF-e':'123456','Fornecedor':'Aços Santa Rita'},
+ 3:{'Lote':'T2408-044','Certificado':'Cert. 0932/26','NF-e':'123871','Fornecedor':'Metalfer'},
+ 4:{'Lote':'E2407-310','Certificado':'Cert. 7710/26','NF-e':'122904','Fornecedor':'Esab'},
+ 5:{'Lote':'C2409-077','Certificado':'Cert. 0933/26','NF-e':'123871','Fornecedor':'Metalfer'},
+ 6:{'Lote':'M2408-201','Certificado':'Cert. 7711/26','NF-e':'122904','Fornecedor':'Esab'},
+ 7:{'Lote':'EP2406-015','Certificado de aprovação (CA)':'CA 00000','NF-e':'118420','Fornecedor':'Fornecedor de EPI'},
+ 8:{'Lote':'EP2407-022','Certificado de aprovação (CA)':'CA 00000','NF-e':'118420','Fornecedor':'Fornecedor de EPI'},
+ 9:{'Lote':'AB2408-090','NF-e':'120077','Fornecedor':'Fornecedor de abrasivos'},
+ 10:{'Lote':'LU2407-031','NF-e':'119350','Fornecedor':'Fornecedor de lubrificantes'},
+ 11:{'Lote':'EL2406-210','NF-e':'117802','Fornecedor':'Fornecedor elétrico'},
+ 12:{'Lote':'FE2408-018','NF-e':'120311','Fornecedor':'Fornecedor de ferramentas'},
+ 13:{'Modelo compatível':'Honda CG 160','Posição':'Dianteira','Marca':'Informar marca','Código original':'Informar código'},
+ 14:{'Modelo compatível':'Honda CG 160','Composição':'Corrente 428H, coroa e pinhão','Marca':'Informar marca','Código original':'Informar código'},
+ 15:{'Modelo compatível':'Universal','Especificação':'Velas de ignição iridium ou níquel','Marca':'NGK','Código original':'Informar código'},
+ 16:{'Modelo compatível':'Honda XRE 300','Tipo':'Filtro de óleo','Marca':'Informar marca','Código original':'Informar código'},
+ 17:{'Modelo compatível':'Aro 18','Medida':'2.75 / 3.00-18','Marca':'Informar marca','Código original':'Informar código'},
+ 18:{'Modelo compatível':'Universal','Tipo':'Cabo de embreagem','Marca':'Informar marca','Código original':'Informar código'}
+};
+/* Exemplos de clientes/fornecedores e pedidos: troque pelas rotas do seu back end. */
+let clientes=[
+ {id:1,tipo:'Cliente',nome:'Metalúrgica Horizonte',doc:'00.000.000/0001-01',contato:'Marcos Lima',tel:'(11) 90000-0001',cidade:'São Paulo'},
+ {id:2,tipo:'Cliente',nome:'Oficina Duas Rodas',doc:'00.000.000/0001-02',contato:'Paulo Souza',tel:'(11) 90000-0002',cidade:'Guarulhos'},
+ {id:3,tipo:'Cliente',nome:'Construtora Alfa',doc:'00.000.000/0001-03',contato:'Ana Prado',tel:'(11) 90000-0003',cidade:'Osasco'},
+ {id:4,tipo:'Fornecedor',nome:'Aços Santa Rita',doc:'00.000.000/0001-04',contato:'Vendas',tel:'(11) 90000-0004',cidade:'Mauá'},
+ {id:5,tipo:'Fornecedor',nome:'Metalfer',doc:'00.000.000/0001-05',contato:'Vendas',tel:'(11) 90000-0005',cidade:'Diadema'},
+ {id:6,tipo:'Transportadora',nome:'Rápido Sul Transportes',doc:'00.000.000/0001-06',contato:'Despacho',tel:'(11) 90000-0006',cidade:'São Paulo'}
+];
+let pedidos=[
+ {id:101,cliente:1,prazo:'2026-10-08',status:'Pendente',itens:[{p:1,q:10},{p:3,q:20}]},
+ {id:102,cliente:2,prazo:'2026-10-05',status:'Separado',itens:[{p:13,q:6},{p:15,q:10}]},
+ {id:103,cliente:3,prazo:'2026-10-12',status:'Pendente',itens:[{p:2,q:20}]},
+ {id:104,cliente:1,prazo:'2026-10-02',status:'Entregue',itens:[{p:6,q:10}]}
+];
+const $=s=>document.querySelector(s);
+const nf=n=>n.toLocaleString('pt-BR');
+const st=p=>p.qtd<=p.min*.5?'crit':p.qtd<=p.min?'low':'ok';
+const lab={ok:'Normal',low:'Abaixo do mínimo',crit:'Crítico'};
+const by=id=>produtos.find(p=>p.id===id);
+produtos.forEach(p=>{if(!p.info&&INFO[p.id])p.info=INFO[p.id]});
+let view='inicio',q='',f='todos';
+
+const gauge=p=>{const s=st(p),w=Math.min(100,p.qtd/p.max*100),m=p.min/p.max*100;
+ return `<div class="gauge s-${s}" role="img" aria-label="${nf(p.qtd)} de ${nf(p.max)} ${p.un}; mínimo ${nf(p.min)}"><i style="width:${w}%"></i><u style="left:${m}%"></u></div>`};
+const tag=p=>`<span class="tag ${st(p)}">${lab[st(p)]}</span>`;
+
+const SING={mp:'Nova matéria-prima',imp:'Novo material improdutivo',motos:'Nova peça de moto'};
+const ABAS={
+ mp:['Matéria-prima','Chapas, barras, tubos e insumos que viram produto.'],
+ imp:['Materiais improdutivos','Itens de consumo da fábrica: EPI, abrasivos, lubrificantes e ferramentas.'],
+ motos:['Peças de motos','Peças para venda e reposição, por modelo.']};
+const movLi=m=>{const p=by(m.p);return `<div class="li"><div><b>${p.nome}</b><br><small>${rotulo(m)} · ${m.quem}${m.obs?' · '+m.obs:''}</small>${m.info?`<br><small>${Object.entries(m.info).map(([k,v])=>k+' '+v).join(' · ')}</small>`:''}</div><b class="${m.tipo==='Entrada'?'in':'out'}">${m.tipo==='Entrada'?'+':'−'}${nf(m.q)} ${p.un}</b></div>`};
+
+function lista(){
+ const base=produtos.filter(p=>p.aba===view),c=base.filter(p=>st(p)==='crit').length,l=base.filter(p=>st(p)==='low').length;
+ const t=q.trim().toLowerCase();
+ const r=base.filter(p=>(f==='todos'||st(p)===f)&&(!t||[p.nome,p.sku,p.cat,...Object.values(p.info||{})].some(x=>x.toLowerCase().includes(t))));
+ const chips=[['todos','Todos'],['ok','Normal'],['low','Abaixo do mínimo'],['crit','Crítico']].map(([k,v])=>`<button class="chip" data-f="${k}" aria-pressed="${f===k}">${v}</button>`).join('');
+ return `<div class="head"><h1>${ABAS[view][0]}</h1><button class="btn" data-new>${SING[view]}</button></div><p class="sub">${ABAS[view][1]} A marca vertical na barra indica o estoque mínimo.</p>
+ <div class="stats">
+  <div class="stat"><b>${base.length}</b><span>Itens nesta aba</span></div>
+  <div class="stat low"><b>${l}</b><span>Abaixo do mínimo</span></div>
+  <div class="stat crit"><b>${c}</b><span>Nível crítico</span></div>
+ </div>
+ <div class="tools"><input type="search" id="busca" placeholder="Buscar por nome, código ou lote" value="${q}" aria-label="Buscar nesta aba">${chips}</div>
+ <div class="wrap"><table><thead><tr><th>Item</th><th>Quantidade</th><th style="width:22%">Nível</th><th>Situação</th></tr></thead><tbody>
+ ${r.map(p=>`<tr class="row" tabindex="0" data-open="${p.id}"><td><b>${p.nome}</b><small>${p.sku} · ${p.cat}</small></td><td>${nf(p.qtd)} ${p.un}</td><td>${gauge(p)}</td><td>${tag(p)}</td></tr>`).join('')||`<tr><td colspan="4" class="empty">Nenhum item encontrado. Limpe a busca ou escolha outro filtro.</td></tr>`}
+ </tbody></table></div>`}
+
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const diaAntes=n=>{const d=new Date();d.setDate(d.getDate()-n);return iso(d)};
+const hoje=()=>diaAntes(0),ontem=()=>diaAntes(1);
+movs.forEach(m=>{if(!m.data){const [d,h]=m.hora.split(', ');m.data=d==='Hoje'?hoje():ontem();m.hora=h}});
+const rotulo=m=>(m.data===hoje()?'Hoje':m.data===ontem()?'Ontem':dBR(m.data))+', '+m.hora;
+const ordenar=a=>[...a].sort((x,y)=>(y.data+y.hora).localeCompare(x.data+x.hora));
+const noPeriodo=m=>per==='Tudo'||(per==='Hoje'&&m.data===hoje())||(per==='Ontem'&&m.data===ontem())||(per==='7 dias'&&m.data>=diaAntes(6));
+const matchM=m=>{const p=by(m.p),t=qm.trim().toLowerCase();return !t||[p.nome,p.sku,m.quem,m.obs||'',...Object.values(m.info||{})].some(x=>String(x).toLowerCase().includes(t))};
+const dBR=d=>d.split('-').reverse().join('/');
+const nomeC=id=>(clientes.find(c=>c.id===id)||{nome:'—'}).nome;
+const TIPOS=['Cliente','Fornecedor','Transportadora','Outro'];
+let fc='todos',per='Hoje',msg='',qm='';
+const pedAtras=o=>o.status!=='Entregue'&&o.prazo<hoje();
+const pedFalta=o=>o.status==='Pendente'&&o.itens.some(i=>by(i.p).qtd<i.q);
+const chip=(a,k,l,on)=>`<button class="chip" data-${a}="${k}" aria-pressed="${on}">${l}</button>`;
+const optProd=()=>Object.entries(ABAS).map(([k,[n]])=>`<optgroup label="${n}">${produtos.filter(p=>p.aba===k).map(p=>`<option value="${p.id}">${p.nome} (${nf(p.qtd)} ${p.un})</option>`).join('')}</optgroup>`).join('');
+
+
+/* ---------- Início ---------- */
+function telaInicio(){
+ const atr=pedidos.filter(pedAtras).length,ab=pedidos.filter(o=>o.status!=='Entregue').length;
+ const card=k=>{const b=produtos.filter(p=>p.aba===k),c=b.filter(p=>st(p)==='crit').length,l=b.filter(p=>st(p)==='low').length;
+  return `<button class="card" data-v="${k}"><span class="card-t">${ABAS[k][0]}</span><b>${b.length}</b><span>itens cadastrados</span><span class="card-s">${c?`<span class="tag crit">${c} crítico${c>1?'s':''}</span>`:''}${l?`<span class="tag low">${l} abaixo do mínimo</span>`:''}${!c&&!l?'<span class="tag ok">Estoque em dia</span>':''}</span></button>`};
+ return `<h1>Almoxarifado</h1><p class="sub">Escolha uma área para começar.</p>
+ <h2 class="sec2">Estoque</h2><div class="cards">${Object.keys(ABAS).map(card).join('')}</div>
+ <h2 class="sec2">Gestão</h2><div class="cards">
+  <button class="card" data-v="vendas"><span class="card-t">Vendas</span><b>${ab}</b><span>pedidos a entregar</span><span class="card-s">${atr?`<span class="tag crit">${atr} atrasado${atr>1?'s':''}</span>`:'<span class="tag ok">Sem atrasos</span>'}</span></button>
+  <button class="card" data-v="clientes"><span class="card-t">Clientes</span><b>${clientes.length}</b><span>cadastros</span></button>
+  <button class="card" data-v="saida"><span class="card-t">Saída manual</span><b>${movs.filter(m=>m.data===hoje()).length}</b><span>movimentações hoje</span></button></div>`}
+
+function render(){
+ const ka=document.activeElement&&['busca','buscam'].includes(document.activeElement.id)?document.activeElement.id:null,atr=pedidos.filter(pedAtras).length;
+ $('#nav').innerHTML=`<button class="nav" data-v="inicio"${view==='inicio'?' aria-current="page"':''}>Início</button><div class="grp">Estoque</div>`+Object.entries(ABAS).map(([k,[n]])=>{const c=produtos.filter(p=>p.aba===k&&st(p)==='crit').length;
+  return `<button class="nav" data-v="${k}"${k===view?' aria-current="page"':''}>${n}${c?` <span class="badge" title="${c} em nível crítico">${c}</span>`:''}</button>`}).join('')
+  +'<div class="grp">Gestão</div>'
+  +[['vendas','Vendas'],['clientes','Clientes'],['saida','Saída manual']].map(([k,n])=>`<button class="nav" data-v="${k}"${k===view?' aria-current="page"':''}>${n}${k==='vendas'&&atr?` <span class="badge" title="${atr} pedido(s) atrasado(s)">${atr}</span>`:''}</button>`).join('');
+ $('#main').innerHTML=(ABAS[view]?lista:{inicio:telaInicio,vendas:telaVendas,clientes:telaClientes,saida:telaSaida}[view])();
+ if(ka){const i=$('#'+ka),v=ka==='busca'?q:qm;i.focus();i.setSelectionRange(v.length,v.length)}
+}
+
+/* ---------- Vendas ---------- */
+function telaVendas(){
+ const ab=pedidos.filter(o=>o.status!=='Entregue');
+ const rows=[...pedidos].sort((a,b)=>(a.status==='Entregue')-(b.status==='Entregue')||a.prazo.localeCompare(b.prazo));
+ return `<div class="head"><h1>Vendas</h1><button class="btn" data-newp>Novo pedido</button></div>
+ <p class="sub">Pedidos a entregar, por cliente e prazo. Ao entregar, o estoque recebe a baixa automaticamente.</p>
+ <div class="stats"><div class="stat"><b>${ab.length}</b><span>Pedidos a entregar</span></div><div class="stat crit"><b>${ab.filter(pedAtras).length}</b><span>Atrasados</span></div><div class="stat low"><b>${ab.filter(pedFalta).length}</b><span>Sem estoque suficiente</span></div></div>
+ ${msg?`<p class="err" role="alert">${msg}</p>`:''}
+ <div class="wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Itens</th><th>Entrega</th><th>Situação</th><th></th></tr></thead><tbody>
+ ${rows.map(o=>`<tr><td><b>#${o.id}</b></td><td>${nomeC(o.cliente)}</td><td>${o.itens.map(i=>`${nf(i.q)} ${by(i.p).un} · ${by(i.p).nome}`).join('<br>')}</td><td>${dBR(o.prazo)}</td>
+ <td><span class="tag ${o.status==='Entregue'?'ok':'info'}">${o.status}</span>${pedAtras(o)?' <span class="tag crit">Atrasado</span>':''}${pedFalta(o)?' <span class="tag low">Falta estoque</span>':''}</td>
+ <td>${o.status!=='Entregue'?`<button class="chip" data-adv="${o.id}">${o.status==='Pendente'?'Marcar separado':'Entregar'}</button>`:''}</td></tr>`).join('')}
+ </tbody></table></div>`}
+function movimentar(p,tipo,q,quem,obs,data,info){
+ const it=by(p);it.qtd+=tipo==='Entrada'?q:-q;
+ movs.unshift({data:data||hoje(),hora:new Date().toTimeString().slice(0,5),tipo,p,q,quem,obs,info});
+ /* envie ao back end: POST /api/movimentacoes */
+}
+function avancar(id){
+ const o=pedidos.find(x=>x.id===id);msg='';
+ if(o.status==='Pendente')o.status='Separado';
+ else{const f=o.itens.find(i=>by(i.p).qtd<i.q);
+  if(f){msg=`Estoque insuficiente de ${by(f.p).nome} para o pedido #${o.id}.`;render();return}
+  o.itens.forEach(i=>movimentar(i.p,'Saída',i.q,nomeC(o.cliente),'Pedido #'+o.id));o.status='Entregue'}
+ render();
+}
+const linhaItem=()=>`<div class="two item"><label>Produto<select name="p">${optProd()}</select></label><label>Quantidade<input name="q" type="number" min="1" value="1"></label></div>`;
+function novoPedido(){
+ $('#drawer').innerHTML=`<button class="close" id="x" type="button">Fechar</button><h2>Novo pedido</h2>
+ <form id="fped" novalidate style="margin-top:14px">
+  <label>Cliente<select name="cliente">${clientes.filter(c=>c.tipo==='Cliente').map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}</select></label>
+  <label>Data de entrega<input name="prazo" type="date" required></label>
+  <h2 class="sec">Itens do pedido</h2><div id="itens">${linhaItem()}</div>
+  <button class="chip" type="button" id="mais">+ Adicionar item</button>
+  <p class="err" id="err" role="alert"></p><button class="btn" type="submit">Salvar pedido</button></form>`;
+ mostrar();
+}
+function salvarPedido(f){
+ const d=Object.fromEntries(new FormData(f)),err=$('#err');
+ const itens=[...f.querySelectorAll('.item')].map(r=>({p:+r.querySelector('[name=p]').value,q:+r.querySelector('[name=q]').value}));
+ if(!d.cliente){err.textContent='Cadastre um cliente antes de criar o pedido.';return}
+ if(!d.prazo){err.textContent='Informe a data de entrega.';return}
+ if(itens.some(i=>!(i.q>0))){err.textContent='As quantidades precisam ser maiores que zero.';return}
+ pedidos.push({id:Math.max(100,...pedidos.map(o=>o.id))+1,cliente:+d.cliente,prazo:d.prazo,status:'Pendente',itens});
+ /* envie ao back end: POST /api/pedidos */
+ fechar();render();
+}
+
+/* ---------- Clientes ---------- */
+function telaClientes(){
+ const r=clientes.filter(c=>fc==='todos'||c.tipo===fc);
+ return `<div class="head"><h1>Clientes</h1><button class="btn" data-newc>Novo cadastro</button></div>
+ <p class="sub">Cadastro de clientes, fornecedores, transportadoras e outros contatos.</p>
+ <div class="chips">${[['todos','Todos'],...TIPOS.map(t=>[t,t])].map(([k,l])=>chip('fc',k,l,fc===k)).join('')}</div>
+ <div class="wrap"><table><thead><tr><th>Nome</th><th>Tipo</th><th>CNPJ / CPF</th><th>Contato</th><th>Telefone</th><th>Cidade</th></tr></thead><tbody>
+ ${r.map(c=>`<tr><td><b>${c.nome}</b></td><td><span class="tag info">${c.tipo}</span></td><td>${c.doc||'—'}</td><td>${c.contato||'—'}</td><td>${c.tel||'—'}</td><td>${c.cidade||'—'}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nenhum cadastro nesta categoria.</td></tr>'}
+ </tbody></table></div>`}
+function novoCadastro(){
+ $('#drawer').innerHTML=`<button class="close" id="x" type="button">Fechar</button><h2>Novo cadastro</h2>
+ <form id="fcli" novalidate style="margin-top:14px">
+  <label>Tipo<select name="tipo">${TIPOS.map(t=>`<option>${t}</option>`).join('')}</select></label>
+  <label>Nome ou razão social<input name="nome" required></label>
+  <label>CNPJ / CPF<input name="doc"></label>
+  <div class="two"><label>Contato<input name="contato"></label><label>Telefone<input name="tel"></label></div>
+  <label>Cidade<input name="cidade"></label>
+  <p class="err" id="err" role="alert"></p><button class="btn" type="submit">Salvar cadastro</button></form>`;
+ mostrar();
+}
+function salvarCliente(f){
+ const d=Object.fromEntries(new FormData(f));
+ if(!d.nome.trim()){$('#err').textContent='Informe o nome do cadastro.';return}
+ const c={id:Math.max(0,...clientes.map(x=>x.id))+1};
+ ['tipo','nome','doc','contato','tel','cidade'].forEach(k=>c[k]=esc((d[k]||'').trim()));
+ clientes.push(c);
+ /* envie ao back end: POST /api/clientes */
+ fc='todos';fechar();render();
+}
+
+/* ---------- Saída manual e relatório ---------- */
+const periodo=()=>ordenar(movs.filter(m=>noPeriodo(m)&&matchM(m)));
+function telaSaida(){
+ const L=periodo(),mapa={};
+ L.forEach(m=>{const r=mapa[m.p]||(mapa[m.p]={e:0,s:0});if(m.tipo==='Entrada')r.e+=m.q;else r.s+=m.q});
+ const ids=Object.keys(mapa).map(Number).sort((a,b)=>by(a).nome.localeCompare(by(b).nome));
+ return `<div class="head"><h1>Saída manual</h1><button class="btn" data-csv>Baixar relatório (CSV)</button></div>
+ <p class="sub">Registre o que sai (ou entra) no estoque e acompanhe quanto entrou e quanto saiu.</p>
+ <section class="panel" style="margin-bottom:22px"><h2>Registrar movimentação</h2>
+ <form id="fsai" novalidate><div class="row3">
+  <label>Data<input name="data" type="date" value="${hoje()}" max="${hoje()}"></label>
+  <label>Movimento<select name="tipo"><option>Saída</option><option>Entrada</option></select></label>
+  <label>Produto<select name="p">${optProd()}</select></label>
+  <label>Quantidade<input name="q" type="number" min="1" value="1"></label>
+  <label>Retirado por / setor<input name="quem" required></label>
+  <label>Observação<input name="obs"></label></div>
+  <p class="err" id="err" role="alert"></p><button class="btn" type="submit">Registrar</button></form></section>
+ <h2 style="font-size:18px;margin:0 0 10px">Relatório de entradas e saídas</h2>
+ <div class="tools"><input type="search" id="buscam" placeholder="Buscar por NF-e, lote, item ou responsável" value="${qm}" aria-label="Buscar movimentações">${['Hoje','Ontem','7 dias','Tudo'].map(k=>chip('per',k,k,per===k)).join('')}</div>
+ <div class="wrap"><table><thead><tr><th>Item</th><th>Entrou</th><th>Saiu</th><th>Estoque atual</th></tr></thead><tbody>
+ ${ids.map(i=>{const p=by(i),r=mapa[i];return `<tr><td><b>${p.nome}</b><small>${p.sku} · ${ABAS[p.aba][0]}</small></td><td class="in">${r.e?'+'+nf(r.e)+' '+p.un:'—'}</td><td class="out">${r.s?'−'+nf(r.s)+' '+p.un:'—'}</td><td>${nf(p.qtd)} ${p.un}</td></tr>`}).join('')||'<tr><td colspan="4" class="empty">Sem movimentações neste período.</td></tr>'}
+ </tbody></table></div>
+ <h2 style="font-size:18px;margin:22px 0 10px">Movimentações do período</h2>
+ <section class="panel">${L.map(movLi).join('')||'<div class="empty">Sem movimentações neste período.</div>'}</section>`}
+function salvarSaida(f){
+ const d=Object.fromEntries(new FormData(f)),it=by(+d.p),q=+d.q,err=$('#err');
+ if(!(q>0)){err.textContent='Informe uma quantidade maior que zero.';return}
+ if(!d.quem.trim()){err.textContent='Informe quem retirou ou recebeu o material.';return}
+ if(d.tipo==='Saída'&&q>it.qtd){err.textContent=`Estoque insuficiente: há ${nf(it.qtd)} ${it.un} de ${it.nome}.`;return}
+ movimentar(it.id,d.tipo,q,esc(d.quem.trim()),esc(d.obs.trim()),d.data||hoje());render();
+}
+
+/* ---------- Entrada e retirada sobre o item existente ---------- */
+const campoEnt=aba=>aba==='motos'?['NF-e','Fornecedor']:CAMPOS[aba];
+function formMov(id,tipo){
+ const p=by(id),ent=tipo==='Entrada';
+ $('#drawer').innerHTML=`<button class="close" id="x" type="button">Fechar</button><h2>${ent?'Entrada de material':'Retirada para produção'}</h2>
+ <small style="color:var(--muted)">${p.nome} · estoque atual ${nf(p.qtd)} ${p.un}</small>
+ <form id="fmov" data-id="${id}" data-tipo="${tipo}" novalidate style="margin-top:14px">
+  <div class="two"><label>${ent?'Data de chegada':'Data da retirada'}<input name="data" type="date" value="${hoje()}" max="${hoje()}"></label>
+  <label>Quantidade (${p.un})<input name="q" type="number" min="1" value="1"></label></div>
+  ${ent?campoEnt(p.aba).map(c=>`<label>${c}<input name="info:${c}"${c==='Fornecedor'&&p.info&&p.info[c]?` value="${p.info[c]}"`:''}></label>`).join(''):'<label>Retirado por / setor<input name="quem" value="Produção"></label>'}
+  <label>Observação<input name="obs"></label>
+  <p class="err" id="err" role="alert"></p><button class="btn" type="submit">${ent?'Registrar entrada':'Registrar retirada'}</button></form>`;
+ mostrar();
+}
+function salvarMov(f){
+ const d=Object.fromEntries(new FormData(f)),id=+f.dataset.id,tipo=f.dataset.tipo,p=by(id),q=+d.q,err=$('#err');
+ const info={};Object.entries(d).forEach(([k,v])=>{if(k.startsWith('info:')&&v.trim())info[k.slice(5)]=esc(v.trim())});
+ if(!d.data){err.textContent='Informe a data.';return}
+ if(!(q>0)){err.textContent='Informe uma quantidade maior que zero.';return}
+ if(tipo==='Saída'&&q>p.qtd){err.textContent=`Estoque insuficiente: há ${nf(p.qtd)} ${p.un}.`;return}
+ if(info['NF-e']&&movs.some(m=>m.p===id&&m.tipo==='Entrada'&&m.info&&m.info['NF-e']===info['NF-e'])){err.textContent='Esta NF-e já foi lançada para este item.';return}
+ const quem=tipo==='Entrada'?(info['Fornecedor']||'Recebimento'):esc((d.quem||'').trim()||'Produção');
+ movimentar(id,tipo,q,quem,esc((d.obs||'').trim()),d.data,tipo==='Entrada'?info:undefined);
+ if(tipo==='Entrada')p.info={...(p.info||{}),...info};
+ render();abrir(id);
+}
+function baixarCSV(){
+ const linhas=[['Data','Hora','Movimento','Código','Item','Quantidade','Unidade','Responsável','NF-e','Lote','Observação'],...periodo().map(m=>{const p=by(m.p),i=m.info||{};return [dBR(m.data),m.hora,m.tipo,p.sku,p.nome,m.q,p.un,m.quem,i['NF-e']||'',i['Lote']||'',m.obs||'']})];
+ const csv='\ufeff'+linhas.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='relatorio-movimentacoes.csv';a.click();
+}
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ficha=rows=>`<div class="ficha">${rows.map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join('')}</div>`;
+function abrir(id){
+ const p=by(id),h=ordenar(movs.filter(m=>m.p===id)),inf=Object.entries(p.info||{});
+ const est=[['Estoque mínimo',nf(p.min)+' '+p.un],['Capacidade',nf(p.max)+' '+p.un]];
+ if(p.qtd<p.min)est.push(['Falta para o mínimo',nf(p.min-p.qtd)+' '+p.un]);
+ $('#drawer').innerHTML=`<button class="close" id="x">Fechar</button>${tag(p)}<h2>${p.nome}</h2><small style="color:var(--muted)">${p.sku} · ${p.cat}</small>
+ <p class="big" style="margin-top:18px">${nf(p.qtd)} <span style="font-size:16px;font-weight:400">${p.un}</span></p><div style="margin:12px 0">${gauge(p)}</div>
+ <div class="acoes"><button class="btn" data-ent="${id}">Adicionar entrada</button><button class="chip" data-ret="${id}">Retirar para produção</button></div>
+ ${ficha(est)}
+ ${inf.length?`<h2 class="sec">Ficha técnica</h2>${ficha(inf)}`:''}
+ <h2 class="sec">Histórico</h2>${h.map(movLi).join('')||'<div class="empty">Sem movimentações recentes.</div>'}`;
+ mostrar();
+}
+function mostrar(){document.body.classList.add('open');$('#drawer').setAttribute('aria-hidden','false');$('#x').focus()}
+
+/* Campos de cada classificação: edite aqui para criar ou mudar os campos do formulário. */
+const CAMPOS={
+ mp:['Lote','Certificado','NF-e','Fornecedor'],
+ imp:['Lote','Certificado de aprovação (CA)','NF-e','Fornecedor'],
+ motos:['Modelo compatível','Marca','Código original','Medida']};
+const espHTML=aba=>`<h2 class="sec">Informações de ${ABAS[aba][0].toLowerCase()}</h2>`+CAMPOS[aba].map(c=>`<label>${c}<input name="info:${c}"></label>`).join('');
+function novo(aba){
+ $('#drawer').innerHTML=`<button class="close" id="x" type="button">Fechar</button><h2>${SING[aba]}</h2>
+ <form id="form" novalidate style="margin-top:14px">
+  <input type="hidden" name="aba" value="${aba}">
+  <label>Nome do item<input name="nome" required></label>
+  <div class="two"><label>Código<input name="sku" required></label><label>Categoria<input name="cat"></label></div>
+  <label>Unidade<input name="un" placeholder="un, kg, m" value="un"></label>
+  <div class="two"><label>Quantidade<input name="qtd" type="number" min="0" value="0"></label><label>Estoque mínimo<input name="min" type="number" min="0" value="0"></label></div>
+  <label>Capacidade máxima<input name="max" type="number" min="1" required></label>
+  <div id="esp">${espHTML(aba)}</div>
+  <p class="err" id="err" role="alert"></p>
+  <button class="btn" type="submit">Salvar item</button>
+ </form>`;
+ mostrar();
+}
+/* Envie o novo item ao seu back end aqui. */
+async function salvar(p){
+ /* await fetch('/api/produtos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}); */
+}
+async function enviar(form){
+ const d=Object.fromEntries(new FormData(form)),err=$('#err');
+ const nome=d.nome.trim(),sku=d.sku.trim(),qtd=+d.qtd,min=+d.min,max=+d.max;
+ if(!nome||!sku){err.textContent='Preencha o nome e o código do item.';return}
+ if(produtos.some(p=>p.sku.toLowerCase()===sku.toLowerCase())){err.textContent='Já existe um item com este código.';return}
+ if(!(max>0)||qtd<0||min<0){err.textContent='Informe a capacidade máxima e quantidades iguais ou maiores que zero.';return}
+ const info={};
+ Object.entries(d).forEach(([k,v])=>{if(k.startsWith('info:')&&v.trim())info[k.slice(5)]=esc(v.trim())});
+ const p={id:Math.max(0,...produtos.map(x=>x.id))+1,aba:d.aba,nome:esc(nome),sku:esc(sku),cat:esc(d.cat.trim()||ABAS[d.aba][0]),qtd,min,max,un:esc(d.un.trim()||'un'),info};
+ await salvar(p);
+ produtos.push(p);view=d.aba;q='';f='todos';render();abrir(p.id);
+}
+function fechar(){document.body.classList.remove('open');$('#drawer').setAttribute('aria-hidden','true')}
+
+document.addEventListener('click',e=>{
+ const n=e.target.closest('.nav,.card'),o=e.target.closest('[data-open]'),c=e.target.closest('[data-f]');
+ if(n){view=n.dataset.v;q='';f='todos';msg='';fechar();render()}
+ else if(o)abrir(+o.dataset.open);
+ else if(c){f=c.dataset.f;render()}
+ else if(e.target.closest('[data-new]'))novo(view);
+ else if(e.target.closest('[data-ent]'))formMov(+e.target.closest('[data-ent]').dataset.ent,'Entrada');
+ else if(e.target.closest('[data-ret]'))formMov(+e.target.closest('[data-ret]').dataset.ret,'Saída');
+ else if(e.target.closest('[data-newp]'))novoPedido();
+ else if(e.target.closest('[data-newc]'))novoCadastro();
+ else if(e.target.closest('[data-adv]'))avancar(+e.target.closest('[data-adv]').dataset.adv);
+ else if(e.target.closest('[data-fc]')){fc=e.target.closest('[data-fc]').dataset.fc;render()}
+ else if(e.target.closest('[data-per]')){per=e.target.closest('[data-per]').dataset.per;render()}
+ else if(e.target.closest('[data-csv]'))baixarCSV();
+ else if(e.target.id==='mais')$('#itens').insertAdjacentHTML('beforeend',linhaItem());
+ else if(e.target.id==='x'||e.target.id==='scrim')fechar();
+});
+document.addEventListener('submit',e=>{const h={form:enviar,fped:salvarPedido,fcli:salvarCliente,fsai:salvarSaida,fmov:salvarMov}[e.target.id];if(h){e.preventDefault();h(e.target)}});
+document.addEventListener('change',e=>{if(e.target.name==='aba')$('#esp').innerHTML=espHTML(e.target.value)});
+document.addEventListener('input',e=>{if(e.target.id==='busca'){q=e.target.value;render()}else if(e.target.id==='buscam'){qm=e.target.value;render()}});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape')fechar();
+ if(e.key==='Enter'&&e.target.classList.contains('row'))abrir(+e.target.dataset.open);
+});
+$('#theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'};
+render();
+</script>
+</body>
+</html>
