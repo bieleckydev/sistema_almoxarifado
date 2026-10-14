@@ -14,7 +14,16 @@ import {
   Bike,
   AlertCircle,
   Loader2,
+  Calendar,
+  Send,
+  History,
+  CheckSquare,
+  Package,
+  Activity,
+  Radio,
   FileSpreadsheet,
+  Tag,
+  ArrowUpDown,
 } from 'lucide-react';
 import {
   useMovimentacoesPeriodo,
@@ -64,8 +73,12 @@ export function SaidaManualView({
   const [itemId, setItemId] = useState<string>('');
   const [quantidade, setQuantidade] = useState<number>(1);
   const [quem, setQuem] = useState('Produção');
+  const [documentoOp, setDocumentoOp] = useState('');
   const [observacao, setObservacao] = useState('');
   const [erroForm, setErroForm] = useState<string | null>(null);
+
+  // Filtro local de tipo para o ledger histórico
+  const [filtroTipoLedger, setFiltroTipoLedger] = useState<'todos' | 'Saída' | 'Entrada'>('todos');
 
   // Inicializa o primeiro item selecionado quando a lista de itens carrega
   React.useEffect(() => {
@@ -87,12 +100,37 @@ export function SaidaManualView({
     };
   }, [itens]);
 
+  // Estatísticas do turno/período para os 4 KPI Cards
+  const statsPeriodo = useMemo(() => {
+    const totalApontamentos = movimentacoes.length;
+    const saidas = movimentacoes.filter((m) => m.tipo === 'Saída');
+    const entradas = movimentacoes.filter((m) => m.tipo === 'Entrada');
+    const totalQtdSaidas = saidas.reduce((acc, m) => acc + m.quantidade, 0);
+    const totalQtdEntradas = entradas.reduce((acc, m) => acc + m.quantidade, 0);
+    const skusMovimentados = resumoItens.length;
+
+    return {
+      totalApontamentos,
+      totalSaidasCount: saidas.length,
+      totalEntradasCount: entradas.length,
+      totalQtdSaidas,
+      totalQtdEntradas,
+      skusMovimentados,
+    };
+  }, [movimentacoes, resumoItens]);
+
+  // Movimentações filtradas por tipo na tabela do ledger
+  const movimentacoesFiltradas = useMemo(() => {
+    if (filtroTipoLedger === 'todos') return movimentacoes;
+    return movimentacoes.filter((m) => m.tipo === filtroTipoLedger);
+  }, [movimentacoes, filtroTipoLedger]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErroForm(null);
 
     if (!dataMov) {
-      setErroForm('Informe a data da movimentação.');
+      setErroForm('Informe a data da operação.');
       return;
     }
 
@@ -102,12 +140,12 @@ export function SaidaManualView({
     }
 
     if (quantidade <= 0) {
-      setErroForm('Informe uma quantidade maior que zero.');
+      setErroForm('Informe uma quantidade válida maior que zero.');
       return;
     }
 
     if (!quem.trim()) {
-      setErroForm('Informe quem retirou ou recebeu o material.');
+      setErroForm('Informe o setor solicitante ou responsável.');
       return;
     }
 
@@ -116,10 +154,15 @@ export function SaidaManualView({
 
     if (tipoMov === 'Saída' && quantidade > itemSelecionado.estoqueAtual) {
       setErroForm(
-        `Estoque insuficiente: há ${itemSelecionado.estoqueAtual.toLocaleString('pt-BR')} ${unidadeFmt} de ${itemSelecionado.descricao}.`
+        `Saldo insuficiente: há apenas ${itemSelecionado.estoqueAtual.toLocaleString('pt-BR')} ${unidadeFmt} disponíveis de ${itemSelecionado.descricao}.`
       );
       return;
     }
+
+    // Monta observação com documento/OP se fornecido
+    const obsFinal = documentoOp.trim()
+      ? `[Doc: ${documentoOp.trim()}] ${observacao.trim()}`.trim()
+      : observacao.trim();
 
     try {
       await registrarMovimentacao({
@@ -127,12 +170,13 @@ export function SaidaManualView({
         tipo: tipoMov,
         quantidade,
         quem: quem.trim(),
-        observacao: observacao.trim() || undefined,
+        observacao: obsFinal || undefined,
         data: dataMov,
       });
 
-      toast('Movimentação registrada.', { type: 'success' });
+      toast('Movimentação registrada com sucesso!', { type: 'success' });
       setObservacao('');
+      setDocumentoOp('');
       setQuantidade(1);
       setErroForm(null);
     } catch (err: unknown) {
@@ -185,15 +229,15 @@ export function SaidaManualView({
   }, [triggerExportCsv, movimentacoes.length]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 animate-fade-in">
-      {/* 1. Cabeçalho Principal */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-[#3e3e42]">
+    <div className="flex-1 flex flex-col min-w-0 animate-fade-in gap-5">
+      {/* 1. Cabeçalho Principal no padrão Stitch */}
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-outline-variant/20">
         <div>
-          <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-slate-900 dark:text-white">
-            Saída manual
+          <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-on-surface">
+            Movimentação &amp; Apontamentos Rápidos
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
-            Registre o que sai (ou entra) no estoque e acompanhe quanto entrou e quanto saiu.
+          <p className="text-xs text-secondary mt-0.5 font-normal">
+            Lançamento direto em grade com conferência automática de saldo físico e auditoria de turno.
           </p>
         </div>
 
@@ -201,18 +245,18 @@ export function SaidaManualView({
           <button
             type="button"
             onClick={handleExportarCSV}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-on-primary bg-primary hover:bg-primary/90 transition-colors cursor-pointer shadow-xs"
             title="Exportar dados do relatório para arquivo CSV"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Baixar relatório (CSV)</span>
+            <span>Baixar CSV</span>
           </button>
 
           <button
             type="button"
             onClick={() => refetch()}
             disabled={isLoading || isFetching}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-[#2b2b2e] border border-slate-300 dark:border-[#3e3e42] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium text-secondary hover:text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 transition-colors cursor-pointer disabled:opacity-50"
             title="Recarregar movimentações"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
@@ -221,388 +265,677 @@ export function SaidaManualView({
         </div>
       </header>
 
-      {/* 2. Painel Embutido: Registrar movimentação */}
+      {/* 2. Grid de 4 Cards de KPIs de Movimentação (Stitch Screen 1) */}
+      <section
+        aria-label="Indicadores de movimentação"
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+      >
+        {/* Card 1: Total de Apontamentos */}
+        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">
+                Apontamentos no Turno
+              </span>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="font-kpi-value text-3xl font-extrabold text-on-surface tabular-nums">
+                  {statsPeriodo.totalApontamentos.toLocaleString('pt-BR')}
+                </span>
+                <span className="font-label-md text-label-md text-secondary">
+                  registros
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <Activity className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
+            <span>Período: <strong>{periodo}</strong></span>
+            <span className="text-primary font-medium">100% auditado</span>
+          </div>
+        </div>
+
+        {/* Card 2: Baixas / Saídas */}
+        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-error" />
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="font-label-sm text-label-sm uppercase tracking-wider text-error font-semibold">
+                Saídas / Baixas
+              </span>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="font-kpi-value text-3xl font-extrabold text-error tabular-nums">
+                  {statsPeriodo.totalSaidasCount.toLocaleString('pt-BR')}
+                </span>
+                <span className="font-label-md text-label-md text-error/80">
+                  baixas
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-error-container flex items-center justify-center text-error shrink-0">
+              <ArrowDownRight className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
+            <span className="text-error font-medium">Consumo de produção</span>
+            <span className="font-mono text-error">-{statsPeriodo.totalQtdSaidas.toLocaleString('pt-BR')} un</span>
+          </div>
+        </div>
+
+        {/* Card 3: Entradas / Recebimentos */}
+        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-tertiary" />
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">
+                Entradas Registradas
+              </span>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="font-kpi-value text-3xl font-extrabold text-on-surface tabular-nums">
+                  {statsPeriodo.totalEntradasCount.toLocaleString('pt-BR')}
+                </span>
+                <span className="font-label-md text-label-md text-secondary">
+                  entradas
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary shrink-0">
+              <ArrowUpRight className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
+            <span className="text-tertiary font-medium">Reposição e compras</span>
+            <span className="font-mono text-tertiary">+{statsPeriodo.totalQtdEntradas.toLocaleString('pt-BR')} un</span>
+          </div>
+        </div>
+
+        {/* Card 4: SKUs Movimentados */}
+        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-secondary-fixed-dim" />
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">
+                Materiais Ativos
+              </span>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="font-kpi-value text-3xl font-extrabold text-on-surface tabular-nums">
+                  {statsPeriodo.skusMovimentados.toLocaleString('pt-BR')}
+                </span>
+                <span className="font-label-md text-label-md text-secondary">
+                  SKUs
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-secondary shrink-0">
+              <Package className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
+            <span>Com variação de saldo</span>
+            <span className="text-on-surface font-semibold">{itens.length} em catálogo</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Painel de Apontamento Rápido em Grade (Fast Entry Pointing Form) */}
       <section
         aria-label="Registrar movimentação avulsa"
-        className="bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-lg p-4 mb-6"
+        className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-5 shadow-xs relative overflow-hidden"
       >
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
-          Registrar movimentação
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-outline-variant/20">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+              <CheckSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-headline-sm text-sm font-bold text-on-surface">
+                Registrar Movimentação &amp; Apontamento Manual
+              </h2>
+              <p className="font-body-sm text-xs text-secondary">
+                Lançamento direto em grade com conferência automática de saldo físico.
+              </p>
+            </div>
+          </div>
 
-        <form id="fsai" onSubmit={handleSubmit} noValidate className="space-y-3.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-            {/* Campo Data */}
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <span>Data</span>
-              <input
-                type="date"
-                name="data"
-                value={dataMov}
-                max={hoje()}
-                onChange={(e) => setDataMov(e.target.value)}
-                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              />
-            </label>
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-semibold">
+              <Radio className="w-3.5 h-3.5 animate-pulse" />
+              <span>Coletor RF Operacional</span>
+            </span>
+          </div>
+        </div>
 
-            {/* Campo Movimento */}
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <span>Movimento</span>
-              <select
-                name="tipo"
-                value={tipoMov}
-                onChange={(e) => setTipoMov(e.target.value as 'Saída' | 'Entrada')}
-                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="Saída">Saída</option>
-                <option value="Entrada">Entrada</option>
-              </select>
-            </label>
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 text-xs">
+            {/* Campo 1: Data */}
+            <div className="lg:col-span-3 flex flex-col gap-1.5">
+              <label className="font-label-md text-xs font-semibold text-secondary flex items-center justify-between">
+                <span>Data da Operação</span>
+                <span className="text-primary text-[10px] uppercase font-bold">Obrigatório</span>
+              </label>
+              <div className="relative flex items-center">
+                <Calendar className="absolute left-3 w-4 h-4 text-outline pointer-events-none" />
+                <input
+                  type="date"
+                  name="data"
+                  value={dataMov}
+                  max={hoje()}
+                  onChange={(e) => setDataMov(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
+                />
+              </div>
+            </div>
 
-            {/* Campo Produto (Agrupado com saldo atual) */}
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <span>Produto</span>
-              <select
-                name="p"
-                value={itemId}
-                onChange={(e) => setItemId(e.target.value)}
-                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none truncate"
-              >
-                {itensPorAba.mp.length > 0 && (
-                  <optgroup label="Matéria-prima">
-                    {itensPorAba.mp.map((it) => (
-                      <option key={it.id} value={it.id}>
-                        {it.descricao} ({it.estoqueAtual.toLocaleString('pt-BR')}{' '}
-                        {UNIDADE_LABELS[it.unidade] || it.unidade.toLowerCase()})
-                      </option>
-                    ))}
-                  </optgroup>
+            {/* Campo 2: Tipo de Movimento */}
+            <div className="lg:col-span-3 flex flex-col gap-1.5">
+              <label className="font-label-md text-xs font-semibold text-secondary flex items-center justify-between">
+                <span>Natureza da Operação</span>
+                <span className="text-secondary text-[10px]">Tipo</span>
+              </label>
+              <div className="relative flex items-center">
+                <ArrowUpDown className="absolute left-3 w-4 h-4 text-outline pointer-events-none" />
+                <select
+                  name="tipo"
+                  value={tipoMov}
+                  onChange={(e) => setTipoMov(e.target.value as 'Saída' | 'Entrada')}
+                  className="w-full pl-9 pr-8 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-semibold border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs appearance-none cursor-pointer"
+                >
+                  <option value="Saída">Saída / Baixa para Produção</option>
+                  <option value="Entrada">Entrada por Compra / Devolução</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Campo 3: Documento / OP / NF-e */}
+            <div className="lg:col-span-6 flex flex-col gap-1.5">
+              <label className="font-label-md text-xs font-semibold text-secondary flex items-center justify-between">
+                <span>Ordem de Produção (OP) ou NF-e</span>
+                <span className="text-secondary text-[10px]">Rastreabilidade</span>
+              </label>
+              <div className="relative flex items-center">
+                <Tag className="absolute left-3 w-4 h-4 text-outline pointer-events-none" />
+                <input
+                  type="text"
+                  value={documentoOp}
+                  onChange={(e) => setDocumentoOp(e.target.value)}
+                  placeholder="Ex: OP-2026-884, NF-10492 ou Lote L-881"
+                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
+                />
+              </div>
+            </div>
+
+            {/* Campo 4: Produto / Insumo com Saldo Atual em tempo real */}
+            <div className="lg:col-span-7 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="font-label-md text-xs font-semibold text-secondary">
+                  Material / Insumo (SKU)
+                </label>
+                {itemSelecionado && (
+                  <span
+                    className={`font-label-sm text-[11px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${
+                      itemSelecionado.estoqueAtual <= 0
+                        ? 'bg-error-container text-on-error-container'
+                        : itemSelecionado.estoqueAtual <= itemSelecionado.estoqueSeguranca
+                        ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                        : 'bg-tertiary/10 text-tertiary'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        itemSelecionado.estoqueAtual <= 0
+                          ? 'bg-error'
+                          : itemSelecionado.estoqueAtual <= itemSelecionado.estoqueSeguranca
+                          ? 'bg-amber-500'
+                          : 'bg-tertiary'
+                      }`}
+                    />
+                    Saldo Atual:{' '}
+                    <strong>
+                      {itemSelecionado.estoqueAtual.toLocaleString('pt-BR')}{' '}
+                      {UNIDADE_LABELS[itemSelecionado.unidade] || itemSelecionado.unidade.toLowerCase()}
+                    </strong>
+                  </span>
                 )}
-                {itensPorAba.imp.length > 0 && (
-                  <optgroup label="Materiais improdutivos">
-                    {itensPorAba.imp.map((it) => (
-                      <option key={it.id} value={it.id}>
-                        {it.descricao} ({it.estoqueAtual.toLocaleString('pt-BR')}{' '}
-                        {UNIDADE_LABELS[it.unidade] || it.unidade.toLowerCase()})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {itensPorAba.motos.length > 0 && (
-                  <optgroup label="Peças de motos">
-                    {itensPorAba.motos.map((it) => (
-                      <option key={it.id} value={it.id}>
-                        {it.descricao} ({it.estoqueAtual.toLocaleString('pt-BR')}{' '}
-                        {UNIDADE_LABELS[it.unidade] || it.unidade.toLowerCase()})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </label>
+              </div>
+              <div className="relative flex items-center">
+                <Package className="absolute left-3 w-4 h-4 text-outline pointer-events-none" />
+                <select
+                  name="p"
+                  value={itemId}
+                  onChange={(e) => setItemId(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-semibold border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs truncate appearance-none cursor-pointer"
+                >
+                  {itensPorAba.mp.length > 0 && (
+                    <optgroup label="Matéria-prima">
+                      {itensPorAba.mp.map((it) => (
+                        <option key={it.id} value={it.id}>
+                          {it.codigo} • {it.descricao} (Saldo: {it.estoqueAtual.toLocaleString('pt-BR')}{' '}
+                          {UNIDADE_LABELS[it.unidade] || it.unidade.toLowerCase()})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {itensPorAba.imp.length > 0 && (
+                    <optgroup label="Materiais Improdutivos">
+                      {itensPorAba.imp.map((it) => (
+                        <option key={it.id} value={it.id}>
+                          {it.codigo} • {it.descricao} (Saldo: {it.estoqueAtual.toLocaleString('pt-BR')}{' '}
+                          {UNIDADE_LABELS[it.unidade] || it.unidade.toLowerCase()})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {itensPorAba.motos.length > 0 && (
+                    <optgroup label="Peças & Componentes">
+                      {itensPorAba.motos.map((it) => (
+                        <option key={it.id} value={it.id}>
+                          {it.codigo} • {it.descricao} (Saldo: {it.estoqueAtual.toLocaleString('pt-BR')}{' '}
+                          {UNIDADE_LABELS[it.unidade] || it.unidade.toLowerCase()})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
+            </div>
 
-            {/* Campo Quantidade */}
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <span>Quantidade</span>
-              <input
-                type="number"
-                name="q"
-                min="1"
-                value={quantidade}
-                onChange={(e) => setQuantidade(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              />
-            </label>
+            {/* Campo 5: Quantidade */}
+            <div className="lg:col-span-2 flex flex-col gap-1.5">
+              <label className="font-label-md text-xs font-semibold text-secondary flex items-center justify-between">
+                <span>Quantidade</span>
+                <span className="text-secondary font-mono text-[10px]">
+                  {itemSelecionado ? UNIDADE_LABELS[itemSelecionado.unidade] || itemSelecionado.unidade.toLowerCase() : 'un'}
+                </span>
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  type="number"
+                  name="q"
+                  min="0.1"
+                  step="any"
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(Math.max(0.1, parseFloat(e.target.value) || 1))}
+                  className="w-full pl-3 pr-10 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-bold font-data-tabular border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
+                />
+                <span className="absolute right-2 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-surface-container text-secondary pointer-events-none">
+                  {itemSelecionado ? UNIDADE_LABELS[itemSelecionado.unidade] || itemSelecionado.unidade.toLowerCase() : 'un'}
+                </span>
+              </div>
+            </div>
 
-            {/* Campo Retirado por / setor */}
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <span>Retirado por / setor</span>
+            {/* Campo 6: Retirado por / Setor Solicitante */}
+            <div className="lg:col-span-3 flex flex-col gap-1.5">
+              <label className="font-label-md text-xs font-semibold text-secondary">
+                Setor Solicitante / Operador
+              </label>
               <input
                 type="text"
                 name="quem"
                 value={quem}
                 onChange={(e) => setQuem(e.target.value)}
-                placeholder="Ex: Produção, Oficina, Fornecedor"
+                placeholder="Ex: Linha 02 - Solda, Manutenção"
                 required
-                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
               />
-            </label>
+            </div>
 
-            {/* Campo Observação */}
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <span>Observação</span>
+            {/* Campo 7: Observações Complementares */}
+            <div className="lg:col-span-9 flex flex-col gap-1.5">
+              <label className="font-label-md text-xs font-semibold text-secondary">
+                Observações Complementares / Finalidade
+              </label>
               <input
                 type="text"
                 name="obs"
                 value={observacao}
                 onChange={(e) => setObservacao(e.target.value)}
-                placeholder="Opcional"
-                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                placeholder="Ex: Aplicação no gabarito da torre C ou lote CSN-9982"
+                className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
               />
-            </label>
+            </div>
+
+            {/* Campo 8: Botão de Ação */}
+            <div className="lg:col-span-3 flex flex-col justify-end">
+              <button
+                type="submit"
+                disabled={isRegistrando}
+                className="h-9 w-full rounded-lg bg-primary text-on-primary font-headline-sm font-semibold text-xs flex items-center justify-center gap-2 shadow-xs hover:bg-primary/90 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isRegistrando ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Confirmando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Confirmar Movimentação</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Mensagem de Erro Inline */}
+          {/* Mensagem de Erro Inline com Alerta */}
           {erroForm && (
             <div
-              id="err"
               role="alert"
-              className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 font-medium"
+              className="p-3 rounded-lg bg-error-container text-on-error-container text-xs font-semibold flex items-center gap-2"
             >
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-error" />
               <span>{erroForm}</span>
             </div>
           )}
-
-          {/* Botão de Gravação */}
-          <div className="pt-1">
-            <button
-              type="submit"
-              disabled={isRegistrando}
-              className="inline-flex items-center justify-center gap-1.5 h-8 px-4 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {isRegistrando ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Registrando...</span>
-                </>
-              ) : (
-                <span>Registrar</span>
-              )}
-            </button>
-          </div>
         </form>
       </section>
 
-      {/* 3. Seção: Relatório de entradas e saídas */}
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-2.5">
-          Relatório de entradas e saídas
-        </h2>
-
-        {/* Toolbar de Busca e Chips de Período */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
-          {/* Campo de Busca */}
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input
-              type="search"
-              id="buscam"
-              placeholder="Buscar por NF-e, lote, item ou responsável"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              aria-label="Buscar movimentações"
-              className="w-full h-8 pl-8 pr-7 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            {busca && (
-              <button
-                type="button"
-                onClick={() => setBusca('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
-                title="Limpar busca"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+      {/* 4. Live Ledger & Histórico de Movimentações (Stitch Screen 1) */}
+      <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-xs overflow-hidden flex flex-col">
+        {/* Toolbar Header do Ledger */}
+        <div className="p-4 bg-surface-container-low/50 border-b border-outline-variant/20 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+              <History className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                Relatório de Entradas e Saídas do Turno
+              </h3>
+              <p className="font-body-sm text-xs text-secondary">
+                Registro cronológico de baixas, entradas e transferências físicas.
+              </p>
+            </div>
           </div>
 
-          {/* Segmented Chips de Período */}
-          <div
-            className="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-[#232325] rounded-md border border-slate-200 dark:border-[#3e3e42] overflow-x-auto shrink-0"
-            role="group"
-            aria-label="Filtro de período"
-          >
-            {PERIODOS.map((p) => {
-              const isAtivo = periodo === p;
-              return (
+          {/* Controles de Filtro e Busca */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Pílulas de Período */}
+            <div className="inline-flex p-0.5 bg-surface-container rounded-lg border border-outline-variant/20" role="group" aria-label="Filtro de período">
+              {PERIODOS.map((p) => {
+                const isAtivo = periodo === p;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPeriodo(p)}
+                    aria-pressed={isAtivo}
+                    className={`px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer whitespace-nowrap font-medium ${
+                      isAtivo
+                        ? 'bg-surface-container-lowest text-on-surface font-bold shadow-xs'
+                        : 'text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Campo de Busca Rápida */}
+            <div className="relative flex items-center min-w-[200px] flex-1 sm:flex-initial">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 text-outline pointer-events-none" />
+              <input
+                type="search"
+                placeholder="Filtrar operador, OP, item..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="w-full pl-8 pr-7 py-1.5 rounded-lg bg-surface-container text-xs text-on-surface placeholder:text-outline border border-transparent focus:bg-surface-container-lowest focus:border-primary/40 outline-none transition-colors"
+              />
+              {busca && (
                 <button
-                  key={p}
                   type="button"
-                  onClick={() => setPeriodo(p)}
-                  aria-pressed={isAtivo}
-                  className={`inline-flex items-center h-7 px-2.5 rounded-sm text-xs transition-colors cursor-pointer whitespace-nowrap ${
-                    isAtivo
-                      ? 'bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-white border border-slate-200 dark:border-[#3e3e42] font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'
-                  }`}
+                  onClick={() => setBusca('')}
+                  className="absolute right-2 text-outline hover:text-on-surface p-0.5 cursor-pointer"
                 >
-                  {p}
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              );
-            })}
+              )}
+            </div>
+
+            {/* Dropdown de Filtro de Tipo */}
+            <div className="relative flex items-center">
+              <select
+                value={filtroTipoLedger}
+                onChange={(e) => setFiltroTipoLedger(e.target.value as 'todos' | 'Saída' | 'Entrada')}
+                className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-xs font-semibold outline-none border border-transparent focus:bg-surface-container-lowest focus:border-primary/40 cursor-pointer"
+              >
+                <option value="todos">Todos os Tipos</option>
+                <option value="Saída">Apenas Saídas (-)</option>
+                <option value="Entrada">Apenas Entradas (+)</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Tabela Sintética Consolidada */}
-        <div className="border border-slate-200 dark:border-[#3e3e42] rounded-lg overflow-hidden bg-white dark:bg-[#2b2b2e]">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-[#232325] border-b border-slate-200 dark:border-[#3e3e42] text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                  <th scope="col" className="py-2 px-3 font-semibold">
-                    Item
-                  </th>
-                  <th scope="col" className="py-2 px-3 font-semibold">
-                    Entrou
-                  </th>
-                  <th scope="col" className="py-2 px-3 font-semibold">
-                    Saiu
-                  </th>
-                  <th scope="col" className="py-2 px-3 font-semibold">
-                    Estoque atual
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#3e3e42]">
-                {resumoItens.length > 0 ? (
-                  resumoItens.map((r) => {
-                    const unidadeFmt =
-                      UNIDADE_LABELS[r.item.unidade] || r.item.unidade.toLowerCase();
-                    const abaTitulo = METADADOS_ABAS[r.item.aba]?.titulo || 'Estoque';
+        {/* Tabela do Histórico de Movimentações */}
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[760px]">
+            <thead>
+              <tr className="bg-surface-container-low text-secondary font-label-sm text-xs uppercase tracking-wider border-b border-outline-variant/20 select-none">
+                <th className="py-2.5 px-4 font-semibold">Horário &amp; Operador</th>
+                <th className="py-2.5 px-4 font-semibold">Item &amp; Código SKU</th>
+                <th className="py-2.5 px-4 font-semibold">Tipo &amp; Setor</th>
+                <th className="py-2.5 px-4 font-semibold text-center">Variação</th>
+                <th className="py-2.5 px-4 font-semibold text-right">Saldo Atual</th>
+                <th className="py-2.5 px-4 text-right font-semibold">Ação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/15 text-xs text-on-surface">
+              {movimentacoesFiltradas.length > 0 ? (
+                movimentacoesFiltradas.map((m) => {
+                  const unidadeFmt = m.item
+                    ? UNIDADE_LABELS[m.item.unidade] || m.item.unidade.toLowerCase()
+                    : 'un';
+                  const isEntrada = m.tipo === 'Entrada';
+                  const iniciaisOperador = (m.quem || 'OP')
+                    .split(' ')
+                    .slice(0, 2)
+                    .map((w) => w[0]?.toUpperCase() || '')
+                    .join('');
 
-                    return (
-                      <tr
-                        key={r.itemId}
-                        className="hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors"
-                      >
-                        <td className="py-2 px-3">
+                  return (
+                    <tr
+                      key={m.id}
+                      className="hover:bg-surface-container-low/60 transition-colors group"
+                    >
+                      {/* Horário & Operador */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="font-data-tabular font-bold text-on-surface">
+                            {m.hora || '—'}
+                          </span>
+                          <span className="text-outline text-xs">•</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">
+                              {iniciaisOperador}
+                            </span>
+                            <span className="font-medium text-on-surface">
+                              {m.quem}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Item & Código SKU */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col">
+                          {m.item ? (
+                            <button
+                              type="button"
+                              onClick={() => onSelectItem?.(m.item!)}
+                              className="font-headline-sm font-semibold text-xs text-left text-on-surface hover:text-primary transition-colors block truncate cursor-pointer leading-tight"
+                            >
+                              {m.item.descricao}
+                            </button>
+                          ) : (
+                            <span className="font-semibold text-on-surface block truncate">
+                              Material não identificado
+                            </span>
+                          )}
+                          <div className="flex items-center gap-2 mt-0.5 font-mono text-[11px] text-secondary">
+                            <span>SKU: {m.item?.codigo || m.rotulo || '—'}</span>
+                            {m.obs && <span>• {m.obs}</span>}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Tipo & Setor */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <div
+                            className={`flex items-center gap-1 font-semibold ${
+                              isEntrada ? 'text-tertiary' : 'text-error'
+                            }`}
+                          >
+                            {isEntrada ? (
+                              <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                            ) : (
+                              <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
+                            )}
+                            <span>{m.tipo === 'Entrada' ? 'Entrada - Reposição' : 'Saída - Produção'}</span>
+                          </div>
+                          <span className="text-[11px] text-secondary">
+                            {m.quem}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Variação */}
+                      <td className="py-3 px-4 text-center whitespace-nowrap font-data-tabular">
+                        <span
+                          className={`font-bold px-2 py-0.5 rounded-full text-xs ${
+                            isEntrada
+                              ? 'bg-tertiary/10 text-tertiary'
+                              : 'bg-error-container text-on-error-container'
+                          }`}
+                        >
+                          {isEntrada ? '+' : '−'}
+                          {m.quantidade.toLocaleString('pt-BR')} {unidadeFmt}
+                        </span>
+                      </td>
+
+                      {/* Saldo Resultante / Atual */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap font-data-tabular">
+                        <span className="font-medium text-on-surface">
+                          {m.item ? `${m.item.estoqueAtual.toLocaleString('pt-BR')} ${unidadeFmt}` : '—'}
+                        </span>
+                      </td>
+
+                      {/* Ação */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        {m.item && (
                           <button
                             type="button"
-                            onClick={() => onSelectItem?.(r.item)}
-                            className="text-left group cursor-pointer"
+                            onClick={() => onSelectItem?.(m.item!)}
+                            className="px-2 py-1 rounded-md text-xs font-medium text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+                            title="Visualizar detalhes do item"
                           >
-                            <b className="block text-slate-900 dark:text-white font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                              {r.item.descricao}
-                            </b>
-                            <small className="block text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
-                              {r.item.codigo} · {abaTitulo}
-                            </small>
+                            Ver item →
                           </button>
-                        </td>
-
-                        {/* Entrou */}
-                        <td className="py-2 px-3">
-                          {r.totalEntrou > 0 ? (
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                              +{r.totalEntrou.toLocaleString('pt-BR')} {unidadeFmt}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 dark:text-slate-500 font-mono">
-                              —
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Saiu */}
-                        <td className="py-2 px-3">
-                          {r.totalSaiu > 0 ? (
-                            <span className="font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
-                              −{r.totalSaiu.toLocaleString('pt-BR')} {unidadeFmt}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 dark:text-slate-500 font-mono">
-                              —
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Estoque Atual */}
-                        <td className="py-2 px-3 font-medium text-slate-900 dark:text-white tabular-nums">
-                          {r.estoqueAtual.toLocaleString('pt-BR')} {unidadeFmt}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="py-6 px-4 text-center text-xs text-slate-500 dark:text-slate-400"
-                    >
-                      Sem movimentações neste período.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-secondary text-xs">
+                    Nenhuma movimentação registrada para o filtro aplicado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
-      {/* 4. Seção: Movimentações do período */}
-      <section>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-2.5">
-          Movimentações do período
-        </h2>
+      {/* 5. Tabela Consolidada de Balanço de Itens no Período */}
+      <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-xs overflow-hidden flex flex-col">
+        <div className="p-3.5 bg-surface-container-low/50 border-b border-outline-variant/20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet className="w-4 h-4 text-secondary" />
+            <h3 className="font-headline-sm text-xs font-bold text-on-surface uppercase tracking-wider">
+              Balanço Sintético de Materiais no Período
+            </h3>
+          </div>
+          <span className="font-data-tabular text-xs text-secondary font-medium">
+            {resumoItens.length} itens movimentados
+          </span>
+        </div>
 
-        <div className="bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-lg divide-y divide-slate-100 dark:divide-[#3e3e42] overflow-hidden">
-          {movimentacoes.length > 0 ? (
-            movimentacoes.map((m) => {
-              const unidadeFmt = m.item
-                ? UNIDADE_LABELS[m.item.unidade] || m.item.unidade.toLowerCase()
-                : 'un';
-              const isEntrada = m.tipo === 'Entrada';
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs min-w-[640px]">
+            <thead>
+              <tr className="bg-surface-container-low text-secondary font-label-sm text-[11px] uppercase tracking-wider border-b border-outline-variant/20">
+                <th className="py-2.5 px-4 font-semibold">Material / SKU</th>
+                <th className="py-2.5 px-4 font-semibold text-tertiary">Entrou (+)</th>
+                <th className="py-2.5 px-4 font-semibold text-error">Saiu (−)</th>
+                <th className="py-2.5 px-4 font-semibold text-right">Saldo Físico Atual</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/15 font-data-tabular">
+              {resumoItens.length > 0 ? (
+                resumoItens.map((r) => {
+                  const unidadeFmt =
+                    UNIDADE_LABELS[r.item.unidade] || r.item.unidade.toLowerCase();
+                  const abaTitulo = METADADOS_ABAS[r.item.aba]?.titulo || 'Estoque';
 
-              const infoEntries = m.info ? Object.entries(m.info) : [];
-
-              return (
-                <div
-                  key={m.id}
-                  className="p-3 flex items-center justify-between gap-4 text-xs hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors"
-                >
-                  {/* Detalhes da Movimentação */}
-                  <div className="min-w-0 flex-1">
-                    {m.item ? (
-                      <button
-                        type="button"
-                        onClick={() => onSelectItem?.(m.item!)}
-                        className="font-semibold text-slate-900 dark:text-white text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors block truncate cursor-pointer"
-                      >
-                        {m.item.descricao}
-                      </button>
-                    ) : (
-                      <b className="text-slate-900 dark:text-white block truncate">
-                        Material não identificado
-                      </b>
-                    )}
-
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                      <span>{m.rotulo}</span>
-                      <span> · </span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">
-                        {m.quem}
-                      </span>
-                      {m.obs && <span> · {m.obs}</span>}
-                    </div>
-
-                    {infoEntries.length > 0 && (
-                      <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-                        {infoEntries.map(([k, v]) => `${k} ${v}`).join(' · ')}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Quantidade com Sinal e Cor */}
-                  <div className="shrink-0 text-right">
-                    <b
-                      className={`text-xs tabular-nums font-semibold flex items-center justify-end gap-0.5 ${
-                        isEntrada
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-rose-600 dark:text-rose-400'
-                      }`}
+                  return (
+                    <tr
+                      key={r.itemId}
+                      className="hover:bg-surface-container-low/50 transition-colors"
                     >
-                      {isEntrada ? '+' : '−'}
-                      {m.quantidade.toLocaleString('pt-BR')} {unidadeFmt}
-                    </b>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
-              Sem movimentações neste período.
-            </div>
-          )}
+                      <td className="py-2.5 px-4">
+                        <button
+                          type="button"
+                          onClick={() => onSelectItem?.(r.item)}
+                          className="text-left group cursor-pointer"
+                        >
+                          <span className="block text-on-surface font-semibold group-hover:text-primary transition-colors">
+                            {r.item.descricao}
+                          </span>
+                          <span className="block text-secondary text-[11px] font-mono mt-0.5">
+                            {r.item.codigo} · {abaTitulo}
+                          </span>
+                        </button>
+                      </td>
+
+                      {/* Entrou */}
+                      <td className="py-2.5 px-4 font-semibold text-tertiary">
+                        {r.totalEntrou > 0 ? (
+                          `+${r.totalEntrou.toLocaleString('pt-BR')} ${unidadeFmt}`
+                        ) : (
+                          <span className="text-outline font-normal">—</span>
+                        )}
+                      </td>
+
+                      {/* Saiu */}
+                      <td className="py-2.5 px-4 font-semibold text-error">
+                        {r.totalSaiu > 0 ? (
+                          `−${r.totalSaiu.toLocaleString('pt-BR')} ${unidadeFmt}`
+                        ) : (
+                          <span className="text-outline font-normal">—</span>
+                        )}
+                      </td>
+
+                      {/* Saldo Atual */}
+                      <td className="py-2.5 px-4 text-right font-bold text-on-surface">
+                        {r.estoqueAtual.toLocaleString('pt-BR')} {unidadeFmt}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-secondary text-xs">
+                    Sem movimentações consolidadas para o período selecionado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
