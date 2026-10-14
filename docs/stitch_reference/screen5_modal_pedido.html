@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"inverse-primary":"#b4c5ff","surface-tint":"#0053db","background":"#f8f9ff","outline-variant":"#c3c6d7","primary":"#004ac6","on-secondary-container":"#5c647a","on-tertiary-fixed":"#002109","secondary-fixed-dim":"#bec6e0","error-container":"#ffdad6","surface-container-lowest":"#ffffff","on-tertiary-container":"#c7ffca","tertiary":"#006329","inverse-on-surface":"#eaf1ff","outline":"#737686","on-error":"#ffffff","surface-container":"#e5eeff","surface-dim":"#cbdbf5","surface-container-highest":"#d3e4fe","surface-bright":"#f8f9ff","primary-container":"#2563eb","on-primary":"#ffffff","secondary-container":"#dae2fd","on-primary-fixed":"#00174b","on-surface-variant":"#434655","on-background":"#0b1c30","surface-container-low":"#eff4ff","on-surface":"#0b1c30","surface-container-high":"#dce9ff","on-primary-fixed-variant":"#003ea8","on-error-container":"#93000a","on-secondary-fixed":"#131b2e","surface-variant":"#d3e4fe","surface":"#f8f9ff","primary-fixed-dim":"#b4c5ff","on-primary-container":"#eeefff","tertiary-fixed-dim":"#62df7d","tertiary-fixed":"#7ffc97","on-secondary-fixed-variant":"#3f465c","inverse-surface":"#213145","on-secondary":"#ffffff","secondary-fixed":"#dae2fd","error":"#ba1a1a","secondary":"#565e74","primary-fixed":"#dbe1ff","tertiary-container":"#007f36","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#005320"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"gutter-compact":"0.5rem","space-xs":"0.25rem","gutter":"1rem","space-sm":"0.5rem","space-md":"0.75rem","space-lg":"1rem","space-xl":"1.5rem","margin":"1.5rem","margin-mobile":"0.75rem"},"fontFamily":{"headline-md":["Plus Jakarta Sans"],"label-md":["Inter"],"display-lg":["Plus Jakarta Sans"],"kpi-value":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Inter"],"body-sm":["Inter"],"body-lg":["Inter"],"body-md":["Inter"],"headline-lg":["Plus Jakarta Sans"],"data-tabular":["Inter"]},"fontSize":{"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"display-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"kpi-value":["28px",{"lineHeight":"32px","letterSpacing":"-0.02em","fontWeight":"800"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"body-md":["13px",{"lineHeight":"18px","fontWeight":"400"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"700"}],"data-tabular":["13px",{"lineHeight":"18px","letterSpacing":"-0.005em","fontWeight":"500"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-inverse-surface z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-sm bg-inverse-surface"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm text-headline-sm">AL</div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-inverse-on-surface font-bold leading-none">Apex Log</span><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline-variant font-medium mt-1">WMS Enterprise</span></div></div><div class="px-space-md py-space-sm"><div class="px-space-sm py-space-xs font-label-sm text-label-sm uppercase tracking-wider text-outline-variant font-semibold">Menu Operacional</div></div><nav class="flex flex-col gap-1 px-space-md" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="visao-geral" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">dashboard</span><span class="font-body-md text-body-md">Início / Visão Geral</span></div><span class="inline-flex items-center px-space-xs py-0.5 rounded-full text-label-sm font-label-sm bg-error text-on-error font-bold">3</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="estoque-almoxarifado" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">inventory_2</span><span class="font-body-md text-body-md">Estoque &amp; Almoxarifado</span></div><span class="inline-flex items-center px-space-xs py-0.5 rounded-full text-label-sm font-label-sm bg-error-container text-on-error-container font-semibold">14 críticos</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="movimentacoes-apontamentos" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">swap_horiz</span><span class="font-body-md text-body-md">Movimentações &amp; Apontamentos</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="pedidos-vendas" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">shopping_cart_checkout</span><span class="font-body-md text-body-md">Pedidos &amp; Vendas</span></div><span class="inline-flex items-center px-space-xs py-0.5 rounded-full text-label-sm font-label-sm bg-secondary-container text-on-secondary-fixed font-semibold">8</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="compras-fornecedores" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">local_shipping</span><span class="font-body-md text-body-md">Compras &amp; Fornecedores</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="clientes-expedicao" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">outgoing_mail</span><span class="font-body-md text-body-md">Clientes &amp; Expedição</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="configuracoes-cadastros" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">settings</span><span class="font-body-md text-body-md">Configurações / Cadastros</span></div></a></nav></div><div class="p-space-md bg-inverse-surface/60"><div class="p-space-sm rounded-lg bg-surface-container/10 flex items-center justify-between"><div class="flex flex-col"><span class="font-label-sm text-label-sm text-outline-variant font-medium">Status do Terminal</span><span class="font-body-sm text-body-sm text-inverse-on-surface font-semibold flex items-center gap-1.5 mt-0.5"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>Coletor RF Online</span></div><span class="material-symbols-outlined text-body-lg text-tertiary-fixed">sensors</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl z-40 flex items-center justify-between px-space-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-lg"><img alt="Apex Log WMS Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1V3T3RI1ib5zAo0I2Ne_9PHxszvYo-cQvcmFOEjLnW72e3OA_dvZm8jj2-LL-91_9CyvCI-aGNrVgEm9nGJR4fG6aCV6HRxX9gfpH4EZWF0SpIRXsMJCXWZcg4MPZr-uoci0nModJOtCeSVhxW-kbdzz4BDE_wdWvWLG2Y74DOoQXZSzePxW39JVZJdB-EGZIJF94LW5AimgAzDLnZhjVg8EZyzLE-3S2u0IZ0C59QOxNxNlbczgTE-KaI"/><div class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low text-on-surface"><span class="material-symbols-outlined text-body-lg text-primary">warehouse</span><span class="font-body-md text-body-md font-semibold text-on-surface">Unidade Matriz - Galpão 01</span><span class="material-symbols-outlined text-label-md text-outline">expand_more</span></div><div class="relative flex items-center w-80"><span class="material-symbols-outlined absolute left-3 text-body-md text-outline">search</span><input class="w-full pl-9 pr-14 py-1.5 rounded-lg bg-surface-container text-body-md font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest" placeholder="Buscar lote, item, SKU ou pallet..." type="text"/><kbd class="absolute right-2 px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-surface-container-highest text-on-surface-variant font-mono">⌘K</kbd></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-body-lg text-secondary">calendar_today</span><span class="font-body-sm text-body-sm font-medium">Data Operacional:</span><span class="font-data-tabular text-data-tabular font-semibold text-on-surface">24/10/2024</span></div><div class="h-6 w-px bg-surface-container-high"></div><button aria-label="Notificações de Ruptura" class="relative p-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-headline-sm">notifications</span><span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><div class="relative"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_bbm_ifViU6RB7W2PE4y8yKxoR1KEGjQsdNLFHHMekcv0HMFIRm5BMANwpO7Su0yrSahO7ZRb9RfW2w6JMnkPkV_OyN15PdIDXYFA1oER1HMrpf9FmNMqeNvaJHmCx20vorEKIoqPrp_MakiUFW0sqEuB4F-Wf3jd0foznps1mzv1JRs3BQe4acCcrUW1mDnGMRXjGOhqmq2GN8DF9llust01zfOZjXwT1AGzn2vukgog4XMriihH"/><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-tertiary ring-2 ring-surface-container-lowest"></span></div><div class="flex flex-col text-left"><span class="font-body-md text-body-md font-bold text-on-surface leading-none">Eduardo Biel</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight mt-0.5">Gestor de Estoque</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full relative">
+<!-- BACKGROUND BEHIND MODAL: Orders Management View (Apex Log WMS) -->
+<div class="w-full px-space-xl py-space-lg flex flex-col gap-space-lg filter blur-[2px] opacity-40 pointer-events-none select-none">
+<!-- Top Action Bar -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg text-on-surface">Gestão de Pedidos &amp; Reservas</span>
+<span class="font-body-sm text-body-sm text-outline">Painel operacional de expedição, carteira de clientes e apontamento imediato</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-body-md">download</span> Exportar Relatório
+        </button>
+<button class="px-space-md py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-body-md">add_shopping_cart</span> Novo Pedido
+        </button>
+</div>
+</div>
+<!-- Legacy Context Preview Banner (Small Architectural reference) -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center gap-space-lg shadow-sm">
+<img alt="Modal Legado Referência" class="h-14 w-auto rounded-lg object-cover shadow-sm opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNZ3ybw3iHTrCJPHb7PEFifzuyaBs_vMu1ljQ1bJzNknAQ8QzDCPFtPsJO05Xm_NPkgXGul0uf6hjaOvfOQXkeGZiFGbpdOxfPbXdrveRvlh8eqGrbdAxRVCysqszJ-7ljiDouFLKBb8jdT-36eVWM7I8zMQvhRBoDCAJ-S7QOZFxFBcxTioNWqmywi4tuAzDevzZkgW9Ep6kZS-OzQOTTXX88-MMzVmtdR8aWoHPrtoXUc-04QFLOVWqlHuw0U3yRhQ"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary">Migração de Sistema WMS v2.4</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Interface legada modernizada para motor de alta densidade e conferência em tempo real.</span>
+</div>
+</div>
+<!-- Table Mockup in Background -->
+<div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">
+<div class="p-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface">Carteira Ativa de Pedidos</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm font-bold">148 Pedidos</span>
+</div>
+</div>
+<div class="w-full h-96 bg-surface-container-lowest"></div>
+</div>
+</div>
+<!-- MODAL BACKDROP OVERLAY -->
+<div class="fixed inset-0 top-16 left-64 bg-inverse-surface/45 backdrop-blur-[6px] z-50 flex items-center justify-center p-space-lg overflow-y-auto">
+<!-- DIALOG CONTAINER (Bespoke 2-Column Expanded Industrial Layout, 1080px max) -->
+<div class="relative w-full max-w-5xl rounded-xl bg-surface-container-lowest shadow-[0_24px_48px_-12px_rgba(11,28,48,0.28)] flex flex-col overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
+<!-- Top Colored Semantic Accent Strip (Apex Primary Blue) -->
+<div class="h-1.5 w-full bg-gradient-to-r from-primary via-primary-container to-secondary-fixed"></div>
+<!-- 1. CABEÇALHO DO MODAL -->
+<div class="px-space-xl py-space-md bg-surface-container-lowest flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-sm">shopping_cart_checkout</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Novo Pedido &amp; Reserva de Estoque</span>
+<span class="font-data-tabular text-data-tabular px-2 py-0.5 rounded bg-surface-container-high text-primary font-bold">#PED-2026-NOVO</span>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Rascunho Comercial
+              </span>
+</div>
+<div class="flex items-center gap-space-md text-outline font-label-sm text-label-sm mt-0.5">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-label-md">schedule</span> Criado em: 24/10/2026 às 14:32</span>
+<span>•</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-label-md">person</span> Operador: Eduardo Biel</span>
+<span>•</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-label-md">warehouse</span> Galpão Origem: Matriz 01</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="p-2 rounded-lg text-outline hover:bg-surface-container-low hover:text-on-surface transition-colors" title="Atalhos de teclado">
+<span class="material-symbols-outlined text-body-lg">keyboard</span>
+</button>
+<button aria-label="Fechar" class="p-2 rounded-lg text-outline hover:bg-error-container hover:text-on-error-container transition-colors" id="closeModalBtn">
+<span class="material-symbols-outlined text-headline-sm">close</span>
+</button>
+</div>
+</div>
+<!-- MAIN MODAL BODY: 2-COLUMN DENSE INDUSTRIAL WORKSPACE -->
+<div class="grid grid-cols-12 gap-space-lg p-space-xl max-h-[calc(88vh-130px)] overflow-y-auto bg-surface-container-low">
+<!-- LEFT COLUMN: 8 Columns wide (Client Data, Real-time Item Grid, Stock Impact) -->
+<div class="col-span-8 flex flex-col gap-space-md">
+<!-- 2. DADOS GERAIS DO CLIENTE & EXPEDIÇÃO -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-body-lg">corporate_fare</span>
+                Dados Cadastrais &amp; Logística
+              </span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Crédito Aprovado
+              </span>
+</div>
+<!-- Client Smart Search Field -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Cliente / Razão Social</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-body-md text-primary">search</span>
+<input class="w-full pl-9 pr-36 py-2 rounded-lg bg-surface-container-low font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" placeholder="Buscar cliente por razão, CNPJ ou código ERP..." type="text" value="Construtora Alfa (Osasco) - CNPJ 61.401.889/0001-92"/>
+<div class="absolute right-2.5 px-2 py-1 rounded bg-tertiary-fixed/40 text-on-tertiary-fixed-variant font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-label-md">account_balance_wallet</span>
+                  Limite: R$ 150.000,00 OK
+                </div>
+</div>
+</div>
+<!-- Logistics Sub-row -->
+<div class="grid grid-cols-3 gap-space-md pt-1">
+<!-- Delivery Date with SLA Badge -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Data Desejada</label>
+<span class="font-label-sm text-label-sm text-primary font-bold">SLA: 48h</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full px-3 py-1.5 rounded-lg bg-surface-container-low font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" type="date" value="2026-10-26"/>
+</div>
+</div>
+<!-- Freight Type -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Tipo de Frete</label>
+<select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container">
+<option selected="">CIF - Por conta do Emitente</option>
+<option>FOB - Retira Cliente</option>
+</select>
+</div>
+<!-- Carrier -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Transportadora Vinculada</label>
+<div class="relative flex items-center">
+<select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container">
+<option selected="">TransLog Cargas Rápidas (Frota 04)</option>
+<option>Expresso Industrial Tubos</option>
+<option>Retira Própria do Cliente</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. SEÇÃO INTERATIVA DE ITENS & RESERVA IMEDIATA -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-body-lg">inventory</span>
+                  Itens Selecionados &amp; Reserva em Tempo Real
+                </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">2 Itens Adicionados</span>
+</div>
+<button class="text-primary hover:text-primary-container font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-body-md">barcode_scanner</span> Entrada Rápida Coletor
+              </button>
+</div>
+<!-- Adicionador Dinâmico de Produto (Live inventory lookup) -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Consulta Rápida de SKU / Saldo Instantâneo</span>
+<span class="font-label-sm text-label-sm text-error flex items-center gap-1 font-semibold">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span> Alerta de Nível Mínimo no Almoxarifado
+                </span>
+</div>
+<div class="grid grid-cols-12 gap-space-sm items-end">
+<div class="col-span-6 flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Buscar Produto / Bitola</label>
+<div class="relative flex items-center">
+<input class="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" type="text" value="Tubo NBR 6591 (Ø 22,22 x 1,2 x 5800 mm)"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+                    Saldo Disponível: <strong class="text-on-surface font-semibold font-data-tabular">258 kg</strong> | Saldo Mínimo: <span class="text-error font-semibold font-data-tabular">500 kg (Atenção)</span>
+</span>
+</div>
+<div class="col-span-2 flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Qtd (kg)</label>
+<input class="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" placeholder="Ex: 150" type="number"/>
+</div>
+<div class="col-span-2 flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Preço/kg</label>
+<input class="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" placeholder="R$ 8,90" type="text"/>
+</div>
+<div class="col-span-2">
+<button class="w-full py-1.5 px-3 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center gap-1 hover:bg-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined text-body-md">add</span> Adicionar
+                  </button>
+</div>
+</div>
+</div>
+<!-- Grade de Itens Adicionados (Super rica) -->
+<div class="flex flex-col gap-space-sm">
+<!-- Item 1 Row -->
+<div class="p-space-md rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs hover:bg-surface-container-low/50 transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-6 h-6 rounded bg-surface-container-high text-primary font-bold font-data-tabular text-label-sm flex items-center justify-center">01</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-bold">Tubo SAE 1008/1010 (19,05 x 1,2 x 6150 mm)</span>
+<span class="font-label-sm text-label-sm text-outline">SKU: TB-SAE-1912-6150 • Unidade: Quilos (kg) • Lote 2026-A12</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="px-2 py-0.5 rounded-full bg-tertiary-container text-on-tertiary font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-label-md">check_circle</span> Reservado em Estoque - Galpão 01
+                    </span>
+<button class="text-outline hover:text-error transition-colors p-1" title="Remover item">
+<span class="material-symbols-outlined text-body-md">delete</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-space-md pt-2 mt-1 bg-surface-container-low/40 p-space-sm rounded">
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Qtd Solicitada</span>
+<span class="font-data-tabular text-data-tabular text-on-surface font-bold">450 kg</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Preço Unitário</span>
+<span class="font-data-tabular text-data-tabular text-on-surface font-semibold">R$ 8,20 / kg</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Subtotal</span>
+<span class="font-data-tabular text-data-tabular text-primary font-bold">R$ 3.690,00</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Posição Física</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Rua B, Prateleira 04 (Nível 2)</span>
+</div>
+</div>
+</div>
+<!-- Item 2 Row -->
+<div class="p-space-md rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs hover:bg-surface-container-low/50 transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-6 h-6 rounded bg-surface-container-high text-primary font-bold font-data-tabular text-label-sm flex items-center justify-center">02</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-bold">Tubo NBR 6591 (Ø 25,40 x 1,20 x 6000 mm)</span>
+<span class="font-label-sm text-label-sm text-outline">SKU: TB-NBR-2512-6000 • Unidade: Quilos (kg) • Lote 2026-C09</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-label-md">task_alt</span> Saldo Imediato Disponível
+                    </span>
+<button class="text-outline hover:text-error transition-colors p-1" title="Remover item">
+<span class="material-symbols-outlined text-body-md">delete</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-space-md pt-2 mt-1 bg-surface-container-low/40 p-space-sm rounded">
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Qtd Solicitada</span>
+<span class="font-data-tabular text-data-tabular text-on-surface font-bold">200 kg</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Preço Unitário</span>
+<span class="font-data-tabular text-data-tabular text-on-surface font-semibold">R$ 9,10 / kg</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Subtotal</span>
+<span class="font-data-tabular text-data-tabular text-primary font-bold">R$ 1.820,00</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">Posição Física</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Rua C, Prateleira 01 (Nível 1)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Botão Adicionar Mais Itens -->
+<button class="py-2 px-3 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-body-md text-primary">add_circle</span>
+              Adicionar outro item ao pedido <span class="font-mono text-outline font-normal">(F4)</span>
+</button>
+<!-- Dynamic Indicator: Impacto no Almoxarifado -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-tertiary text-label-md">verified</span>
+                  Impacto Operacional no Almoxarifado (Conferência 100% Atendida)
+                </span>
+<span class="font-data-tabular text-data-tabular text-tertiary font-bold">Sem necessidade de OP</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-tertiary-container w-full rounded-full transition-all"></div>
+</div>
+<span class="font-body-sm text-body-sm text-outline">
+                Todos os 650 kg solicitados estão fisicamente disponíveis e segregados virtualmente para picking no Galpão 01.
+              </span>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: 4 Columns wide (Financial Summary, Conditions, Billing Instructions) -->
+<div class="col-span-4 flex flex-col gap-space-md">
+<!-- 4. RESUMO FINANCEIRO & CONDIÇÕES -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-body-lg">payments</span>
+              Condições &amp; Faturamento
+            </span>
+<!-- Payment Condition -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Condição de Pagamento</label>
+<select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-data-tabular text-data-tabular text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container">
+<option selected="">28 / 35 / 42 DDL - Boleto Bancário</option>
+<option>30 DDL - Boleto Bancário</option>
+<option>À Vista Antecipado (PIX - 3% desc.)</option>
+<option>Cartão BNDES (3x)</option>
+</select>
+</div>
+<!-- Totalization Card with Accent -->
+<div class="p-space-md rounded-xl bg-surface-container-high flex flex-col gap-space-sm relative overflow-hidden">
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Peso Total dos Itens</span>
+<span class="font-data-tabular text-data-tabular font-bold text-on-surface">650,00 kg</span>
+</div>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Preço Médio Ponderado</span>
+<span class="font-data-tabular text-data-tabular font-semibold text-on-surface">R$ 8,48 / kg</span>
+</div>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Impostos Incidentes (ICMS/ST)</span>
+<span class="font-data-tabular text-data-tabular font-semibold text-tertiary">Inclusos</span>
+</div>
+<div class="h-px w-full bg-outline-variant/40 my-0.5"></div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">Valor Total do Pedido</span>
+<span class="font-kpi-value text-kpi-value text-on-surface tracking-tight mt-0.5">R$ 5.510,00</span>
+</div>
+<!-- SLA indicator -->
+<div class="mt-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-tertiary text-body-md">bolt</span>
+<span>Previsão de Faturamento: <strong>24 horas úteis</strong></span>
+</div>
+</div>
+<!-- Notes & Dispatch Instructions -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Observações / Romaneio de Carga</label>
+<textarea class="w-full p-2.5 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container" placeholder="Ex: Entregar com caminhão tipo Toco. Amarrar feixes com fita metálica. Romaneio em anexo à NF." rows="3">Feixes de no máximo 250kg para descarga com empilhadeira frontal no galpão de destino. Horário de recebimento até 16h30.</textarea>
+</div>
+<!-- Quick Validation Checklist -->
+<div class="flex flex-col gap-1.5 pt-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Validações Automáticas WMS</span>
+<div class="flex items-center gap-2 text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-tertiary text-body-md">check_circle</span>
+<span>Trava de preço mínimo respeitada</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-tertiary text-body-md">check_circle</span>
+<span>Saldo físico conferido via RF</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-tertiary text-body-md">check_circle</span>
+<span>Endereço de entrega regular na Receita</span>
+</div>
+</div>
+</div>
+<!-- Micro Quick Help Info -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-body-lg mt-0.5">help_outline</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Processamento Direto</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Ao clicar em 'Emitir e Reservar Estoque', as etiquetas de separação serão geradas nos coletores RF dos operadores do Galpão 01.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. RODAPÉ DE AÇÕES DO MODAL (Action Footer) -->
+<div class="px-space-xl py-space-md bg-surface-container-lowest flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-10">
+<div class="flex items-center gap-space-sm">
+<button class="px-space-lg py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-outline hover:text-error font-label-md text-label-md transition-colors flex items-center gap-1.5" id="cancelModalBtn">
+<span class="material-symbols-outlined text-body-md">close</span>
+            Cancelar Pedido
+          </button>
+</div>
+<div class="flex items-center gap-space-md">
+<button class="px-space-lg py-2 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface font-label-md text-label-md flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-body-md">save_as</span>
+            Salvar como Orçamento
+          </button>
+<button class="px-space-xl py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-[0.99]" id="submitOrderBtn">
+<span class="material-symbols-outlined text-body-lg">lock_clock</span>
+            Emitir e Reservar Estoque
+          </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple micro-interactions for modal dismissal feedback
+  const closeModal = () => {
+    const backdrop = document.querySelector('.fixed.inset-0.top-16');
+    if (backdrop) {
+      backdrop.classList.add('opacity-0', 'transition-opacity', 'duration-150');
+      setTimeout(() => {
+        backdrop.style.display = 'none';
+        const bgLayer = document.querySelector('.filter.blur-\\[2px\\]');
+        if (bgLayer) {
+          bgLayer.classList.remove('blur-[2px]', 'opacity-40', 'pointer-events-none', 'select-none');
+        }
+      }, 150);
+    }
+  };
+
+  document.getElementById('closeModalBtn')?.addEventListener('click', closeModal);
+  document.getElementById('cancelModalBtn')?.addEventListener('click', closeModal);
+  
+  document.getElementById('submitOrderBtn')?.addEventListener('click', () => {
+    const btn = document.getElementById('submitOrderBtn');
+    btn.innerHTML = '<span class="material-symbols-outlined text-body-lg animate-spin">refresh</span> Reservando Lotes no Galpão 01...';
+    btn.classList.add('bg-tertiary-container', 'text-on-tertiary');
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined text-body-lg">check</span> Pedido #2026-894 Emitido com Sucesso!';
+      setTimeout(closeModal, 800);
+    }, 1000);
+  });
+</script></main></div></body></html>
