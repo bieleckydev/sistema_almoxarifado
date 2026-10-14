@@ -7,14 +7,16 @@ import {
   type TelaOuAba,
   type StatusCriticidade,
   type DashboardItem,
+  type ModuloCorporativo,
   METADADOS_ABAS,
+  obterModuloDeTela,
 } from '@/web/data/mock-almoxarifado';
 import type { TipoParceiro } from '@/core/domain/cliente.schema';
 import { useItensEstoque } from '@/web/hooks/useItensEstoque';
 import { useDebounce } from '@/web/hooks/useDebounce';
 import { useDashboardResumo } from '@/web/hooks/useDashboardResumo';
 import { AppSidebar } from '@/web/components/layout/AppSidebar';
-import { AppTopHeader } from '@/web/components/layout/AppTopHeader';
+import { AppRibbonHeader } from '@/web/components/layout/AppRibbonHeader';
 import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards';
 import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
 import { StockTable } from '@/web/components/dashboard/StockTable';
@@ -36,12 +38,15 @@ import type { GlobalSearchResult } from '@/web/hooks/useGlobalSearch';
 export default function AlmoxarifadoDashboardPage() {
   const { toast } = useToast();
 
-  // Tela inicial definida como 'inicio' (hub executivo da V2)
+  // Navegação corporativa V5: Módulo e tela ativos
+  const [moduloAtivo, setModuloAtivo] = useState<ModuloCorporativo>('inicio');
+  const [abaRibbonAtiva, setAbaRibbonAtiva] = useState<string>('Período de Análise');
   const [telaAtiva, setTelaAtiva] = useState<TelaOuAba>('inicio');
   const [termoBusca, setTermoBusca] = useState('');
   const [filtroSituacao, setFiltroSituacao] = useState<'todos' | StatusCriticidade>('todos');
   const [itemSelecionado, setItemSelecionado] = useState<DashboardItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [triggerExportCSV, setTriggerExportCSV] = useState<boolean>(false);
 
   // Estados dos Drawers e Modais Operacionais
   const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
@@ -92,6 +97,12 @@ export default function AlmoxarifadoDashboardPage() {
     filtroSituacao,
   });
 
+  // Total de itens críticos consolidados para a badge do Estoque
+  const totalCriticosGerais = Object.values(contagemCriticosPorAba).reduce(
+    (acc, curr) => acc + curr,
+    0
+  );
+
   const handleSelectTela = (novaTela: TelaOuAba) => {
     setTelaAtiva(novaTela);
     setTermoBusca('');
@@ -99,6 +110,68 @@ export default function AlmoxarifadoDashboardPage() {
     setItemSelecionado(null);
     setIsDrawerOpen(false);
     setFiltroClientesInicial('TODOS');
+    // Atualiza o módulo corporativo contextual inferido pela tela
+    setModuloAtivo((prev) => obterModuloDeTela(novaTela, prev));
+  };
+
+  const handleSelectModulo = (novoModulo: ModuloCorporativo) => {
+    setModuloAtivo(novoModulo);
+    if (novoModulo === 'inicio') {
+      handleSelectTela('inicio');
+      setAbaRibbonAtiva('Período de Análise');
+    } else if (novoModulo === 'estoque') {
+      handleSelectTela('mp');
+      setAbaRibbonAtiva('Materiais');
+    } else if (novoModulo === 'compras') {
+      handleSelectTela('saida');
+      setAbaRibbonAtiva('Recebimentos');
+    } else if (novoModulo === 'vendas') {
+      handleSelectTela('vendas');
+      setAbaRibbonAtiva('Pedidos');
+    }
+  };
+
+  const handleRibbonAction = (action: string) => {
+    const separadorIndex = action.indexOf(':');
+    const tipo = separadorIndex < 0 ? action : action.slice(0, separadorIndex);
+    const param = separadorIndex < 0 ? '' : action.slice(separadorIndex + 1);
+
+    if (tipo === 'v') {
+      if (param === 'inicio') {
+        handleSelectModulo('inicio');
+      } else if (param === 'mp' || param === 'imp' || param === 'motos') {
+        setModuloAtivo('estoque');
+        handleSelectTela(param as TelaOuAba);
+      } else if (param === 'vendas') {
+        setModuloAtivo('vendas');
+        handleSelectTela('vendas');
+      } else if (param === 'saida') {
+        handleSelectTela('saida');
+      } else if (param === 'clientes') {
+        handleSelectTela('clientes');
+      }
+    } else if (tipo === 'novoitem') {
+      const aba = (param || 'mp') as AbaEstoque;
+      setModuloAtivo('estoque');
+      handleSelectTela(aba);
+      setIsItemCreateOpen(true);
+    } else if (tipo === 'pick') {
+      setPickerDrawerState({
+        isOpen: true,
+        tipo: param === 'Saída' ? 'Saída' : 'Entrada',
+      });
+    } else if (tipo === 'novopedido') {
+      setIsOrderCreateOpen(true);
+    } else if (tipo === 'novocad') {
+      handleOpenClientCreate((param as TipoParceiro) || 'CLIENTE');
+    } else if (tipo === 'fc') {
+      const tipoFiltro = (param as 'TODOS' | TipoParceiro) || 'TODOS';
+      setFiltroClientesInicial(tipoFiltro);
+      handleSelectTela('clientes');
+    } else if (tipo === 'csv') {
+      handleSelectTela('saida');
+      setTriggerExportCSV(true);
+    }
   };
 
   const handleSelectItem = (item: DashboardItem) => {
@@ -228,20 +301,26 @@ export default function AlmoxarifadoDashboardPage() {
   return (
     <AuthGuard>
       <div className="flex flex-col md:flex-row min-h-screen bg-[#f1f4f8] dark:bg-[#0c1218] text-[#17212b] dark:text-[#e6edf3]">
-        {/* Menu Lateral de Navegação Operacional com Seções V2 */}
+        {/* Menu Lateral de Navegação em Módulos V5 */}
         <AppSidebar
+          moduloAtivo={moduloAtivo}
           telaAtiva={telaAtiva}
+          onSelectModulo={handleSelectModulo}
           onSelectTela={handleSelectTela}
+          totalCriticos={totalCriticosGerais}
           contagemCriticos={contagemCriticosPorAba}
           pedidosAtrasadosCount={resumoGeral?.vendas.atrasados ?? 0}
         />
 
-        {/* Coluna Central com Topbar e Conteúdo */}
+        {/* Coluna Central com Ribbon e Conteúdo */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header Superior com Breadcrumbs e Busca Geral */}
-          <AppTopHeader
+          {/* Faixa de Opções Superior (Ribbon Menu V5) */}
+          <AppRibbonHeader
+            moduloAtivo={moduloAtivo}
             telaAtiva={telaAtiva}
-            onSelectTela={handleSelectTela}
+            abaRibbonAtiva={abaRibbonAtiva}
+            onSelectAbaRibbon={setAbaRibbonAtiva}
+            onRibbonAction={handleRibbonAction}
             onSelectSearchResult={handleSelectSearchResult}
           />
 
@@ -364,6 +443,8 @@ export default function AlmoxarifadoDashboardPage() {
             ) : telaAtiva === 'saida' ? (
               /* 5. Módulo de Saída Manual, Relatórios Analíticos e Exportação CSV */
               <SaidaManualView
+                triggerExportCsv={triggerExportCSV}
+                onExportCsvDone={() => setTriggerExportCSV(false)}
                 onSelectItem={(item) => {
                   setItemSelecionado(item);
                   setIsDrawerOpen(true);

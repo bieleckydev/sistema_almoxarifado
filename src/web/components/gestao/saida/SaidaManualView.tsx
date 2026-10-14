@@ -31,11 +31,17 @@ import {
 
 export interface SaidaManualViewProps {
   onSelectItem?: (item: DashboardItem) => void;
+  triggerExportCsv?: boolean;
+  onExportCsvDone?: () => void;
 }
 
 const PERIODOS: PeriodoFiltro[] = ['Hoje', 'Ontem', '7 dias', 'Tudo'];
 
-export function SaidaManualView({ onSelectItem }: SaidaManualViewProps) {
+export function SaidaManualView({
+  onSelectItem,
+  triggerExportCsv,
+  onExportCsvDone,
+}: SaidaManualViewProps) {
   const { toast } = useToast();
   const {
     periodo,
@@ -169,6 +175,14 @@ export function SaidaManualView({ onSelectItem }: SaidaManualViewProps) {
     exportarMovimentacoesCSV(listaExportar);
     toast('Relatório CSV gerado com sucesso!', { type: 'success' });
   };
+
+  // Disparo automático via Ribbon (ação 'csv')
+  React.useEffect(() => {
+    if (triggerExportCsv && movimentacoes.length > 0) {
+      handleExportarCSV();
+      onExportCsvDone?.();
+    }
+  }, [triggerExportCsv, movimentacoes.length]);
 
   return (
     <div className="flex-1 flex flex-col min-w-0 animate-fade-in">
