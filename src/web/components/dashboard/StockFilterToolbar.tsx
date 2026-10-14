@@ -9,6 +9,7 @@ export interface StockFilterToolbarProps {
   onBuscaChange: (valor: string) => void;
   filtroSituacao: 'todos' | StatusCriticidade;
   onFiltroSituacaoChange: (filtro: 'todos' | StatusCriticidade) => void;
+  contagemPorSituacao?: Record<'todos' | StatusCriticidade, number>;
   totalFiltrados?: number;
   placeholder?: string;
   className?: string;
@@ -26,6 +27,7 @@ export function StockFilterToolbar({
   onBuscaChange,
   filtroSituacao,
   onFiltroSituacaoChange,
+  contagemPorSituacao,
   totalFiltrados,
   placeholder = 'Filtrar por nome, SKU ou endereço físico...',
   className = '',
@@ -66,6 +68,7 @@ export function StockFilterToolbar({
         </span>
         {CHIP_OPTIONS.map(({ chave, rotulo }) => {
           const isActive = filtroSituacao === chave;
+          const count = contagemPorSituacao ? contagemPorSituacao[chave] : undefined;
 
           return (
             <button
@@ -84,13 +87,24 @@ export function StockFilterToolbar({
                   ? 'Filtro ativo. Clique novamente para desmarcar'
                   : undefined
               }
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
+              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              {rotulo}
+              <span>{rotulo}</span>
+              {count !== undefined && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    isActive
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      : 'bg-slate-200/60 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  {count}
+                </span>
+              )}
             </button>
           );
         })}

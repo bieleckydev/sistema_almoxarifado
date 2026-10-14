@@ -12,9 +12,17 @@ export interface ItemDetailsDrawerProps {
   item: DashboardItem | null;
   isOpen: boolean;
   onClose: () => void;
+  onRegistrarEntrada?: (item: DashboardItem) => void;
+  onRegistrarSaida?: (item: DashboardItem) => void;
 }
 
-export function ItemDetailsDrawer({ item, isOpen, onClose }: ItemDetailsDrawerProps) {
+export function ItemDetailsDrawer({
+  item,
+  isOpen,
+  onClose,
+  onRegistrarEntrada,
+  onRegistrarSaida,
+}: ItemDetailsDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Hook de extrato de movimentações (executado sob demanda quando o Drawer estiver aberto)
@@ -121,6 +129,27 @@ export function ItemDetailsDrawer({ item, isOpen, onClose }: ItemDetailsDrawerPr
                 showLabels
               />
             </div>
+          </div>
+
+          {/* Ações Operacionais Imediatas (Entrada / Retirada) */}
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => onRegistrarEntrada?.(item)}
+              className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] hover:bg-blue-800 dark:hover:bg-blue-400 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <ArrowUpRight className="w-4 h-4" />
+              <span>Adicionar entrada</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onRegistrarSaida?.(item)}
+              className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <ArrowDownRight className="w-4 h-4 text-rose-500" />
+              <span>Retirar para produção</span>
+            </button>
           </div>
 
           {/* Grid de Informações de Armazenamento */}

@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { FileText, ArrowDownRight } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { formatarTextoFalta } from '@/web/utils/pluralization';
 import { StockGauge } from './StockGauge';
@@ -13,6 +13,8 @@ import { EmptyState } from '../feedback/EmptyState';
 export interface StockTableProps {
   itens: DashboardItem[];
   onSelectItem: (item: DashboardItem) => void;
+  onRegistrarEntrada?: (item: DashboardItem) => void;
+  onRegistrarSaida?: (item: DashboardItem) => void;
   onRegistrarBaixaRapida?: (item: DashboardItem) => void;
   selectedItemId?: string | null;
   isLoading?: boolean;
@@ -23,6 +25,8 @@ export interface StockTableProps {
 export function StockTable({
   itens,
   onSelectItem,
+  onRegistrarEntrada,
+  onRegistrarSaida,
   onRegistrarBaixaRapida,
   selectedItemId,
   isLoading = false,
@@ -185,27 +189,27 @@ export function StockTable({
                   />
                 </td>
 
-                {/* Gatilhos Operacionais por Linha */}
+                {/* Gatilhos Operacionais por Linha (+ Entrada / Retirar) */}
                 <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1.5">
                     <button
                       type="button"
-                      onClick={() => onSelectItem(item)}
-                      title="Abrir detalhes técnicos e extrato"
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                      onClick={() => (onRegistrarEntrada ? onRegistrarEntrada(item) : onSelectItem(item))}
+                      title="Adicionar entrada de material"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                     >
-                      <FileText className="w-3 h-3 text-slate-500" />
-                      <span>Detalhes</span>
+                      <ArrowUpRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span>+ Entrada</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => (onRegistrarBaixaRapida ? onRegistrarBaixaRapida(item) : onSelectItem(item))}
-                      title="Registrar baixa / saída rápida"
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                      onClick={() => (onRegistrarSaida ? onRegistrarSaida(item) : onSelectItem(item))}
+                      title="Retirar para produção"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                     >
-                      <ArrowDownRight className="w-3 h-3 text-rose-600" />
-                      <span>Baixa</span>
+                      <ArrowDownRight className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                      <span>Retirar</span>
                     </button>
                   </div>
                 </td>
