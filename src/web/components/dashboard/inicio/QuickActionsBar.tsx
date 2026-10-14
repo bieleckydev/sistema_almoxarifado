@@ -1,7 +1,13 @@
 'use client';
 
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight, ShoppingCart, UserPlus } from 'lucide-react';
+import {
+  PlusCircle,
+  MinusCircle,
+  ShoppingBag,
+  PackagePlus,
+  ArrowRight,
+} from 'lucide-react';
 
 export interface QuickActionsBarProps {
   onRegistrarEntrada: () => void;
@@ -20,47 +26,95 @@ export function QuickActionsBar({
 }: QuickActionsBarProps) {
   return (
     <div
-      aria-label="Ações rápidas operacionais"
-      className={`flex items-center gap-2.5 flex-wrap mb-6 ${className}`}
+      aria-label="Faixa de Ações Rápidas de Chão de Fábrica"
+      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6 ${className}`}
     >
-      {/* 1. Registrar Entrada (Botão Principal com destaque) */}
+      {/* 1. Registrar Entrada (Card Primário Azul Destaque) */}
       <button
         type="button"
         onClick={onRegistrarEntrada}
-        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] hover:bg-[#163c7e] dark:hover:bg-[#4898d5] transition-colors cursor-pointer"
+        className="group flex items-center justify-between p-4 rounded-xl bg-primary text-on-primary shadow-sm hover:shadow-md hover:bg-primary-container transition-all cursor-pointer text-left active:scale-[0.99]"
       >
-        <ArrowUpRight className="w-4 h-4" />
-        <span>Registrar entrada</span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-surface-container-lowest/15 flex items-center justify-center text-on-primary group-hover:scale-105 transition-transform shrink-0">
+            <PlusCircle className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-headline-sm text-sm font-bold leading-tight">
+              + Registrar Entrada
+            </div>
+            <div className="font-label-sm text-[11px] text-on-primary-container/85 mt-0.5">
+              NF, Insumos e Lotes
+            </div>
+          </div>
+        </div>
+        <ArrowRight className="w-4 h-4 opacity-60 group-hover:translate-x-1 group-hover:opacity-100 transition-all shrink-0" />
       </button>
 
-      {/* 2. Registrar Saída (Ação Secundária) */}
+      {/* 2. Registrar Saída / Baixa */}
       <button
         type="button"
         onClick={onRegistrarSaida}
-        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-medium border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-800 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer"
+        className="group flex items-center justify-between p-4 rounded-xl bg-surface-container-lowest text-on-surface border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-error/40 transition-all cursor-pointer text-left active:scale-[0.99]"
       >
-        <ArrowDownRight className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-        <span>Registrar saída</span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+            <MinusCircle className="w-5 h-5 text-error" />
+          </div>
+          <div>
+            <div className="font-headline-sm text-sm font-bold leading-tight text-error">
+              - Registrar Saída / Baixa
+            </div>
+            <div className="font-label-sm text-[11px] text-on-surface-variant mt-0.5">
+              Apontamento de OS
+            </div>
+          </div>
+        </div>
+        <ArrowRight className="w-4 h-4 text-outline-variant group-hover:translate-x-1 group-hover:text-on-surface transition-all shrink-0" />
       </button>
 
-      {/* 3. Novo Pedido (Ação Secundária) */}
+      {/* 3. Novo Pedido Venda */}
       <button
         type="button"
         onClick={onNovoPedido}
-        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-medium border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-800 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer"
+        className="group flex items-center justify-between p-4 rounded-xl bg-surface-container-lowest text-on-surface border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer text-left active:scale-[0.99]"
       >
-        <ShoppingCart className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-        <span>Novo pedido</span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-secondary-container text-on-secondary-fixed flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+            <ShoppingBag className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-headline-sm text-sm font-bold leading-tight text-on-surface">
+              + Novo Pedido Venda
+            </div>
+            <div className="font-label-sm text-[11px] text-on-surface-variant mt-0.5">
+              Faturamento & Separação
+            </div>
+          </div>
+        </div>
+        <ArrowRight className="w-4 h-4 text-outline-variant group-hover:translate-x-1 group-hover:text-on-surface transition-all shrink-0" />
       </button>
 
-      {/* 4. Novo Cadastro (Ação Secundária) */}
+      {/* 4. Cadastro de Item */}
       <button
         type="button"
         onClick={onNovoCadastro}
-        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-medium border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-800 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer"
+        className="group flex items-center justify-between p-4 rounded-xl bg-surface-container-lowest text-on-surface border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer text-left active:scale-[0.99]"
       >
-        <UserPlus className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-        <span>Novo cadastro</span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-surface-container-high text-primary flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+            <PackagePlus className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-headline-sm text-sm font-bold leading-tight text-on-surface">
+              + Cadastro de Item
+            </div>
+            <div className="font-label-sm text-[11px] text-on-surface-variant mt-0.5">
+              SKU, Localização & Nível
+            </div>
+          </div>
+        </div>
+        <ArrowRight className="w-4 h-4 text-outline-variant group-hover:translate-x-1 group-hover:text-on-surface transition-all shrink-0" />
       </button>
     </div>
   );
