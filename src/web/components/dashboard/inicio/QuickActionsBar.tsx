@@ -27,39 +27,39 @@ export function QuickActionsBar({
       <button
         type="button"
         onClick={onRegistrarEntrada}
-        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] hover:bg-blue-800 dark:hover:bg-blue-400 shadow-xs hover:shadow-md transition-all cursor-pointer"
+        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] hover:bg-[#163c7e] dark:hover:bg-[#4898d5] transition-colors cursor-pointer"
       >
         <ArrowUpRight className="w-4 h-4" />
         <span>Registrar entrada</span>
       </button>
 
-      {/* 2. Registrar Saída (Chip Secundário) */}
+      {/* 2. Registrar Saída (Ação Secundária) */}
       <button
         type="button"
         onClick={onRegistrarSaida}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-medium border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-800 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer"
       >
-        <ArrowDownRight className="w-4 h-4 text-rose-500" />
+        <ArrowDownRight className="w-4 h-4 text-slate-500 dark:text-slate-400" />
         <span>Registrar saída</span>
       </button>
 
-      {/* 3. Novo Pedido (Chip Secundário) */}
+      {/* 3. Novo Pedido (Ação Secundária) */}
       <button
         type="button"
         onClick={onNovoPedido}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-medium border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-800 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer"
       >
-        <ShoppingCart className="w-4 h-4 text-blue-500" />
+        <ShoppingCart className="w-4 h-4 text-slate-500 dark:text-slate-400" />
         <span>Novo pedido</span>
       </button>
 
-      {/* 4. Novo Cadastro (Chip Secundário) */}
+      {/* 4. Novo Cadastro (Ação Secundária) */}
       <button
         type="button"
         onClick={onNovoCadastro}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md text-xs font-medium border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-800 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer"
       >
-        <UserPlus className="w-4 h-4 text-emerald-500" />
+        <UserPlus className="w-4 h-4 text-slate-500 dark:text-slate-400" />
         <span>Novo cadastro</span>
       </button>
     </div>

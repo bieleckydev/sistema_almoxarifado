@@ -43,10 +43,10 @@ export function StockMetricsCards({
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg animate-pulse"
+            className="p-3.5 bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-lg animate-pulse"
           >
-            <div className="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded mb-1.5" />
-            <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800/60 rounded" />
+            <div className="h-6 w-16 bg-slate-200 dark:bg-[#343438] rounded-sm mb-1.5" />
+            <div className="h-3 w-32 bg-slate-100 dark:bg-[#343438]/60 rounded-sm" />
           </div>
         ))}
       </div>
@@ -64,17 +64,17 @@ export function StockMetricsCards({
         onClick={() => handleCardClick('todos')}
         aria-pressed={filtroAtivo === 'todos'}
         title={filtroAtivo === 'todos' ? 'Exibindo todos os itens do catálogo' : 'Clique para exibir todos os itens'}
-        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer relative ${
+        className={`p-3.5 rounded-lg border text-left transition-colors cursor-pointer relative border-t-3 border-t-[#4fa8e0] ${
           filtroAtivo === 'todos'
-            ? 'bg-slate-50 dark:bg-slate-800/80 border-slate-400 dark:border-slate-600 ring-1 ring-slate-400 dark:ring-slate-600 shadow-xs'
-            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+            ? 'bg-slate-100 dark:bg-[#343438] border-slate-400 dark:border-slate-500'
+            : 'bg-white dark:bg-[#2b2b2e] border-slate-200 dark:border-[#3e3e42] hover:border-slate-300 dark:hover:border-slate-600'
         }`}
       >
         <div className="flex items-baseline justify-between mb-1">
-          <span className="text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">
+          <span className="text-2xl font-bold text-slate-900 dark:text-[#ececee] tabular-nums tracking-tight">
             {totalItens.toLocaleString('pt-BR')}
           </span>
-          <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
             100% catálogo
           </span>
         </div>
@@ -93,24 +93,24 @@ export function StockMetricsCards({
             ? 'Filtro ativo. Clique novamente para limpar e ver todos'
             : 'Clique para filtrar itens em atenção (abaixo do estoque de segurança)'
         }
-        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer relative ${
+        className={`p-3.5 rounded-lg border text-left transition-colors cursor-pointer relative border-t-3 border-t-[#f2b705] ${
           filtroAtivo === 'low'
-            ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-500 dark:border-amber-500 ring-2 ring-amber-500 shadow-xs'
-            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700'
+            ? 'bg-amber-50/70 dark:bg-[#3d2e14] border-amber-500 dark:border-amber-600'
+            : 'bg-white dark:bg-[#2b2b2e] border-slate-200 dark:border-[#3e3e42] hover:border-amber-300 dark:hover:border-amber-700/60'
         }`}
       >
         <div className="flex items-baseline justify-between mb-1">
-          <span className="text-2xl font-semibold text-amber-700 dark:text-amber-400 tabular-nums">
+          <span className="text-2xl font-bold text-amber-700 dark:text-[#f3c462] tabular-nums tracking-tight">
             {totalAbaixoMinimo.toLocaleString('pt-BR')}
           </span>
-          <span className="text-xs font-mono font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
+          <span className="text-xs font-semibold text-amber-700 dark:text-[#f3c462] bg-amber-50 dark:bg-[#3d2e14] px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/60">
             {percentualAbaixo}% em atenção
           </span>
         </div>
         <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-400">
           <span>Abaixo do estoque de segurança</span>
           {filtroAtivo === 'low' && (
-            <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-amber-700 dark:text-[#f3c462] bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 rounded-md">
               Filtro ativo ✕
             </span>
           )}
@@ -127,24 +127,24 @@ export function StockMetricsCards({
             ? 'Filtro ativo. Clique novamente para limpar e ver todos'
             : 'Clique para filtrar itens em nível crítico/zerado'
         }
-        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer relative ${
+        className={`p-3.5 rounded-lg border text-left transition-colors cursor-pointer relative border-t-3 border-t-[#d9372f] ${
           filtroAtivo === 'crit'
-            ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-500 dark:border-rose-500 ring-2 ring-rose-500 shadow-xs'
-            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700'
+            ? 'bg-rose-50/70 dark:bg-[#40201d] border-rose-500 dark:border-rose-600'
+            : 'bg-white dark:bg-[#2b2b2e] border-slate-200 dark:border-[#3e3e42] hover:border-rose-300 dark:hover:border-rose-700/60'
         }`}
       >
         <div className="flex items-baseline justify-between mb-1">
-          <span className="text-2xl font-semibold text-rose-700 dark:text-rose-400 tabular-nums">
+          <span className="text-2xl font-bold text-rose-700 dark:text-[#f0796b] tabular-nums tracking-tight">
             {totalCriticos.toLocaleString('pt-BR')}
           </span>
-          <span className="text-xs font-mono font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
+          <span className="text-xs font-semibold text-rose-700 dark:text-[#f0796b] bg-rose-50 dark:bg-[#40201d] px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900/60">
             {percentualCritico}% em ruptura
           </span>
         </div>
         <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-400">
           <span>Nível crítico (requer reposição)</span>
           {filtroAtivo === 'crit' && (
-            <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/50 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-rose-700 dark:text-[#f0796b] bg-rose-100 dark:bg-rose-900/50 px-1.5 py-0.5 rounded-md">
               Filtro ativo ✕
             </span>
           )}
