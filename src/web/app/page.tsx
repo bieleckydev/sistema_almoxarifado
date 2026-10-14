@@ -21,9 +21,12 @@ import { ItemDetailsDrawer } from '@/web/components/dashboard/ItemDetailsDrawer'
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
+import { useToast } from '@/web/hooks/useToast';
 import type { GlobalSearchResult } from '@/web/hooks/useGlobalSearch';
 
 export default function AlmoxarifadoDashboardPage() {
+  const { toast } = useToast();
+
   // Tela inicial definida como 'inicio' (hub executivo da V2)
   const [telaAtiva, setTelaAtiva] = useState<TelaOuAba>('inicio');
   const [termoBusca, setTermoBusca] = useState('');
@@ -165,7 +168,42 @@ export default function AlmoxarifadoDashboardPage() {
           <main className="flex-1 w-full px-4 py-4 md:px-7 md:py-6 flex flex-col min-w-0">
             {telaAtiva === 'inicio' ? (
               /* 1. Hub Executivo / Dashboard Inicial */
-              <InicioDashboardView onNavegar={handleSelectTela} />
+              <InicioDashboardView
+                onNavegar={handleSelectTela}
+                onRegistrarEntrada={() => {
+                  toast('Selecione o produto no catálogo para registrar a entrada.', { type: 'info' });
+                  handleSelectTela('mp');
+                }}
+                onRegistrarSaida={() => {
+                  toast('Selecione o produto no catálogo para registrar a saída.', { type: 'info' });
+                  handleSelectTela('mp');
+                }}
+                onNovoPedido={() => handleSelectTela('vendas')}
+                onNovoCadastro={() => handleSelectTela('clientes')}
+                onSelectItem={async (itemAtencao) => {
+                  setTelaAtiva(itemAtencao.aba);
+                  await handleSelectSearchResult({
+                    id: itemAtencao.id,
+                    type: 'item',
+                    title: itemAtencao.nome,
+                    subtitle: itemAtencao.codigo,
+                    targetAba: itemAtencao.aba,
+                    targetItemId: itemAtencao.id,
+                  });
+                }}
+                onAdicionarEntrada={async (itemAtencao) => {
+                  setTelaAtiva(itemAtencao.aba);
+                  toast(`Abrindo detalhes de ${itemAtencao.nome} para entrada rápida`, { type: 'info' });
+                  await handleSelectSearchResult({
+                    id: itemAtencao.id,
+                    type: 'item',
+                    title: itemAtencao.nome,
+                    subtitle: itemAtencao.codigo,
+                    targetAba: itemAtencao.aba,
+                    targetItemId: itemAtencao.id,
+                  });
+                }}
+              />
             ) : isAbaEstoque && metadadosAba ? (
               /* 2. Catálogo Operacional de Estoque (MP / IMP / MOTOS) */
               <div key={telaAtiva} className="animate-tab-switch flex-1 flex flex-col min-w-0">
