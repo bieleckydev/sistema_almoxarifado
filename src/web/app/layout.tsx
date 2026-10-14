@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Sans, JetBrains_Mono } from 'next/font/google';
+import { IBM_Plex_Sans, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/web/components/providers';
 
@@ -8,6 +8,13 @@ const ibmPlexSans = IBM_Plex_Sans({
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-sans',
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  display: 'swap',
+  variable: '--font-headline',
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -27,7 +34,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${ibmPlexSans.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="pt-BR"
+      className={`${ibmPlexSans.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
