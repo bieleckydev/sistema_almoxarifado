@@ -85,14 +85,15 @@ graph TD
 
 ## 4. Fases de Execução
 
-1. **Fase 1: Modernização do Modal de Novo Pedido de Venda** ([OrderCreateDrawer.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/vendas/OrderCreateDrawer.tsx))
-   - Implementar consulta de saldo em tempo real ao selecionar produtos.
-   - Adicionar badges de disponibilidade/déficit e cards detalhados por linha de pedido.
-   - Validar com `CreatePedidoSchema`.
-2. **Fase 2: Modernização do Modal de Cadastro de Parceiros** ([ClientCreateDrawer.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/clientes/ClientCreateDrawer.tsx))
-   - Implementar segmented tabs de perfil (`Cliente`, `Fornecedor`, `Transportadora`, `Outro`).
-   - Adicionar alternador CNPJ/CPF e seções estruturadas com barras laterais coloridas.
-   - Validar com `CreateClienteSchema`.
-3. **Fase 3: Validação de Tipos e Testes Automatizados**
-   - Executar `npx tsc --noEmit` para validação estrita de tipos.
-   - Executar suíte completa de testes (`npm test`).
+1. **Fase 1: Modernização do Modal de Novo Pedido de Venda** ([OrderCreateDrawer.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/vendas/OrderCreateDrawer.tsx)) — **[CONCLUÍDO]**
+   - Implementado layout amplo `max-w-2xl` com live lookup e consulta de saldo em tempo real.
+   - Adicionados badges de disponibilidade/déficit e cards detalhados por linha de pedido com numeração `01`, `02`.
+   - Compatibilidade total com `CreatePedidoSchema`.
+2. **Fase 2: Modernização do Modal de Cadastro de Parceiros** ([ClientCreateDrawer.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/clientes/ClientCreateDrawer.tsx)) — **[CONCLUÍDO]**
+   - Implementadas segmented tabs de perfil (`Cliente`, `Fornecedor`, `Transportadora`, `Contato`).
+   - Adicionado alternador CNPJ/CPF com máscaras inteligentes, botão de consulta na Receita e seções estruturadas com barras coloridas.
+   - Campos adicionais de Regime Tributário, Inscrição Estadual com badge de contribuinte, email para DANFE/EDI e banner de compliance.
+   - Compatibilidade total com `CreateClienteSchema`.
+3. **Fase 3: Validação de Tipos e Testes Automatizados** — **[CONCLUÍDO]**
+   - Compilação estrita e build Next.js/Turbopack validados com `exit code 0`.
+   - Suíte de testes unitários executada com 100% de aprovação.
