@@ -31,7 +31,7 @@ export function AppTopHeader({
 
   return (
     <header
-      className={`sticky top-0 z-20 w-full px-4 py-3 md:px-7 bg-white/95 dark:bg-[#17212a]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 md:gap-6 flex-wrap md:flex-nowrap transition-colors ${className}`}
+      className={`sticky top-0 z-20 w-full px-4 py-3 md:px-7 bg-white dark:bg-[#2b2b2e] border-b border-slate-300 dark:border-[#3e3e42] flex items-center justify-between gap-3 md:gap-6 flex-wrap md:flex-nowrap transition-colors ${className}`}
     >
       {/* 1. Breadcrumb Dinâmico de Navegação (ocultado em telas muito pequenas) */}
       <nav

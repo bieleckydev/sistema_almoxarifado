@@ -86,7 +86,7 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
           placeholder="Buscar item, cliente, pedido ou NF-e   ( / )"
           autoComplete="off"
           aria-label="Busca geral no almoxarifado"
-          className="w-full pl-9 pr-16 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1.5 focus:ring-blue-500 dark:focus:ring-blue-400 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-2xs"
+          className="w-full pl-9 pr-16 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-1.5 focus:ring-[#1d4ea3] dark:focus:ring-[#5aa9ea] transition-colors"
         />
 
         <div className="absolute right-2.5 flex items-center gap-1.5">
@@ -106,7 +106,7 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-slate-200/60 dark:bg-slate-800 rounded border border-slate-300/60 dark:border-slate-700 select-none">
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-slate-200/60 dark:bg-[#1a1a1c] rounded border border-slate-300/60 dark:border-[#3e3e42] select-none">
               /
             </kbd>
           )}
@@ -115,7 +115,7 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
 
       {/* Dropdown com Resultados Categorizados */}
       {isOpen && termo.trim().length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#17212a] border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden z-50 max-h-[380px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-md shadow-lg overflow-hidden z-50 max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-[#3e3e42]">
           {resultados.length === 0 ? (
             <div className="p-5 text-center text-xs text-slate-500 dark:text-slate-400">
               Nada encontrado para &ldquo;{termo}&rdquo;.
@@ -128,10 +128,10 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
                   key={res.id}
                   type="button"
                   onClick={() => handleSelect(res)}
-                  className="w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group"
+                  className="w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-950/50 transition-colors shrink-0">
+                    <div className="p-1.5 rounded-md bg-slate-100 dark:bg-[#1a1a1c] text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors shrink-0">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
