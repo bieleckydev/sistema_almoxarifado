@@ -8,8 +8,13 @@ import { isMovimentacaoEntrada } from '@/core/services/estoque-calculator';
 import { useItensEstoque } from './useItensEstoque';
 import type { DashboardItem } from '../data/mock-almoxarifado';
 import { formatarDataBR } from '../components/gestao/saida/exportCsv';
+import {
+  usePeriodoStore,
+  type PeriodoFiltro,
+  calcularIntervaloPeriodo,
+} from './usePeriodoGlobal';
 
-export type PeriodoFiltro = 'Hoje' | 'Ontem' | '7 dias' | 'Tudo';
+export type { PeriodoFiltro };
 
 export interface MovimentacaoEnriquecida {
   id: string;
@@ -88,9 +93,13 @@ export interface RegistrarMovimentacaoParams {
   info?: Record<string, string>;
 }
 
-export function useMovimentacoesPeriodo() {
+export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
   const queryClient = useQueryClient();
-  const [periodo, setPeriodo] = useState<PeriodoFiltro>('Hoje');
+  const periodoGlobal = usePeriodoStore((s) => s.periodo);
+  const setPeriodoGlobal = usePeriodoStore((s) => s.setPeriodo);
+
+  const periodo = periodoCustom || periodoGlobal;
+  const setPeriodo = setPeriodoGlobal;
   const [busca, setBusca] = useState('');
 
   // 1. Catálogo geral de itens para relacionamento e enriquecimento
