@@ -1,16 +1,40 @@
 'use client';
 
 import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import {
+  RefreshCw,
+  Layers,
+  Wrench,
+  Bike,
+  ShoppingCart,
+  Users,
+  ArrowLeftRight,
+} from 'lucide-react';
 import { SummaryNavCard, type SummaryBadge } from './SummaryNavCard';
-import { useDashboardResumo } from '@/web/hooks/useDashboardResumo';
+import { QuickActionsBar } from './QuickActionsBar';
+import { AttentionPanel } from './AttentionPanel';
+import { useDashboardResumo, type ItemAtencaoResumo } from '@/web/hooks/useDashboardResumo';
 import { type TelaOuAba, METADADOS_ABAS, type AbaEstoque } from '@/web/data/mock-almoxarifado';
 
 export interface InicioDashboardViewProps {
   onNavegar: (destino: TelaOuAba) => void;
+  onRegistrarEntrada?: () => void;
+  onRegistrarSaida?: () => void;
+  onNovoPedido?: () => void;
+  onNovoCadastro?: () => void;
+  onSelectItem?: (item: ItemAtencaoResumo) => void;
+  onAdicionarEntrada?: (item: ItemAtencaoResumo) => void;
 }
 
-export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
+export function InicioDashboardView({
+  onNavegar,
+  onRegistrarEntrada,
+  onRegistrarSaida,
+  onNovoPedido,
+  onNovoCadastro,
+  onSelectItem,
+  onAdicionarEntrada,
+}: InicioDashboardViewProps) {
   const { data: resumo, isLoading, isFetching, refetch } = useDashboardResumo();
 
   const getBadgesEstoque = (aba: AbaEstoque): SummaryBadge[] => {
@@ -64,13 +88,13 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
   return (
     <div className="flex-1 flex flex-col min-w-0 animate-fade-in">
       {/* Cabeçalho da Visão Geral */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Almoxarifado
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-normal">
-            Escolha uma área operacional para começar.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
+            Ações rápidas e o que precisa de atenção hoje.
           </p>
         </div>
 
@@ -86,9 +110,27 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
         </button>
       </header>
 
-      {/* 1. Seção Estoque */}
+      {/* 1. Barra de Ações Rápidas */}
+      <QuickActionsBar
+        onRegistrarEntrada={() => (onRegistrarEntrada ? onRegistrarEntrada() : onNavegar('mp'))}
+        onRegistrarSaida={() => (onRegistrarSaida ? onRegistrarSaida() : onNavegar('saida'))}
+        onNovoPedido={() => (onNovoPedido ? onNovoPedido() : onNavegar('vendas'))}
+        onNovoCadastro={() => (onNovoCadastro ? onNovoCadastro() : onNavegar('clientes'))}
+      />
+
+      {/* 2. Painel Central: Precisa de Atenção */}
+      <AttentionPanel
+        pedidosAtrasados={resumo?.vendas.atrasados ?? 0}
+        itensAtencao={resumo?.itensAtencao ?? []}
+        onVerPedidos={() => onNavegar('vendas')}
+        onSelectItem={(item) => (onSelectItem ? onSelectItem(item) : onNavegar(item.aba))}
+        onAdicionarEntrada={(item) => (onAdicionarEntrada ? onAdicionarEntrada(item) : onNavegar(item.aba))}
+        isLoading={isLoading}
+      />
+
+      {/* 3. Seção Estoque */}
       <section className="mb-8">
-        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+        <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
           <span>Estoque</span>
         </h2>
 
@@ -99,6 +141,7 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
             legenda="itens cadastrados"
             badges={getBadgesEstoque('mp')}
             borderTopColor="sky"
+            icon={Layers}
             isLoading={isLoading}
             onClick={() => onNavegar('mp')}
           />
@@ -109,6 +152,7 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
             legenda="itens cadastrados"
             badges={getBadgesEstoque('imp')}
             borderTopColor="sky"
+            icon={Wrench}
             isLoading={isLoading}
             onClick={() => onNavegar('imp')}
           />
@@ -119,15 +163,16 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
             legenda="itens cadastrados"
             badges={getBadgesEstoque('motos')}
             borderTopColor="sky"
+            icon={Bike}
             isLoading={isLoading}
             onClick={() => onNavegar('motos')}
           />
         </div>
       </section>
 
-      {/* 2. Seção Gestão */}
+      {/* 4. Seção Gestão */}
       <section>
-        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+        <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
           <span>Gestão</span>
         </h2>
 
@@ -138,6 +183,7 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
             legenda="pedidos a entregar"
             badges={getBadgesVendas()}
             borderTopColor="brand"
+            icon={ShoppingCart}
             isLoading={isLoading}
             onClick={() => onNavegar('vendas')}
           />
@@ -147,6 +193,7 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
             valor={resumo?.clientes.totalCadastros ?? 0}
             legenda="cadastros ativos"
             borderTopColor="brand"
+            icon={Users}
             isLoading={isLoading}
             onClick={() => onNavegar('clientes')}
           />
@@ -156,6 +203,7 @@ export function InicioDashboardView({ onNavegar }: InicioDashboardViewProps) {
             valor={resumo?.movimentacoesHoje.total ?? 0}
             legenda="movimentações hoje"
             borderTopColor="brand"
+            icon={ArrowLeftRight}
             isLoading={isLoading}
             onClick={() => onNavegar('saida')}
           />

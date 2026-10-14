@@ -124,6 +124,15 @@ export function AppSidebar({
               />
               <span>Início</span>
             </div>
+
+            {pedidosAtrasadosCount > 0 && (
+              <span
+                className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#c8322b] text-white shadow-xs"
+                title={`${pedidosAtrasadosCount} pedido(s) atrasado(s)`}
+              >
+                {pedidosAtrasadosCount}
+              </span>
+            )}
           </button>
 
           {/* 2. Seção Estoque */}

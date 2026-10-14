@@ -14,6 +14,7 @@ export interface SummaryNavCardProps {
   legenda: string;
   badges?: SummaryBadge[];
   borderTopColor?: 'sky' | 'yellow' | 'red' | 'brand';
+  icon?: React.ComponentType<{ className?: string }>;
   onClick?: () => void;
   isLoading?: boolean;
   className?: string;
@@ -39,6 +40,7 @@ export function SummaryNavCard({
   legenda,
   badges = [],
   borderTopColor = 'sky',
+  icon: Icon,
   onClick,
   isLoading = false,
   className = '',
@@ -50,6 +52,7 @@ export function SummaryNavCard({
       <div
         className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs animate-pulse flex flex-col gap-3 ${className}`}
       >
+        <div className="h-6 w-6 bg-slate-200 dark:bg-slate-800 rounded-md" />
         <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md" />
         <div className="h-9 w-16 bg-slate-200 dark:bg-slate-800 rounded-md mt-1" />
         <div className="h-3 w-36 bg-slate-100 dark:bg-slate-800/60 rounded-md" />
@@ -65,6 +68,13 @@ export function SummaryNavCard({
       className={`group w-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-5 text-left flex flex-col justify-between transition-all duration-150 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer ${borderTop} ${className}`}
     >
       <div>
+        {/* Ícone Temático */}
+        {Icon && (
+          <div className="text-[#1d4ea3] dark:text-[#5aa9ea] mb-2.5">
+            <Icon className="w-5 h-5 md:w-6 md:h-6" />
+          </div>
+        )}
+
         {/* Cabeçalho do Card */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-base font-semibold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">

@@ -12,6 +12,17 @@ export interface ResumoEstoqueAba {
   abaixoMinimo: number;
 }
 
+export interface ItemAtencaoResumo {
+  id: string;
+  nome: string;
+  codigo: string;
+  aba: AbaEstoque;
+  estoqueAtual: number;
+  estoqueSeguranca: number;
+  unidade: string;
+  status: 'crit' | 'low';
+}
+
 export interface DashboardResumoData {
   estoque: Record<AbaEstoque, ResumoEstoqueAba>;
   vendas: {
@@ -24,6 +35,7 @@ export interface DashboardResumoData {
   movimentacoesHoje: {
     total: number;
   };
+  itensAtencao: ItemAtencaoResumo[];
 }
 
 export function useDashboardResumo() {
@@ -36,6 +48,8 @@ export function useDashboardResumo() {
         imp: { totalItens: 0, criticos: 0, abaixoMinimo: 0 },
         motos: { totalItens: 0, criticos: 0, abaixoMinimo: 0 },
       };
+
+      const itensParaAtencao: Array<ItemAtencaoResumo & { proporcao: number }> = [];
 
       try {
         const itemsSnap = await getDocs(collection(db, 'items'));
@@ -55,10 +69,32 @@ export function useDashboardResumo() {
           } else if (atual <= min) {
             estoqueResumo[aba].abaixoMinimo += 1;
           }
+
+          // Se estiver crítico ou abaixo do mínimo, insere na lista de atenção
+          if (atual <= min && min > 0) {
+            const proporcao = atual / min;
+            itensParaAtencao.push({
+              id: doc.id,
+              nome: String(data.descricao || data.nome || 'Material'),
+              codigo: String(data.codigo || ''),
+              aba,
+              estoqueAtual: atual,
+              estoqueSeguranca: min,
+              unidade: String(data.unidade || 'un'),
+              status: atual <= min * 0.5 ? 'crit' : 'low',
+              proporcao,
+            });
+          }
         });
       } catch (err) {
         console.warn('Erro ao carregar resumo de estoque:', err);
       }
+
+      // Ordena por menor proporção (mais urgente) e limita aos 6 primeiros (idêntico ao protótipo)
+      const itensAtencaoFinal: ItemAtencaoResumo[] = itensParaAtencao
+        .sort((a, b) => a.proporcao - b.proporcao)
+        .slice(0, 6)
+        .map(({ proporcao: _, ...resto }) => resto);
 
       // 2. Consulta Pedidos no Firestore
       let totalAEntregar = 0;
@@ -123,6 +159,7 @@ export function useDashboardResumo() {
         movimentacoesHoje: {
           total: totalMovsHoje,
         },
+        itensAtencao: itensAtencaoFinal,
       };
     },
     staleTime: 60 * 1000, // 1 minuto
