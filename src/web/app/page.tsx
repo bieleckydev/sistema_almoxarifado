@@ -23,6 +23,8 @@ import { MovementFormDrawer } from '@/web/components/dashboard/drawers/MovementF
 import { QuickItemPickerDrawer } from '@/web/components/dashboard/drawers/QuickItemPickerDrawer';
 import { VendasView } from '@/web/components/gestao/vendas/VendasView';
 import { OrderCreateDrawer } from '@/web/components/gestao/vendas/OrderCreateDrawer';
+import { ClientesView } from '@/web/components/gestao/clientes/ClientesView';
+import { ClientCreateDrawer } from '@/web/components/gestao/clientes/ClientCreateDrawer';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
@@ -42,6 +44,7 @@ export default function AlmoxarifadoDashboardPage() {
   // Estados dos Drawers e Modais Operacionais
   const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
   const [isOrderCreateOpen, setIsOrderCreateOpen] = useState(false);
+  const [isClientCreateOpen, setIsClientCreateOpen] = useState(false);
   const [movementDrawerState, setMovementDrawerState] = useState<{
     isOpen: boolean;
     item: DashboardItem | null;
@@ -240,8 +243,8 @@ export default function AlmoxarifadoDashboardPage() {
                 onNavegar={handleSelectTela}
                 onRegistrarEntrada={() => setPickerDrawerState({ isOpen: true, tipo: 'Entrada' })}
                 onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
-                onNovoPedido={() => handleSelectTela('vendas')}
-                onNovoCadastro={() => setIsItemCreateOpen(true)}
+                onNovoPedido={() => setIsOrderCreateOpen(true)}
+                onNovoCadastro={() => setIsClientCreateOpen(true)}
                 onSelectItem={async (itemAtencao) => {
                   setTelaAtiva(itemAtencao.aba);
                   await handleSelectSearchResult({
@@ -342,8 +345,11 @@ export default function AlmoxarifadoDashboardPage() {
             ) : telaAtiva === 'vendas' ? (
               /* 3. Módulo de Vendas e Pedidos */
               <VendasView onNovoPedido={() => setIsOrderCreateOpen(true)} />
+            ) : telaAtiva === 'clientes' ? (
+              /* 4. Módulo de Clientes, Fornecedores e Parceiros */
+              <ClientesView onNovoCadastro={() => setIsClientCreateOpen(true)} />
             ) : (
-              /* 4. Placeholder / Próximos Módulos (Clientes, Saída manual) */
+              /* 5. Placeholder / Próximos Módulos (Saída manual) */
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-fade-in">
                 <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mb-4">
                   <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
@@ -385,6 +391,12 @@ export default function AlmoxarifadoDashboardPage() {
         <OrderCreateDrawer
           isOpen={isOrderCreateOpen}
           onClose={() => setIsOrderCreateOpen(false)}
+        />
+
+        {/* Gaveta de Criação de Cliente / Parceiro */}
+        <ClientCreateDrawer
+          isOpen={isClientCreateOpen}
+          onClose={() => setIsClientCreateOpen(false)}
         />
 
         {/* Gaveta de Criação de Item */}
