@@ -13,6 +13,7 @@ export interface ClientCreateDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onClientCreated?: () => void;
+  tipoInicial?: TipoParceiro;
 }
 
 const OPCOES_TIPO: Array<{ valor: TipoParceiro; label: string }> = [
@@ -26,11 +27,12 @@ export function ClientCreateDrawer({
   isOpen,
   onClose,
   onClientCreated,
+  tipoInicial,
 }: ClientCreateDrawerProps) {
   const { toast } = useToast();
   const criarClienteMutation = useCriarCliente();
 
-  const [tipo, setTipo] = useState<TipoParceiro>('CLIENTE');
+  const [tipo, setTipo] = useState<TipoParceiro>(tipoInicial || 'CLIENTE');
   const [nome, setNome] = useState('');
   const [documento, setDocumento] = useState('');
   const [contato, setContato] = useState('');
@@ -40,10 +42,10 @@ export function ClientCreateDrawer({
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Reset de campos ao abrir
+  // Reset de campos ao abrir (com suporte ao tipoInicial)
   useEffect(() => {
     if (isOpen) {
-      setTipo('CLIENTE');
+      setTipo(tipoInicial || 'CLIENTE');
       setNome('');
       setDocumento('');
       setContato('');
@@ -51,7 +53,7 @@ export function ClientCreateDrawer({
       setCidade('');
       setErro(null);
     }
-  }, [isOpen]);
+  }, [isOpen, tipoInicial]);
 
   // Fechamento com tecla Escape
   useEffect(() => {
