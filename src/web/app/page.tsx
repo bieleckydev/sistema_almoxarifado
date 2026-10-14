@@ -300,7 +300,7 @@ export default function AlmoxarifadoDashboardPage() {
 
   return (
     <AuthGuard>
-      <div className="flex flex-col md:flex-row min-h-screen bg-[#f1f4f8] dark:bg-[#0c1218] text-[#17212b] dark:text-[#e6edf3]">
+      <div className="flex flex-col md:flex-row min-h-screen bg-[#e9eff7] dark:bg-[#232325] text-[#17212b] dark:text-[#ececee]">
         {/* Menu Lateral de Navegação em Módulos V5 */}
         <AppSidebar
           moduloAtivo={moduloAtivo}

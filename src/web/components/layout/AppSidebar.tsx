@@ -174,7 +174,7 @@ export function AppSidebar({
 
   return (
     <aside
-      className={`bg-[#0b0c0f] dark:bg-[#050607] text-[#d5e4ec] flex flex-col justify-between shrink-0 transition-all duration-200 border-r border-slate-200/10 dark:border-slate-800 md:min-h-screen z-20 ${
+      className={`bg-[#0b0c0f] dark:bg-[#1a1a1c] text-[#d5e4ec] flex flex-col justify-between shrink-0 transition-all duration-200 border-r border-slate-200/10 dark:border-[#3e3e42] md:min-h-screen z-20 ${
         isMini ? 'w-full md:w-[54px] p-2' : 'w-full md:w-[178px] p-3'
       } ${className}`}
       aria-label="Barra de módulos corporativos"
@@ -231,13 +231,13 @@ export function AppSidebar({
                 onClick={() => handleSelectModulo(item.id, item.viewPadrao)}
                 aria-current={isCurrent ? 'true' : undefined}
                 title={isMini ? `${item.nome}${badgeCount > 0 ? ` (${badgeTitle})` : ''}` : undefined}
-                className={`w-full flex items-center rounded-lg text-xs font-medium transition-all cursor-pointer text-left relative ${
+                className={`w-full flex items-center rounded-md text-xs font-medium transition-all cursor-pointer text-left relative ${
                   isMini
                     ? 'justify-center py-2 px-1'
                     : 'justify-between px-3 py-2'
                 } ${
                   isCurrent
-                    ? 'bg-white/15 text-white font-semibold shadow-xs border-l-3 border-[#f2b705]'
+                    ? 'bg-white/15 text-white font-semibold border-l-3 border-[#f2b705]'
                     : 'text-[#d5e4ec]/80 hover:bg-white/10 hover:text-white'
                 }`}
               >
@@ -259,14 +259,14 @@ export function AppSidebar({
                   <>
                     {!isMini ? (
                       <span
-                        className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#c8322b] text-white shadow-xs shrink-0"
+                        className="px-1.5 py-0.2 rounded-sm text-[10px] font-bold bg-[#c8322b] text-white shrink-0"
                         title={badgeTitle}
                       >
                         {badgeCount}
                       </span>
                     ) : (
                       <span
-                        className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#c8322b] ring-1 ring-[#0b0c0f]"
+                        className="absolute top-1 right-1 w-2 h-2 rounded-xs bg-[#c8322b] ring-1 ring-[#0b0c0f]"
                         title={badgeTitle}
                       />
                     )}
@@ -284,18 +284,18 @@ export function AppSidebar({
           {!isMini ? (
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-cyan-300 shrink-0">
+                <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center text-slate-200 shrink-0">
                   {user.role === 'mestre' ? (
-                    <Shield className="w-3.5 h-3.5 text-amber-400" />
+                    <Shield className="w-3.5 h-3.5 text-[#f2b705]" />
                   ) : (
                     <UserIcon className="w-3.5 h-3.5" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-white truncate leading-tight">
+                  <p className="text-[11.5px] font-medium text-white truncate leading-tight">
                     {user.name}
                   </p>
-                  <span className="text-[9px] text-cyan-200/70 uppercase tracking-wider font-semibold">
+                  <span className="text-[9.5px] text-[#7cc3f2] uppercase tracking-wider font-semibold">
                     {user.role}
                   </span>
                 </div>
@@ -314,11 +314,11 @@ export function AppSidebar({
           ) : (
             <div className="flex flex-col items-center gap-2">
               <div
-                className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-cyan-300 shrink-0"
+                className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center text-slate-200 shrink-0"
                 title={`${user.name} (${user.role})`}
               >
                 {user.role === 'mestre' ? (
-                  <Shield className="w-3.5 h-3.5 text-amber-400" />
+                  <Shield className="w-3.5 h-3.5 text-[#f2b705]" />
                 ) : (
                   <UserIcon className="w-3.5 h-3.5" />
                 )}

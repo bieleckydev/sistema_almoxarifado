@@ -147,7 +147,7 @@ export function AppRibbonHeader({
 
   return (
     <header
-      className={`sticky top-0 z-30 w-full bg-[#e8edf4] dark:bg-[#20252b] border-b border-slate-200 dark:border-slate-800 transition-colors select-none ${className}`}
+      className={`sticky top-0 z-30 w-full bg-[#e8edf4] dark:bg-[#2f2f32] border-b border-slate-300/80 dark:border-[#3e3e42] select-none ${className}`}
     >
       {/* 1. Camada de Abas Superiores (.tabs) */}
       <div className="flex items-center gap-1 px-3 pt-2 pb-0 flex-wrap sm:flex-nowrap">
@@ -156,7 +156,7 @@ export function AppRibbonHeader({
           type="button"
           onClick={() => onRibbonAction('v:inicio')}
           title="Ir para o Início"
-          className="w-7 h-7 rounded-md bg-[#1d4ea3] dark:bg-[#3273dc] text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer hover:opacity-90 mr-2 shrink-0"
+          className="w-7 h-7 rounded-md bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] font-bold text-xs flex items-center justify-center cursor-pointer hover:opacity-90 mr-2 shrink-0"
         >
           A
         </button>
@@ -173,7 +173,7 @@ export function AppRibbonHeader({
                 aria-selected={isSelected}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-b-2 transition-all cursor-pointer whitespace-nowrap ${
                   isSelected
-                    ? 'border-[#4fa8e0] text-[#1d4ea3] dark:text-[#7cc3f2] font-semibold opacity-100 bg-white/40 dark:bg-black/20 rounded-t-sm'
+                    ? 'border-[#4fa8e0] text-[#1d4ea3] dark:text-[#7cc3f2] font-semibold opacity-100 bg-white/50 dark:bg-[#2b2b2e] rounded-t-sm'
                     : 'border-transparent text-slate-700 dark:text-slate-300 opacity-75 hover:opacity-100'
                 }`}
               >
@@ -204,7 +204,7 @@ export function AppRibbonHeader({
             key={grupo.title}
             className={`flex flex-col justify-between px-3 ${
               idx < gruposRenderizados.length - 1
-                ? 'border-r border-slate-300 dark:border-slate-700/60'
+                ? 'border-r border-slate-300 dark:border-[#3e3e42]'
                 : ''
             }`}
           >
@@ -220,7 +220,7 @@ export function AppRibbonHeader({
                     type="button"
                     onClick={() => handleActionClick(btn.action)}
                     title={btn.label.replace('\n', ' - ')}
-                    className={`w-[88px] min-w-[88px] h-full py-1.5 px-1 flex flex-col items-center justify-center gap-1 rounded-md text-[11.5px] leading-tight text-center text-slate-800 dark:text-slate-100 hover:bg-[#4fa8e0]/15 dark:hover:bg-[#4fa8e0]/20 hover:border-slate-300 dark:hover:border-slate-600 transition-colors border border-transparent cursor-pointer select-none ${
+                    className={`w-[88px] min-w-[88px] h-full py-1.5 px-1 flex flex-col items-center justify-center gap-1 rounded-md text-[11.5px] leading-tight text-center text-slate-800 dark:text-slate-100 hover:bg-[#4fa8e0]/15 dark:hover:bg-[#4fa8e0]/20 hover:border-slate-300 dark:hover:border-[#3e3e42] transition-colors border border-transparent cursor-pointer select-none ${
                       isPeriodButton ? 'font-medium' : ''
                     }`}
                   >

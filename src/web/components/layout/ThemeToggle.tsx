@@ -76,7 +76,7 @@ export function ThemeToggle({ className = '' }: ThemeToggleProps) {
       onClick={toggleTheme}
       aria-label={mounted && isDarkMode ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
       title={mounted && isDarkMode ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-      className={`inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer ${className}`}
+      className={`inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-white dark:bg-[#2b2b2e] border border-slate-300 dark:border-[#3e3e42] hover:border-slate-400 dark:hover:border-slate-500 transition-colors cursor-pointer ${className}`}
     >
       {mounted && isDarkMode ? (
         <Sun className="w-4 h-4 text-amber-500 dark:text-amber-400" />
