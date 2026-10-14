@@ -1,7 +1,25 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, ShoppingCart, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+  X,
+  Plus,
+  Trash2,
+  ShoppingCart,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  Calendar,
+  Package,
+  Layers,
+  MapPin,
+  Clock,
+  ArrowRight,
+  ShieldCheck,
+  Building2,
+  Search,
+} from 'lucide-react';
 import { useClientes } from '@/web/hooks/useClientes';
 import { useCriarPedido } from '@/web/hooks/usePedidos';
 import { db } from '@/core/services/firebase';
@@ -26,6 +44,8 @@ interface CatalogoItemOption {
   nome: string;
   aba: AbaEstoque;
   estoqueAtual: number;
+  estoqueMinimo: number;
+  localizacao?: string;
   unidade: string;
 }
 
@@ -41,10 +61,14 @@ export function OrderCreateDrawer({
   const [clienteId, setClienteId] = useState('');
   const [prazoEntrega, setPrazoEntrega] = useState('');
   const [observacoes, setObservacoes] = useState('');
-  const [itens, setItens] = useState<ItemLinha[]>([{ itemId: '', quantidade: 1 }]);
+  const [itens, setItens] = useState<ItemLinha[]>([]);
   const [catalogoItens, setCatalogoItens] = useState<CatalogoItemOption[]>([]);
   const [isLoadingCatalogo, setIsLoadingCatalogo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  // Estado do adicionador dinâmico de produto (Live Lookup)
+  const [itemSelecionadoId, setItemSelecionadoId] = useState('');
+  const [quantidadeAdicionar, setQuantidadeAdicionar] = useState<number>(1);
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -67,14 +91,17 @@ export function OrderCreateDrawer({
               nome: String(data.descricao || data.nome || 'Produto'),
               aba,
               estoqueAtual: Number(data.estoqueAtual) || 0,
+              estoqueMinimo: Number(data.estoqueMinimo ?? data.estoqueSeguranca) || 0,
+              localizacao: String(data.localizacaoFisica || data.localizacao || ''),
               unidade: String(data.unidade || 'UNIDADE'),
             });
           });
           list.sort((a, b) => a.nome.localeCompare(b.nome));
           setCatalogoItens(list);
 
-          // Se a primeira linha estiver vazia e tivermos itens, preenche o primeiro
-          if (list.length > 0 && itens.length === 1 && !itens[0].itemId) {
+          if (list.length > 0) {
+            setItemSelecionadoId(list[0].id);
+            // Se não houver itens ainda, inicializa com o primeiro
             setItens([{ itemId: list[0].id, quantidade: 1 }]);
           }
         })
@@ -89,7 +116,7 @@ export function OrderCreateDrawer({
     }
   }, [isOpen]);
 
-  // Se o clienteId estiver vazio e clientes carregarem, seleciona o primeiro
+  // Se o clienteId estiver vazio e clientes carregarem, seleciona o primeiro cliente
   useEffect(() => {
     if (clientes.length > 0 && !clienteId) {
       const primeiroCliente = clientes.find((c) => c.tipo === 'CLIENTE') || clientes[0];
@@ -115,27 +142,88 @@ export function OrderCreateDrawer({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Item ativo no painel de consulta rápida
+  const itemConsulta = useMemo(() => {
+    return catalogoItens.find((it) => it.id === itemSelecionadoId) || catalogoItens[0];
+  }, [catalogoItens, itemSelecionadoId]);
 
-  const handleAddItem = () => {
-    const defaultId = catalogoItens[0]?.id || '';
-    setItens((prev) => [...prev, { itemId: defaultId, quantidade: 1 }]);
+  // Cálculo de SLA da data de entrega
+  const slaInfo = useMemo(() => {
+    if (!prazoEntrega) return null;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const data = new Date(prazoEntrega + 'T00:00:00');
+    const diffDias = Math.ceil((data.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDias < 0) {
+      return { texto: `${Math.abs(diffDias)}d em atraso`, badgeClass: 'bg-error-container text-on-error-container' };
+    }
+    if (diffDias === 0) {
+      return { texto: 'SLA: Hoje (Urgente)', badgeClass: 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300' };
+    }
+    if (diffDias === 1) {
+      return { texto: 'SLA: 24h', badgeClass: 'bg-primary-container/20 text-primary' };
+    }
+    if (diffDias === 2) {
+      return { texto: 'SLA: 48h', badgeClass: 'bg-primary-container/20 text-primary' };
+    }
+    return { texto: `SLA: ${diffDias} dias`, badgeClass: 'bg-surface-container-high text-on-surface-variant' };
+  }, [prazoEntrega]);
+
+  // Cliente selecionado atualmente
+  const clienteSelecionado = useMemo(() => {
+    return clientes.find((c) => c.id === clienteId);
+  }, [clientes, clienteId]);
+
+  // Totalizadores do pedido
+  const totalizadores = useMemo(() => {
+    const totalLinhas = itens.length;
+    let totalUnidades = 0;
+    let temDeficit = false;
+
+    for (const linha of itens) {
+      totalUnidades += linha.quantidade;
+      const it = catalogoItens.find((c) => c.id === linha.itemId);
+      if (it && it.estoqueAtual < linha.quantidade) {
+        temDeficit = true;
+      }
+    }
+
+    return { totalLinhas, totalUnidades, temDeficit };
+  }, [itens, catalogoItens]);
+
+  // Adicionar item via painel rápido
+  const handleAdicionarItemRapido = () => {
+    if (!itemConsulta) return;
+
+    const qtd = Math.max(1, quantidadeAdicionar || 1);
+    const indexExistente = itens.findIndex((i) => i.itemId === itemConsulta.id);
+
+    if (indexExistente >= 0) {
+      // Já existe na lista, incrementa a quantidade
+      setItens((prev) =>
+        prev.map((linha, idx) =>
+          idx === indexExistente ? { ...linha, quantidade: linha.quantidade + qtd } : linha
+        )
+      );
+      toast(`Quantidade atualizada: +${qtd} de ${itemConsulta.nome}`, { type: 'success' });
+    } else {
+      // Adiciona novo item na lista
+      setItens((prev) => [...prev, { itemId: itemConsulta.id, quantidade: qtd }]);
+      toast(`Item adicionado ao pedido: ${itemConsulta.nome}`, { type: 'success' });
+    }
+
+    setQuantidadeAdicionar(1);
   };
 
   const handleRemoveItem = (index: number) => {
-    if (itens.length <= 1) return;
     setItens((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleItemChange = (index: number, campo: keyof ItemLinha, valor: string | number) => {
+  const handleAtualizarQuantidade = (index: number, novaQtd: number) => {
+    const qtdValida = Math.max(1, novaQtd);
     setItens((prev) =>
-      prev.map((item, i) => {
-        if (i !== index) return item;
-        return {
-          ...item,
-          [campo]: campo === 'quantidade' ? Math.max(1, Number(valor) || 1) : valor,
-        };
-      })
+      prev.map((item, i) => (i === index ? { ...item, quantidade: qtdValida } : item))
     );
   };
 
@@ -154,7 +242,7 @@ export function OrderCreateDrawer({
     }
 
     if (itens.length === 0 || itens.some((i) => !i.itemId)) {
-      setErro('Selecione pelo menos um produto para o pedido.');
+      setErro('Adicione pelo menos um produto à lista do pedido.');
       return;
     }
 
@@ -176,13 +264,18 @@ export function OrderCreateDrawer({
         observacoes: observacoes.trim() || undefined,
       });
 
-      toast('Pedido criado com sucesso!', { type: 'success' });
+      toast('Pedido criado e reserva de insumos registrada!', { type: 'success' });
       onOrderCreated?.();
       onClose();
-    } catch (err: any) {
-      setErro(err?.message || 'Falha ao salvar pedido. Tente novamente.');
+    } catch (err: unknown) {
+      const msg =
+        (err as { message?: string })?.message ||
+        'Falha ao salvar pedido. Tente novamente.';
+      setErro(msg);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -193,25 +286,31 @@ export function OrderCreateDrawer({
         aria-hidden="true"
       />
 
-      {/* Painel Deslizante Lateral */}
+      {/* Painel Deslizante Lateral Amplo (WMS Style: max-w-2xl) */}
       <aside
         role="dialog"
         aria-modal="true"
         aria-label="Novo pedido de venda"
-        className="relative w-full max-w-lg bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250 shadow-2xl"
+        className="relative w-full max-w-2xl bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250 shadow-2xl"
       >
-        {/* Cabeçalho */}
+        {/* 1. Cabeçalho */}
         <div className="sticky top-0 bg-surface-container-lowest/95 backdrop-blur-md z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary-container/10 text-primary flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-sm shrink-0">
               <ShoppingCart className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-headline text-base font-bold text-on-surface leading-tight">
-                Novo Pedido de Venda
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-headline text-lg font-bold text-on-surface leading-tight">
+                  Novo Pedido de Venda
+                </h2>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  WMS Sincronizado
+                </span>
+              </div>
               <p className="text-xs text-on-surface-variant mt-0.5 font-normal">
-                Pedidos a entregar por cliente, prazos e faturamento.
+                Conferência em tempo real de saldo físico, reserva de insumos e prazo de entrega.
               </p>
             </div>
           </div>
@@ -227,8 +326,8 @@ export function OrderCreateDrawer({
           </button>
         </div>
 
-        {/* Formulário */}
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5 flex-1">
+        {/* 2. Formulário Principal */}
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6 flex-1">
           {erro && (
             <div
               role="alert"
@@ -239,190 +338,357 @@ export function OrderCreateDrawer({
             </div>
           )}
 
-          {/* Seleção do Cliente */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-on-surface-variant">
-              Cliente <span className="text-error">*</span>
-            </label>
-            <select
-              value={clienteId}
-              onChange={(e) => setClienteId(e.target.value)}
-              disabled={isLoadingClientes}
-              required
-              className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
-            >
-              {isLoadingClientes ? (
-                <option value="">Carregando parceiros...</option>
-              ) : clientes.length === 0 ? (
-                <option value="">Nenhum cliente cadastrado</option>
-              ) : (
-                clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome} {c.cidade ? `(${c.cidade})` : ''} - {c.tipo}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
-
-          {/* Data de Entrega */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-on-surface-variant">
-              Data de entrega <span className="text-error">*</span>
-            </label>
-            <input
-              type="date"
-              value={prazoEntrega}
-              onChange={(e) => setPrazoEntrega(e.target.value)}
-              required
-              className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
-          </div>
-
-          {/* Seção Itens do Pedido */}
-          <div className="flex flex-col gap-3 pt-2 border-t border-outline-variant/20">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
-                Itens do pedido
-              </h3>
-              <span className="text-[11px] text-outline font-mono">
-                {itens.length} {itens.length === 1 ? 'linha' : 'linhas'}
+          {/* SEÇÃO 1: Cliente & Parâmetros de Entrega */}
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-1 border-b border-outline-variant/15">
+              <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-primary" />
+                1. Cliente Destinatário &amp; Logística
               </span>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {itens.map((linha, index) => {
-                const itemInfo = catalogoItens.find((c) => c.id === linha.itemId);
-                const unidadeFmt = itemInfo
-                  ? UNIDADE_LABELS[itemInfo.unidade as keyof typeof UNIDADE_LABELS] || itemInfo.unidade
-                  : 'un';
-
-                return (
-                  <div
-                    key={index}
-                    className="p-3.5 rounded-2xl border border-outline-variant/20 bg-surface-container-low flex flex-col gap-2.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-semibold text-on-surface-variant">
-                        Item #{index + 1}
-                      </span>
-                      {itens.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveItem(index)}
-                          className="p-1 rounded text-outline hover:text-error transition-colors"
-                          title="Remover item da lista"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      <div className="sm:col-span-2 flex flex-col gap-1">
-                        <label className="text-[11px] text-on-surface-variant">
-                          Produto
-                        </label>
-                        <select
-                          value={linha.itemId}
-                          onChange={(e) => handleItemChange(index, 'itemId', e.target.value)}
-                          disabled={isLoadingCatalogo}
-                          className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
-                        >
-                          {isLoadingCatalogo ? (
-                            <option value="">Carregando catálogo...</option>
-                          ) : (
-                            ['motos', 'mp', 'imp'].map((aba) => {
-                              const itensDaAba = catalogoItens.filter((c) => c.aba === aba);
-                              if (itensDaAba.length === 0) return null;
-                              return (
-                                <optgroup
-                                  key={aba}
-                                  label={METADADOS_ABAS[aba as AbaEstoque]?.titulo || aba}
-                                >
-                                  {itensDaAba.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.codigo ? `[${p.codigo}] ` : ''}
-                                      {p.nome} (Saldo: {p.estoqueAtual})
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              );
-                            })
-                          )}
-                        </select>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[11px] text-on-surface-variant">
-                          Qtd ({unidadeFmt})
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={linha.quantidade}
-                          onChange={(e) => handleItemChange(index, 'quantidade', e.target.value)}
-                          className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleAddItem}
-              className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-xl text-xs font-semibold text-on-surface bg-surface-container-lowest hover:bg-surface-container transition-all cursor-pointer border border-outline-variant/30 self-start mt-1 active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Adicionar item</span>
-            </button>
-          </div>
-
-          {/* Observações */}
-          <div className="flex flex-col gap-1.5 pt-2 border-t border-outline-variant/20">
-            <label className="text-xs font-semibold text-on-surface-variant">
-              Observações do pedido (opcional)
-            </label>
-            <textarea
-              rows={2}
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              placeholder="Ex: Pedido para reposição de balcão ou instrução de entrega"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-            />
-          </div>
-
-          {/* Botões de Ação */}
-          <div className="mt-auto pt-4 border-t border-outline-variant/20 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={criarPedidoMutation.isPending}
-              className="h-10 px-4 rounded-xl text-xs font-medium text-on-surface hover:bg-surface-container border border-outline-variant/30 transition-all cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={criarPedidoMutation.isPending}
-              className="h-10 px-4 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-on-primary transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
-            >
-              {criarPedidoMutation.isPending ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Salvando pedido...</span>
-                </>
-              ) : (
-                <span>Salvar pedido</span>
+              {clienteSelecionado && (
+                <span className="text-[11px] font-medium text-tertiary flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Homologado ({clienteSelecionado.tipo})
+                </span>
               )}
-            </button>
+            </div>
+
+            {/* Dropdown de Cliente com dados visuais */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-on-surface-variant">
+                Cliente / Razão Social <span className="text-error">*</span>
+              </label>
+              <select
+                value={clienteId}
+                onChange={(e) => setClienteId(e.target.value)}
+                disabled={isLoadingClientes}
+                required
+                className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer font-medium"
+              >
+                {isLoadingClientes ? (
+                  <option value="">Carregando parceiros cadastrados...</option>
+                ) : clientes.length === 0 ? (
+                  <option value="">Nenhum cliente cadastrado no sistema</option>
+                ) : (
+                  clientes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nome} {c.cidade ? `(${c.cidade})` : ''} {c.documento ? `· ${c.documento}` : ''}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+
+            {/* Linha de Data Desejada com Badge de SLA */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-on-surface-variant">
+                    Data de Entrega Desejada <span className="text-error">*</span>
+                  </label>
+                  {slaInfo && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${slaInfo.badgeClass}`}>
+                      {slaInfo.texto}
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={prazoEntrega}
+                    onChange={(e) => setPrazoEntrega(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-on-surface-variant">
+                  Instruções de Expedição (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={observacoes}
+                  onChange={(e) => setObservacoes(e.target.value)}
+                  placeholder="Ex: Despacho prioritário filial, aguardar caminhão"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SEÇÃO 2: Consulta Rápida de SKU & Saldo Instantâneo (Stitch Live Lookup) */}
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-primary" />
+                2. Consulta Rápida de SKU / Saldo Instantâneo
+              </span>
+              {itemConsulta && itemConsulta.estoqueAtual <= itemConsulta.estoqueMinimo && (
+                <span className="text-[11px] font-semibold text-error flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                  Alerta: Nível Crítico no Almoxarifado
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              {/* Seletor de Produto */}
+              <div className="sm:col-span-6 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-on-surface-variant">
+                  Buscar Produto do Catálogo
+                </label>
+                <select
+                  value={itemSelecionadoId}
+                  onChange={(e) => setItemSelecionadoId(e.target.value)}
+                  disabled={isLoadingCatalogo}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer font-medium"
+                >
+                  {isLoadingCatalogo ? (
+                    <option value="">Carregando produtos do estoque...</option>
+                  ) : (
+                    ['mp', 'motos', 'imp'].map((aba) => {
+                      const itensDaAba = catalogoItens.filter((c) => c.aba === aba);
+                      if (itensDaAba.length === 0) return null;
+                      return (
+                        <optgroup key={aba} label={METADADOS_ABAS[aba as AbaEstoque]?.titulo || aba}>
+                          {itensDaAba.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.codigo ? `[${p.codigo}] ` : ''}
+                              {p.nome} (Saldo: {p.estoqueAtual} {UNIDADE_LABELS[p.unidade as keyof typeof UNIDADE_LABELS] || p.unidade})
+                            </option>
+                          ))}
+                        </optgroup>
+                      );
+                    })
+                  )}
+                </select>
+              </div>
+
+              {/* Quantidade */}
+              <div className="sm:col-span-3 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-on-surface-variant">
+                  Qtd ({itemConsulta ? UNIDADE_LABELS[itemConsulta.unidade as keyof typeof UNIDADE_LABELS] || itemConsulta.unidade : 'un'})
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={quantidadeAdicionar}
+                  onChange={(e) => setQuantidadeAdicionar(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono font-bold"
+                />
+              </div>
+
+              {/* Botão Adicionar */}
+              <div className="sm:col-span-3">
+                <button
+                  type="button"
+                  onClick={handleAdicionarItemRapido}
+                  className="w-full h-9 px-3 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-semibold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Telemetria de Estoque do Item em Foco */}
+            {itemConsulta && (
+              <div className="pt-2 border-t border-outline-variant/15 flex flex-wrap items-center justify-between text-xs text-on-surface-variant gap-2">
+                <div className="flex items-center gap-3">
+                  <span>
+                    Saldo Físico:{' '}
+                    <strong className="text-on-surface font-mono font-bold">
+                      {itemConsulta.estoqueAtual.toLocaleString('pt-BR')}{' '}
+                      {UNIDADE_LABELS[itemConsulta.unidade as keyof typeof UNIDADE_LABELS] || itemConsulta.unidade}
+                    </strong>
+                  </span>
+                  <span>|</span>
+                  <span>
+                    Mínimo:{' '}
+                    <strong className="text-on-surface font-mono">
+                      {itemConsulta.estoqueMinimo.toLocaleString('pt-BR')}
+                    </strong>
+                  </span>
+                </div>
+
+                {itemConsulta.localizacao && (
+                  <span className="flex items-center gap-1 text-[11px] text-outline font-medium">
+                    <MapPin className="w-3 h-3" />
+                    {itemConsulta.localizacao}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* SEÇÃO 3: Itens Selecionados & Reserva em Tempo Real */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-headline text-sm font-bold text-on-surface flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-primary" />
+                  Itens Selecionados &amp; Reserva em Tempo Real
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-semibold">
+                  {itens.length} {itens.length === 1 ? 'item' : 'itens'}
+                </span>
+              </div>
+            </div>
+
+            {itens.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl border border-dashed border-outline-variant/40 bg-surface-container-low text-on-surface-variant flex flex-col items-center justify-center gap-2">
+                <Package className="w-8 h-8 text-outline/50" />
+                <p className="font-medium text-xs text-on-surface">Nenhum item adicionado ao pedido</p>
+                <p className="text-[11px] text-outline">
+                  Consulte os materiais acima e clique em &quot;Adicionar&quot; para incluir no pedido.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {itens.map((linha, index) => {
+                  const it = catalogoItens.find((c) => c.id === linha.itemId);
+                  const unidadeFmt = it
+                    ? UNIDADE_LABELS[it.unidade as keyof typeof UNIDADE_LABELS] || it.unidade
+                    : 'un';
+                  const temSaldoSuficiente = it ? it.estoqueAtual >= linha.quantidade : true;
+                  const deficitQtd = it ? Math.max(0, linha.quantidade - it.estoqueAtual) : 0;
+                  const numeroSequencial = String(index + 1).padStart(2, '0');
+
+                  return (
+                    <div
+                      key={index}
+                      className="p-3.5 rounded-2xl border border-outline-variant/25 bg-surface-container-lowest shadow-sm flex flex-col gap-2.5 hover:bg-surface-container-low/40 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-lg bg-surface-container-high text-primary font-bold font-mono text-xs flex items-center justify-center shrink-0 border border-outline-variant/20">
+                            {numeroSequencial}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-xs text-on-surface truncate">
+                              {it?.nome || 'Item não identificado'}
+                            </span>
+                            <span className="text-[11px] text-outline font-mono">
+                              SKU: {it?.codigo || '—'} · {it ? METADADOS_ABAS[it.aba]?.titulo : ''}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {temSaldoSuficiente ? (
+                            <span className="px-2.5 py-1 rounded-full bg-tertiary-fixed/40 text-tertiary text-[11px] font-semibold flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Saldo Disponível
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full bg-error-container text-on-error-container text-[11px] font-semibold flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5 text-error" />
+                              Déficit de {deficitQtd} {unidadeFmt}
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(index)}
+                            className="p-1.5 rounded-lg text-outline hover:text-error hover:bg-surface-container transition-colors cursor-pointer"
+                            title="Remover item da lista"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Grade de Parâmetros e Quantidade da Linha */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-outline-variant/15 text-xs bg-surface-container-low/40 p-2.5 rounded-xl">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[11px] text-on-surface-variant font-medium">Quantidade Solicitada</span>
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={linha.quantidade}
+                              onChange={(e) => handleAtualizarQuantidade(index, parseInt(e.target.value, 10) || 1)}
+                              className="w-24 px-2 py-1 text-xs rounded-lg border border-outline-variant/30 bg-surface-container-lowest text-on-surface font-mono font-bold"
+                            />
+                            <span className="text-xs text-outline">{unidadeFmt}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] text-on-surface-variant font-medium">Saldo no Galpão</span>
+                          <span className="font-mono font-semibold text-on-surface">
+                            {it?.estoqueAtual.toLocaleString('pt-BR') || 0} {unidadeFmt}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] text-on-surface-variant font-medium">Posição Física</span>
+                          <span className="text-on-surface font-medium truncate">
+                            {it?.localizacao || 'Almoxarifado Geral'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 3. Rodapé & Ações */}
+          <div className="mt-auto pt-4 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-on-surface">
+                  Total: {totalizadores.totalLinhas} {totalizadores.totalLinhas === 1 ? 'item' : 'itens'}
+                </span>
+                <span className="text-xs text-outline font-mono">
+                  ({totalizadores.totalUnidades} un)
+                </span>
+              </div>
+              {totalizadores.temDeficit && (
+                <span className="text-[11px] text-error font-medium flex items-center gap-1 mt-0.5">
+                  <AlertTriangle className="w-3 h-3 text-error" />
+                  Itens com déficit de estoque demandarão reposição imediata.
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2.5 self-end sm:self-center">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={criarPedidoMutation.isPending}
+                className="h-10 px-4 rounded-xl text-xs font-medium text-on-surface hover:bg-surface-container border border-outline-variant/30 transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={criarPedidoMutation.isPending || itens.length === 0}
+                className="h-10 px-5 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-on-primary transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+              >
+                {criarPedidoMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processando Pedido...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Salvar Pedido &amp; Reservar</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </aside>
     </div>
   );
 }
+
