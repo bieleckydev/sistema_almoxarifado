@@ -9,7 +9,8 @@ import {
 } from '@/core/domain/cliente.schema';
 
 export interface ClientesViewProps {
-  onNovoCadastro: () => void;
+  onNovoCadastro: (tipo?: TipoParceiro) => void;
+  filtroInicial?: FiltroTipo;
 }
 
 type FiltroTipo = 'TODOS' | TipoParceiro;
@@ -22,9 +23,16 @@ const CHIPS_TIPO: Array<{ chave: FiltroTipo; rotulo: string }> = [
   { chave: 'OUTRO', rotulo: TIPO_PARCEIRO_LABELS.OUTRO },
 ];
 
-export function ClientesView({ onNovoCadastro }: ClientesViewProps) {
-  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('TODOS');
+export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: ClientesViewProps) {
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>(filtroInicial);
   const [busca, setBusca] = useState('');
+
+  // Sincroniza quando o filtroInicial mudar via navegação externa / Ribbon
+  React.useEffect(() => {
+    if (filtroInicial) {
+      setFiltroTipo(filtroInicial);
+    }
+  }, [filtroInicial]);
 
   const { clientes, isLoading, isFetching, refetch } = useClientes({
     tipo: filtroTipo,
@@ -97,7 +105,7 @@ export function ClientesView({ onNovoCadastro }: ClientesViewProps) {
         <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
           <button
             type="button"
-            onClick={onNovoCadastro}
+            onClick={() => onNovoCadastro(filtroTipo === 'TODOS' ? undefined : filtroTipo)}
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />

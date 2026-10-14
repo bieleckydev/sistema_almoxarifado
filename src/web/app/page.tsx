@@ -9,6 +9,7 @@ import {
   type DashboardItem,
   METADADOS_ABAS,
 } from '@/web/data/mock-almoxarifado';
+import type { TipoParceiro } from '@/core/domain/cliente.schema';
 import { useItensEstoque } from '@/web/hooks/useItensEstoque';
 import { useDebounce } from '@/web/hooks/useDebounce';
 import { useDashboardResumo } from '@/web/hooks/useDashboardResumo';
@@ -46,6 +47,8 @@ export default function AlmoxarifadoDashboardPage() {
   const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
   const [isOrderCreateOpen, setIsOrderCreateOpen] = useState(false);
   const [isClientCreateOpen, setIsClientCreateOpen] = useState(false);
+  const [clientCreateTipoInicial, setClientCreateTipoInicial] = useState<TipoParceiro | undefined>(undefined);
+  const [filtroClientesInicial, setFiltroClientesInicial] = useState<'TODOS' | TipoParceiro>('TODOS');
   const [movementDrawerState, setMovementDrawerState] = useState<{
     isOpen: boolean;
     item: DashboardItem | null;
@@ -95,11 +98,17 @@ export default function AlmoxarifadoDashboardPage() {
     setFiltroSituacao('todos');
     setItemSelecionado(null);
     setIsDrawerOpen(false);
+    setFiltroClientesInicial('TODOS');
   };
 
   const handleSelectItem = (item: DashboardItem) => {
     setItemSelecionado(item);
     setIsDrawerOpen(true);
+  };
+
+  const handleOpenClientCreate = (tipo?: TipoParceiro) => {
+    setClientCreateTipoInicial(tipo);
+    setIsClientCreateOpen(true);
   };
 
   const handleOpenMovement = (item: DashboardItem, tipo: 'Entrada' | 'Saída') => {
@@ -245,7 +254,7 @@ export default function AlmoxarifadoDashboardPage() {
                 onRegistrarEntrada={() => setPickerDrawerState({ isOpen: true, tipo: 'Entrada' })}
                 onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
                 onNovoPedido={() => setIsOrderCreateOpen(true)}
-                onNovoCadastro={() => setIsClientCreateOpen(true)}
+                onNovoCadastro={() => handleOpenClientCreate()}
                 onSelectItem={async (itemAtencao) => {
                   setTelaAtiva(itemAtencao.aba);
                   await handleSelectSearchResult({
@@ -348,7 +357,10 @@ export default function AlmoxarifadoDashboardPage() {
               <VendasView onNovoPedido={() => setIsOrderCreateOpen(true)} />
             ) : telaAtiva === 'clientes' ? (
               /* 4. Módulo de Clientes, Fornecedores e Parceiros */
-              <ClientesView onNovoCadastro={() => setIsClientCreateOpen(true)} />
+              <ClientesView
+                onNovoCadastro={handleOpenClientCreate}
+                filtroInicial={filtroClientesInicial}
+              />
             ) : telaAtiva === 'saida' ? (
               /* 5. Módulo de Saída Manual, Relatórios Analíticos e Exportação CSV */
               <SaidaManualView
@@ -405,7 +417,11 @@ export default function AlmoxarifadoDashboardPage() {
         {/* Gaveta de Criação de Cliente / Parceiro */}
         <ClientCreateDrawer
           isOpen={isClientCreateOpen}
-          onClose={() => setIsClientCreateOpen(false)}
+          onClose={() => {
+            setIsClientCreateOpen(false);
+            setClientCreateTipoInicial(undefined);
+          }}
+          tipoInicial={clientCreateTipoInicial}
         />
 
         {/* Gaveta de Criação de Item */}
