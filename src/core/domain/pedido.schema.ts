@@ -123,7 +123,7 @@ export const CreatePedidoSchema = z.object({
     .optional(),
 });
 
-export type CreatePedidoInput = z.infer<typeof CreatePedidoSchema>;
+export type CreatePedidoInput = z.input<typeof CreatePedidoSchema>;
 
 /**
  * Schema para atualização de pedido existente.
