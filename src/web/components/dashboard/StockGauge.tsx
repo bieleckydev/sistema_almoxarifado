@@ -45,7 +45,7 @@ export function StockGauge({
     <div className={`w-full ${className}`}>
       {/* Barra de progresso limpa com marcador vertical */}
       <div
-        className={`relative w-full ${heightClasses} bg-slate-200 dark:bg-slate-700/70 rounded-xs overflow-visible`}
+        className={`relative w-full ${heightClasses} bg-slate-200 dark:bg-[#3e3e42] rounded-xs overflow-visible`}
         role="progressbar"
         aria-valuenow={estoqueAtual}
         aria-valuemin={0}

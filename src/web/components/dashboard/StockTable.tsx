@@ -77,20 +77,20 @@ export function StockTable({
   return (
     <div
       ref={tableContainerRef}
-      className={`overflow-auto max-h-[calc(100vh-275px)] min-h-[360px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs transition-colors ${className}`}
+      className={`overflow-auto max-h-[calc(100vh-275px)] min-h-[360px] bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-lg transition-colors ${className}`}
     >
       <table className="w-full text-left border-collapse min-w-[760px]">
-        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs">
-          <tr className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            <th className="py-2.5 px-3 w-28 bg-slate-50 dark:bg-slate-900">Código</th>
-            <th className="py-2.5 px-3 bg-slate-50 dark:bg-slate-900">Descrição / Categoria</th>
-            <th className="py-2.5 px-3 w-24 bg-slate-50 dark:bg-slate-900">Endereço</th>
-            <th className="py-2.5 px-3 min-w-[200px] bg-slate-50 dark:bg-slate-900">Saldo & Cobertura</th>
-            <th className="py-2.5 px-3 w-32 bg-slate-50 dark:bg-slate-900">Situação</th>
-            <th className="py-2.5 px-3 text-right w-36 bg-slate-50 dark:bg-slate-900">Ações</th>
+        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-[#232325] border-b border-slate-200 dark:border-[#3e3e42]">
+          <tr className="text-xs font-semibold text-slate-600 dark:text-[#a3a3a9] uppercase tracking-wider">
+            <th className="py-2.5 px-3 w-28 bg-slate-50 dark:bg-[#232325]">Código</th>
+            <th className="py-2.5 px-3 bg-slate-50 dark:bg-[#232325]">Descrição / Categoria</th>
+            <th className="py-2.5 px-3 w-24 bg-slate-50 dark:bg-[#232325]">Endereço</th>
+            <th className="py-2.5 px-3 min-w-[200px] bg-slate-50 dark:bg-[#232325]">Saldo & Cobertura</th>
+            <th className="py-2.5 px-3 w-32 bg-slate-50 dark:bg-[#232325]">Situação</th>
+            <th className="py-2.5 px-3 text-right w-36 bg-slate-50 dark:bg-[#232325]">Ações</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+        <tbody className="divide-y divide-slate-100 dark:divide-[#3e3e42] text-xs">
           {paddingTop > 0 && (
             <tr aria-hidden="true">
               <td
@@ -125,10 +125,10 @@ export function StockTable({
                     onSelectItem(item);
                   }
                 }}
-                className={`transition-colors outline-none cursor-pointer focus:ring-1.5 focus:ring-blue-500/50 focus-within:bg-slate-50/80 dark:focus-within:bg-slate-800/40 ${
+                className={`transition-colors outline-none cursor-pointer focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 ${
                   isSelected
-                    ? 'bg-blue-50/60 dark:bg-blue-950/25'
-                    : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30'
+                    ? 'bg-blue-50/60 dark:bg-[#1a2b42]'
+                    : 'hover:bg-slate-50/80 dark:hover:bg-[#232325]'
                 }`}
               >
                 {/* Código SKU / Prefixo Técnico */}
@@ -209,9 +209,9 @@ export function StockTable({
                       type="button"
                       onClick={() => (onRegistrarEntrada ? onRegistrarEntrada(item) : onSelectItem(item))}
                       title="Adicionar entrada de material"
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-xs font-medium text-slate-700 dark:text-[#ececee] bg-white hover:bg-slate-50 dark:bg-[#232325] dark:hover:bg-[#343438] border border-slate-300 dark:border-[#3e3e42] transition-colors cursor-pointer"
                     >
-                      <ArrowUpRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <ArrowUpRight className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                       <span>+ Entrada</span>
                     </button>
 
@@ -219,9 +219,9 @@ export function StockTable({
                       type="button"
                       onClick={() => (onRegistrarSaida ? onRegistrarSaida(item) : onSelectItem(item))}
                       title="Retirar para produção"
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-xs font-medium text-slate-700 dark:text-[#ececee] bg-white hover:bg-slate-50 dark:bg-[#232325] dark:hover:bg-[#343438] border border-slate-300 dark:border-[#3e3e42] transition-colors cursor-pointer"
                     >
-                      <ArrowDownRight className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                      <ArrowDownRight className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                       <span>Retirar</span>
                     </button>
                   </div>

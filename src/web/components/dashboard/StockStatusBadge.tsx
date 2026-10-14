@@ -26,17 +26,17 @@ const STATUS_CONFIG: Record<
   ok: {
     rotulo: 'Normal',
     dotColor: 'bg-emerald-500',
-    badgeStyle: 'text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60',
+    badgeStyle: 'text-slate-700 dark:text-[#ececee] bg-slate-50 dark:bg-[#343438] border-slate-200 dark:border-[#3e3e42]',
   },
   low: {
     rotulo: 'Abaixo do Mínimo',
-    dotColor: 'bg-amber-500',
-    badgeStyle: 'text-amber-800 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60',
+    dotColor: 'bg-amber-500 dark:bg-[#f3c462]',
+    badgeStyle: 'text-amber-800 dark:text-[#f3c462] bg-amber-50 dark:bg-[#3d2e14] border-amber-200 dark:border-amber-900/60',
   },
   crit: {
     rotulo: 'Crítico / Ruptura',
-    dotColor: 'bg-rose-500 animate-pulse',
-    badgeStyle: 'text-rose-800 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 font-semibold',
+    dotColor: 'bg-rose-500 dark:bg-[#f0796b]',
+    badgeStyle: 'text-rose-800 dark:text-[#f0796b] bg-rose-50 dark:bg-[#40201d] border-rose-200 dark:border-rose-900/60 font-semibold',
   },
 };
 
