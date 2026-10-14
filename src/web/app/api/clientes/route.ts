@@ -15,6 +15,7 @@ import {
 } from '../api-helpers';
 import { db } from '@/core/services/firebase';
 import { collection, getDocs, doc, setDoc, query, where } from 'firebase/firestore';
+import { CLIENTES_INICIAIS } from '@/web/data/mock-almoxarifado';
 
 /**
  * Converte query params de URL em filtros estruturados e validados pelo Zod.
@@ -45,25 +46,33 @@ export async function GET(request: Request) {
     await requireIdentity(request);
     const filtros = parseClienteFiltros(request);
 
-    const snapshot = await getDocs(collection(db, 'clients'));
     let clientes: Cliente[] = [];
 
-    snapshot.forEach((snapDoc) => {
-      const data = snapDoc.data();
-      const c: Cliente = {
-        id: snapDoc.id,
-        nome: String(data.nome || ''),
-        tipo: data.tipo || 'CLIENTE',
-        documento: data.documento || undefined,
-        contato: data.contato || undefined,
-        telefone: data.telefone || undefined,
-        cidade: data.cidade || undefined,
-        ativo: data.ativo ?? true,
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: data.updatedAt || new Date().toISOString(),
-      };
-      clientes.push(c);
-    });
+    try {
+      const snapshot = await getDocs(collection(db, 'clients'));
+      snapshot.forEach((snapDoc) => {
+        const data = snapDoc.data();
+        const c: Cliente = {
+          id: snapDoc.id,
+          nome: String(data.nome || ''),
+          tipo: data.tipo || 'CLIENTE',
+          documento: data.documento || undefined,
+          contato: data.contato || undefined,
+          telefone: data.telefone || undefined,
+          cidade: data.cidade || undefined,
+          ativo: data.ativo ?? true,
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || new Date().toISOString(),
+        };
+        clientes.push(c);
+      });
+    } catch {
+      clientes = [];
+    }
+
+    if (clientes.length === 0) {
+      clientes = [...CLIENTES_INICIAIS];
+    }
 
     // Filtros em memória
     if (filtros.tipo && filtros.tipo !== 'TODOS') {

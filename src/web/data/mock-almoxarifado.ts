@@ -104,5 +104,106 @@ export const STATUS_LABELS: Record<StatusCriticidade, string> = {
  */
 export type TelaOuAba = 'inicio' | AbaEstoque | 'vendas' | 'clientes' | 'saida';
 
-export const CLIENTES_INICIAIS: Cliente[] = [];
-export const PEDIDOS_INICIAIS: Pedido[] = [];
+export const CLIENTES_INICIAIS: Cliente[] = [
+  {
+    id: 'cli-1',
+    tipo: 'CLIENTE',
+    nome: 'Metalúrgica Horizonte',
+    documento: '00.000.000/0001-01',
+    contato: 'Marcos Lima',
+    telefone: '(11) 90000-0001',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+  {
+    id: 'cli-2',
+    tipo: 'CLIENTE',
+    nome: 'Oficina Duas Rodas',
+    documento: '00.000.000/0001-02',
+    contato: 'Paulo Souza',
+    telefone: '(11) 90000-0002',
+    cidade: 'Guarulhos',
+    ativo: true,
+  },
+  {
+    id: 'cli-3',
+    tipo: 'CLIENTE',
+    nome: 'Construtora Alfa',
+    documento: '00.000.000/0001-03',
+    contato: 'Ana Prado',
+    telefone: '(11) 90000-0003',
+    cidade: 'Osasco',
+    ativo: true,
+  },
+  {
+    id: 'cli-4',
+    tipo: 'FORNECEDOR',
+    nome: 'Aços Santa Rita',
+    documento: '00.000.000/0001-04',
+    contato: 'Vendas',
+    telefone: '(11) 90000-0004',
+    cidade: 'Mauá',
+    ativo: true,
+  },
+  {
+    id: 'cli-5',
+    tipo: 'FORNECEDOR',
+    nome: 'Metalfer',
+    documento: '00.000.000/0001-05',
+    contato: 'Vendas',
+    telefone: '(11) 90000-0005',
+    cidade: 'Diadema',
+    ativo: true,
+  },
+  {
+    id: 'cli-6',
+    tipo: 'TRANSPORTADORA',
+    nome: 'Rápido Sul Transportes',
+    documento: '00.000.000/0001-06',
+    contato: 'Despacho',
+    telefone: '(11) 90000-0006',
+    cidade: 'São Paulo',
+    ativo: true,
+  },
+];
+
+export const PEDIDOS_INICIAIS: Pedido[] = [
+  {
+    id: 'ped-101',
+    numeroSequencial: 101,
+    clienteId: 'cli-1',
+    prazoEntrega: '2026-10-08',
+    status: 'PENDENTE',
+    itens: [
+      { itemId: 'item-1', quantidade: 10 },
+      { itemId: 'item-3', quantidade: 20 },
+    ],
+  },
+  {
+    id: 'ped-102',
+    numeroSequencial: 102,
+    clienteId: 'cli-2',
+    prazoEntrega: '2026-10-05',
+    status: 'SEPARADO',
+    itens: [
+      { itemId: 'item-13', quantidade: 6 },
+      { itemId: 'item-15', quantidade: 10 },
+    ],
+  },
+  {
+    id: 'ped-103',
+    numeroSequencial: 103,
+    clienteId: 'cli-3',
+    prazoEntrega: '2026-10-12',
+    status: 'PENDENTE',
+    itens: [{ itemId: 'item-2', quantidade: 20 }],
+  },
+  {
+    id: 'ped-104',
+    numeroSequencial: 104,
+    clienteId: 'cli-1',
+    prazoEntrega: '2026-10-02',
+    status: 'ENTREGUE',
+    itens: [{ itemId: 'item-6', quantidade: 10 }],
+  },
+];

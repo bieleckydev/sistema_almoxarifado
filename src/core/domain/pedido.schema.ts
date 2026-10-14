@@ -62,11 +62,7 @@ export const ItemPedidoSchema = z.object({
   quantidade: z
     .number()
     .positive('A quantidade do item deve ser maior que zero'),
-  observacao: z
-    .string()
-    .trim()
-    .optional()
-    .transform((val) => (val === '' ? undefined : val)),
+  observacao: z.string().trim().optional(),
 });
 
 export type ItemPedido = z.infer<typeof ItemPedidoSchema>;
@@ -88,11 +84,7 @@ export const PedidoSchema = z.object({
   itens: z
     .array(ItemPedidoSchema)
     .min(1, 'O pedido deve conter pelo menos um item'),
-  observacoes: z
-    .string()
-    .trim()
-    .optional()
-    .transform((val) => (val === '' ? undefined : val)),
+  observacoes: z.string().trim().optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
 });
