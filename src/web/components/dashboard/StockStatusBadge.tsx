@@ -25,18 +25,18 @@ const STATUS_CONFIG: Record<
 > = {
   ok: {
     rotulo: 'Normal',
-    dotColor: 'bg-emerald-500',
-    badgeStyle: 'text-slate-700 dark:text-[#ececee] bg-slate-50 dark:bg-[#343438] border-slate-200 dark:border-[#3e3e42]',
+    dotColor: 'bg-tertiary',
+    badgeStyle: 'text-secondary bg-surface-container border-transparent font-medium',
   },
   low: {
     rotulo: 'Abaixo do Mínimo',
-    dotColor: 'bg-amber-500 dark:bg-[#f3c462]',
-    badgeStyle: 'text-amber-800 dark:text-[#f3c462] bg-amber-50 dark:bg-[#3d2e14] border-amber-200 dark:border-amber-900/60',
+    dotColor: 'bg-amber-500',
+    badgeStyle: 'text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/80 border-amber-300/40 font-semibold',
   },
   crit: {
     rotulo: 'Crítico / Ruptura',
-    dotColor: 'bg-rose-500 dark:bg-[#f0796b]',
-    badgeStyle: 'text-rose-800 dark:text-[#f0796b] bg-rose-50 dark:bg-[#40201d] border-rose-200 dark:border-rose-900/60 font-semibold',
+    dotColor: 'bg-error',
+    badgeStyle: 'text-on-error-container bg-error-container border-transparent font-bold',
   },
 };
 
@@ -66,7 +66,7 @@ export function StockStatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs leading-tight font-medium transition-colors ${config.badgeStyle} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs leading-tight transition-colors ${config.badgeStyle} ${className}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor} shrink-0`} aria-hidden="true" />
       <span>{config.rotulo}</span>

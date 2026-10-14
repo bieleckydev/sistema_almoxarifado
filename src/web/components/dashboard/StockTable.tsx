@@ -2,10 +2,9 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, QrCode, Warehouse } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { formatarTextoFalta } from '@/web/utils/pluralization';
-import { StockGauge } from './StockGauge';
 import { StockStatusBadge } from './StockStatusBadge';
 import { StockTableSkeleton } from './StockTableSkeleton';
 import { EmptyState } from '../feedback/EmptyState';
@@ -77,20 +76,20 @@ export function StockTable({
   return (
     <div
       ref={tableContainerRef}
-      className={`overflow-auto max-h-[calc(100vh-275px)] min-h-[360px] bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-lg transition-colors ${className}`}
+      className={`overflow-auto max-h-[calc(100vh-275px)] min-h-[360px] bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-xs transition-colors ${className}`}
     >
-      <table className="w-full text-left border-collapse min-w-[760px]">
-        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-[#232325] border-b border-slate-200 dark:border-[#3e3e42]">
-          <tr className="text-xs font-semibold text-slate-600 dark:text-[#a3a3a9] uppercase tracking-wider">
-            <th className="py-2.5 px-3 w-28 bg-slate-50 dark:bg-[#232325]">Código</th>
-            <th className="py-2.5 px-3 bg-slate-50 dark:bg-[#232325]">Descrição / Categoria</th>
-            <th className="py-2.5 px-3 w-24 bg-slate-50 dark:bg-[#232325]">Endereço</th>
-            <th className="py-2.5 px-3 min-w-[200px] bg-slate-50 dark:bg-[#232325]">Saldo & Cobertura</th>
-            <th className="py-2.5 px-3 w-32 bg-slate-50 dark:bg-[#232325]">Situação</th>
-            <th className="py-2.5 px-3 text-right w-36 bg-slate-50 dark:bg-[#232325]">Ações</th>
+      <table className="w-full text-left border-collapse min-w-[780px]">
+        <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/20">
+          <tr className="text-xs font-label-sm uppercase tracking-wider text-secondary select-none">
+            <th className="py-3 px-4 w-32 bg-surface-container-low">Código / SKU</th>
+            <th className="py-3 px-4 bg-surface-container-low">Descrição &amp; Categoria</th>
+            <th className="py-3 px-4 w-44 bg-surface-container-low">Localização</th>
+            <th className="py-3 px-4 w-56 bg-surface-container-low">Saldo &amp; Cobertura</th>
+            <th className="py-3 px-4 w-36 text-center bg-surface-container-low">Situação</th>
+            <th className="py-3 px-4 text-right w-44 bg-surface-container-low">Ações Imediatas</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-[#3e3e42] text-xs">
+        <tbody className="divide-y divide-outline-variant/15 text-xs font-body-md text-on-surface">
           {paddingTop > 0 && (
             <tr aria-hidden="true">
               <td
@@ -105,6 +104,28 @@ export function StockTable({
             const isSelected = selectedItemId === item.id;
             const unidadeFormatada = UNIDADE_LABELS[item.unidade] || item.unidade.toLowerCase();
             const deficit = item.estoqueSeguranca - item.estoqueAtual;
+            const percentualCap = Math.min(
+              100,
+              Math.max(
+                0,
+                Math.round(
+                  (item.estoqueAtual / Math.max(item.capacidadeMaxima, item.estoqueSeguranca, 1)) * 100
+                )
+              )
+            );
+
+            // Cores semânticas da barra de progresso
+            const barBgColor = deficit > 0 && item.estoqueAtual === 0
+              ? 'bg-error'
+              : deficit > 0
+              ? 'bg-amber-500'
+              : 'bg-tertiary';
+
+            const barTrackColor = deficit > 0 && item.estoqueAtual === 0
+              ? 'bg-error-container'
+              : deficit > 0
+              ? 'bg-amber-100 dark:bg-amber-950'
+              : 'bg-surface-container';
 
             return (
               <tr
@@ -125,77 +146,88 @@ export function StockTable({
                     onSelectItem(item);
                   }
                 }}
-                className={`transition-colors outline-none cursor-pointer focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 ${
+                className={`transition-colors outline-none cursor-pointer group focus:ring-1 focus:ring-primary ${
                   isSelected
-                    ? 'bg-blue-50/60 dark:bg-[#1a2b42]'
-                    : 'hover:bg-slate-50/80 dark:hover:bg-[#232325]'
+                    ? 'bg-primary-container/20 ring-1 ring-inset ring-primary/40'
+                    : 'hover:bg-surface-container-low/70'
                 }`}
               >
                 {/* Código SKU / Prefixo Técnico */}
-                <td className="py-2.5 px-3 font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                  {item.codigo}
+                <td className="py-3 px-4 font-mono font-bold text-xs text-on-surface whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5 text-outline shrink-0" />
+                    <span>{item.codigo}</span>
+                  </div>
                 </td>
 
                 {/* Descrição e Categoria */}
-                <td className="py-2.5 px-3">
+                <td className="py-3 px-4">
                   <button
                     type="button"
                     onClick={() => onSelectItem(item)}
-                    className="text-left font-medium text-xs text-slate-900 dark:text-white hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors cursor-pointer block leading-tight"
+                    className="text-left font-headline-sm font-semibold text-xs text-on-surface group-hover:text-primary transition-colors cursor-pointer block leading-snug"
                   >
                     {item.descricao}
                   </button>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 block font-normal">
+                  <span className="font-label-sm text-[11px] px-1.5 py-0.2 rounded-md bg-surface-container text-secondary inline-block mt-0.5">
                     {item.categoria}
                   </span>
                 </td>
 
-                {/* Endereço Físico no Almoxarifado */}
-                <td className="py-2.5 px-3 font-mono text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                  {item.localizacaoFisica || '-'}
+                {/* Endereço Físico / Localização no Almoxarifado */}
+                <td className="py-3 px-4 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5 font-mono text-xs text-secondary">
+                    <Warehouse className="w-3.5 h-3.5 text-primary/70 shrink-0" />
+                    <span>{item.localizacaoFisica || '-'}</span>
+                  </div>
                 </td>
 
                 {/* Saldo Unificado e Medidor de Cobertura */}
-                <td className="py-2.5 px-3">
+                <td className="py-3 px-4">
                   <div className="w-full max-w-[210px]">
                     {/* Linha 1: 48 / 20 un mín */}
-                    <div className="text-xs font-medium tabular-nums text-slate-800 dark:text-slate-200 mb-1 leading-none">
-                      <span className="font-semibold text-slate-900 dark:text-white">
-                        {item.estoqueAtual.toLocaleString('pt-BR')}
+                    <div className="flex justify-between items-baseline font-data-tabular text-xs mb-1 leading-none">
+                      <span
+                        className={`font-bold ${
+                          deficit > 0 && item.estoqueAtual === 0
+                            ? 'text-error'
+                            : deficit > 0
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-on-surface'
+                        }`}
+                      >
+                        {item.estoqueAtual.toLocaleString('pt-BR')} {unidadeFormatada}
                       </span>
-                      <span className="text-slate-500 dark:text-slate-400 font-normal">
-                        {' '}/ {item.estoqueSeguranca.toLocaleString('pt-BR')} {unidadeFormatada} mín
+                      <span className="text-secondary text-[11px]">
+                        Mín: {item.estoqueSeguranca.toLocaleString('pt-BR')}
                       </span>
                     </div>
 
                     {/* Linha 2: Barra compacta + percentual ou falta */}
                     <div className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <StockGauge
-                          estoqueAtual={item.estoqueAtual}
-                          estoqueSeguranca={item.estoqueSeguranca}
-                          capacidadeMaxima={item.capacidadeMaxima}
-                          unidade={unidadeFormatada}
-                          size="sm"
+                      <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${barTrackColor}`}>
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${barBgColor}`}
+                          style={{ width: `${percentualCap}%` }}
                         />
                       </div>
                       <span
-                        className={`text-xs tabular-nums font-medium shrink-0 ${
+                        className={`text-[11px] tabular-nums font-semibold shrink-0 ${
                           deficit > 0
-                            ? 'text-rose-600 dark:text-rose-400'
-                            : 'text-slate-500 dark:text-slate-400'
+                            ? 'text-error'
+                            : 'text-secondary'
                         }`}
                       >
                         {deficit > 0
                           ? formatarTextoFalta(deficit, item.unidade, { sufixo: '' })
-                          : `${Math.min(100, Math.round((item.estoqueAtual / Math.max(item.capacidadeMaxima, item.estoqueSeguranca, 1)) * 100))}%`}
+                          : `${percentualCap}%`}
                       </span>
                     </div>
                   </div>
                 </td>
 
                 {/* Situação Discreta */}
-                <td className="py-2.5 px-3 whitespace-nowrap">
+                <td className="py-3 px-4 text-center whitespace-nowrap">
                   <StockStatusBadge
                     estoqueAtual={item.estoqueAtual}
                     estoqueSeguranca={item.estoqueSeguranca}
@@ -203,25 +235,30 @@ export function StockTable({
                 </td>
 
                 {/* Gatilhos Operacionais por Linha (+ Entrada / Retirar) */}
-                <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                <td className="py-3 px-4 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1.5">
                     <button
                       type="button"
                       onClick={() => (onRegistrarEntrada ? onRegistrarEntrada(item) : onSelectItem(item))}
                       title="Adicionar entrada de material"
-                      className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-xs font-medium text-slate-700 dark:text-[#ececee] bg-white hover:bg-slate-50 dark:bg-[#232325] dark:hover:bg-[#343438] border border-slate-300 dark:border-[#3e3e42] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-semibold text-on-primary-container bg-primary-container hover:bg-primary hover:text-on-primary transition-colors cursor-pointer shadow-2xs"
                     >
-                      <ArrowUpRight className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                      <ArrowUpRight className="w-3 h-3 shrink-0" />
                       <span>+ Entrada</span>
                     </button>
 
                     <button
                       type="button"
+                      disabled={item.estoqueAtual <= 0}
                       onClick={() => (onRegistrarSaida ? onRegistrarSaida(item) : onSelectItem(item))}
-                      title="Retirar para produção"
-                      className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-xs font-medium text-slate-700 dark:text-[#ececee] bg-white hover:bg-slate-50 dark:bg-[#232325] dark:hover:bg-[#343438] border border-slate-300 dark:border-[#3e3e42] transition-colors cursor-pointer"
+                      title={item.estoqueAtual <= 0 ? 'Sem saldo disponível para baixa' : 'Retirar / Baixa para produção'}
+                      className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-medium transition-colors ${
+                        item.estoqueAtual <= 0
+                          ? 'bg-surface-container text-outline opacity-50 cursor-not-allowed'
+                          : 'bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer'
+                      }`}
                     >
-                      <ArrowDownRight className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                      <ArrowDownRight className="w-3 h-3 shrink-0" />
                       <span>Retirar</span>
                     </button>
                   </div>

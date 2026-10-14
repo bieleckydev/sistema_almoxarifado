@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { RefreshCw, Plus } from 'lucide-react';
+import { RefreshCw, Plus, Layers, Package, Wrench } from 'lucide-react';
 import {
   type AbaEstoque,
   type TelaOuAba,
@@ -351,23 +351,51 @@ export default function AlmoxarifadoDashboardPage() {
             ) : isAbaEstoque && metadadosAba ? (
               /* 2. Catálogo Operacional de Estoque (MP / IMP / MOTOS) */
               <div key={telaAtiva} className="animate-tab-switch flex-1 flex flex-col min-w-0">
-                {/* Cabeçalho Operacional Compacto */}
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
-                  <div>
-                    <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-slate-900 dark:text-white">
-                      {metadadosAba.titulo}
-                    </h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
-                      {metadadosAba.subtitulo}
-                    </p>
-                  </div>
+                {/* Abas Superiores de Categoria & Ações de Topo no padrão Stitch Screen 3 */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant/20 mb-4 pb-2">
+                  <nav className="flex items-center gap-1.5 overflow-x-auto" aria-label="Categorias de estoque">
+                    {[
+                      { id: 'mp' as const, rotulo: 'Matéria-prima', icon: Layers },
+                      { id: 'imp' as const, rotulo: 'Materiais Improdutivos', icon: Package },
+                      { id: 'motos' as const, rotulo: 'Peças & Componentes', icon: Wrench },
+                    ].map(({ id, rotulo, icon: IconComponent }) => {
+                      const isActive = telaAtiva === id;
+                      const criticos = contagemCriticosPorAba[id] || 0;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => handleSelectTela(id)}
+                          className={`flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                            isActive
+                              ? 'bg-primary text-on-primary shadow-xs'
+                              : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
+                          }`}
+                        >
+                          <IconComponent className="w-4 h-4 shrink-0" />
+                          <span>{rotulo}</span>
+                          {criticos > 0 && (
+                            <span
+                              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                                isActive
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-error-container text-on-error-container'
+                              }`}
+                            >
+                              {criticos}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </nav>
 
                   {/* Ações do Cabeçalho */}
-                  <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                     <button
                       type="button"
                       onClick={() => setIsItemCreateOpen(true)}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-on-primary bg-primary hover:bg-primary/90 transition-colors cursor-pointer shadow-xs"
                       title="Cadastrar novo item nesta categoria"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -375,7 +403,7 @@ export default function AlmoxarifadoDashboardPage() {
                         {telaAtiva === 'mp'
                           ? 'Nova matéria-prima'
                           : telaAtiva === 'imp'
-                          ? 'Novo material improdutivo'
+                          ? 'Novo improdutivo'
                           : 'Nova peça de moto'}
                       </span>
                     </button>
@@ -384,14 +412,14 @@ export default function AlmoxarifadoDashboardPage() {
                       type="button"
                       onClick={() => refetch()}
                       disabled={isLoading || isFetching}
-                      className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium text-secondary hover:text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 transition-colors cursor-pointer disabled:opacity-50"
                       title="Recarregar dados do estoque"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-                      <span>Atualizar</span>
+                      <span className="hidden sm:inline">Atualizar</span>
                     </button>
                   </div>
-                </header>
+                </div>
 
                 {/* Cards de Métricas Operacionais Clicáveis */}
                 <StockMetricsCards
