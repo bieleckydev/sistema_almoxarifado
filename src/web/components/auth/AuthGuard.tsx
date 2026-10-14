@@ -29,10 +29,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Enquanto verifica o token inicial do Firebase, exibe estado sóbrio de carregamento
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f1f4f8] dark:bg-[#0c1218] text-slate-600 dark:text-slate-400">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 dark:bg-[#232325] text-slate-600 dark:text-slate-400">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-6 h-6 animate-spin text-[#0f5c7a] dark:text-[#4cb3d9]" />
-          <span className="text-xs font-medium tracking-wide uppercase">
+          <Loader2 className="w-5 h-5 animate-spin text-[#1d4ea3] dark:text-[#3273dc]" />
+          <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
             Verificando credenciais...
           </span>
         </div>
