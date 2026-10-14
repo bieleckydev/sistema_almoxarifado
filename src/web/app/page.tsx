@@ -25,6 +25,7 @@ import { VendasView } from '@/web/components/gestao/vendas/VendasView';
 import { OrderCreateDrawer } from '@/web/components/gestao/vendas/OrderCreateDrawer';
 import { ClientesView } from '@/web/components/gestao/clientes/ClientesView';
 import { ClientCreateDrawer } from '@/web/components/gestao/clientes/ClientCreateDrawer';
+import { SaidaManualView } from '@/web/components/gestao/saida/SaidaManualView';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
@@ -348,8 +349,16 @@ export default function AlmoxarifadoDashboardPage() {
             ) : telaAtiva === 'clientes' ? (
               /* 4. Módulo de Clientes, Fornecedores e Parceiros */
               <ClientesView onNovoCadastro={() => setIsClientCreateOpen(true)} />
+            ) : telaAtiva === 'saida' ? (
+              /* 5. Módulo de Saída Manual, Relatórios Analíticos e Exportação CSV */
+              <SaidaManualView
+                onSelectItem={(item) => {
+                  setItemSelecionado(item);
+                  setIsDrawerOpen(true);
+                }}
+              />
             ) : (
-              /* 5. Placeholder / Próximos Módulos (Saída manual) */
+              /* 6. Fallback / Telas Desconhecidas */
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-fade-in">
                 <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mb-4">
                   <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
