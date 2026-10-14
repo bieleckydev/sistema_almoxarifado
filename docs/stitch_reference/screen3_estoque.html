@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"inverse-primary":"#b4c5ff","surface-tint":"#0053db","background":"#f8f9ff","outline-variant":"#c3c6d7","primary":"#004ac6","on-secondary-container":"#5c647a","on-tertiary-fixed":"#002109","secondary-fixed-dim":"#bec6e0","error-container":"#ffdad6","surface-container-lowest":"#ffffff","on-tertiary-container":"#c7ffca","tertiary":"#006329","inverse-on-surface":"#eaf1ff","outline":"#737686","on-error":"#ffffff","surface-container":"#e5eeff","surface-dim":"#cbdbf5","surface-container-highest":"#d3e4fe","surface-bright":"#f8f9ff","primary-container":"#2563eb","on-primary":"#ffffff","secondary-container":"#dae2fd","on-primary-fixed":"#00174b","on-surface-variant":"#434655","on-background":"#0b1c30","surface-container-low":"#eff4ff","on-surface":"#0b1c30","surface-container-high":"#dce9ff","on-primary-fixed-variant":"#003ea8","on-error-container":"#93000a","on-secondary-fixed":"#131b2e","surface-variant":"#d3e4fe","surface":"#f8f9ff","primary-fixed-dim":"#b4c5ff","on-primary-container":"#eeefff","tertiary-fixed-dim":"#62df7d","tertiary-fixed":"#7ffc97","on-secondary-fixed-variant":"#3f465c","inverse-surface":"#213145","on-secondary":"#ffffff","secondary-fixed":"#dae2fd","error":"#ba1a1a","secondary":"#565e74","primary-fixed":"#dbe1ff","tertiary-container":"#007f36","on-tertiary":"#ffffff","on-tertiary-fixed-variant":"#005320"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"gutter-compact":"0.5rem","space-xs":"0.25rem","gutter":"1rem","space-sm":"0.5rem","space-md":"0.75rem","space-lg":"1rem","space-xl":"1.5rem","margin":"1.5rem","margin-mobile":"0.75rem"},"fontFamily":{"headline-md":["Plus Jakarta Sans"],"label-md":["Inter"],"display-lg":["Plus Jakarta Sans"],"kpi-value":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Inter"],"body-sm":["Inter"],"body-lg":["Inter"],"body-md":["Inter"],"headline-lg":["Plus Jakarta Sans"],"data-tabular":["Inter"]},"fontSize":{"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"display-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"kpi-value":["28px",{"lineHeight":"32px","letterSpacing":"-0.02em","fontWeight":"800"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"body-md":["13px",{"lineHeight":"18px","fontWeight":"400"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"700"}],"data-tabular":["13px",{"lineHeight":"18px","letterSpacing":"-0.005em","fontWeight":"500"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-inverse-surface z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-sm bg-inverse-surface"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm text-headline-sm">AL</div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-inverse-on-surface font-bold leading-none">Apex Log</span><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline-variant font-medium mt-1">WMS Enterprise</span></div></div><div class="px-space-md py-space-sm"><div class="px-space-sm py-space-xs font-label-sm text-label-sm uppercase tracking-wider text-outline-variant font-semibold">Menu Operacional</div></div><nav class="flex flex-col gap-1 px-space-md" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="visao-geral" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">dashboard</span><span class="font-body-md text-body-md">Início / Visão Geral</span></div><span class="inline-flex items-center px-space-xs py-0.5 rounded-full text-label-sm font-label-sm bg-error text-on-error font-bold">3</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="estoque-almoxarifado" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">inventory_2</span><span class="font-body-md text-body-md">Estoque &amp; Almoxarifado</span></div><span class="inline-flex items-center px-space-xs py-0.5 rounded-full text-label-sm font-label-sm bg-error-container text-on-error-container font-semibold">14 críticos</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="movimentacoes-apontamentos" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">swap_horiz</span><span class="font-body-md text-body-md">Movimentações &amp; Apontamentos</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="pedidos-vendas" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">shopping_cart_checkout</span><span class="font-body-md text-body-md">Pedidos &amp; Vendas</span></div><span class="inline-flex items-center px-space-xs py-0.5 rounded-full text-label-sm font-label-sm bg-secondary-container text-on-secondary-fixed font-semibold">8</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="compras-fornecedores" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">local_shipping</span><span class="font-body-md text-body-md">Compras &amp; Fornecedores</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="clientes-expedicao" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">outgoing_mail</span><span class="font-body-md text-body-md">Clientes &amp; Expedição</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-inverse-on-surface hover:bg-surface-container/10 hover:text-surface-bright transition-colors" data-path="configuracoes-cadastros" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-body-lg text-outline-variant">settings</span><span class="font-body-md text-body-md">Configurações / Cadastros</span></div></a></nav></div><div class="p-space-md bg-inverse-surface/60"><div class="p-space-sm rounded-lg bg-surface-container/10 flex items-center justify-between"><div class="flex flex-col"><span class="font-label-sm text-label-sm text-outline-variant font-medium">Status do Terminal</span><span class="font-body-sm text-body-sm text-inverse-on-surface font-semibold flex items-center gap-1.5 mt-0.5"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>Coletor RF Online</span></div><span class="material-symbols-outlined text-body-lg text-tertiary-fixed">sensors</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl z-40 flex items-center justify-between px-space-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-lg"><img alt="Apex Log WMS Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1V3T3RI1ib5zAo0I2Ne_9PHxszvYo-cQvcmFOEjLnW72e3OA_dvZm8jj2-LL-91_9CyvCI-aGNrVgEm9nGJR4fG6aCV6HRxX9gfpH4EZWF0SpIRXsMJCXWZcg4MPZr-uoci0nModJOtCeSVhxW-kbdzz4BDE_wdWvWLG2Y74DOoQXZSzePxW39JVZJdB-EGZIJF94LW5AimgAzDLnZhjVg8EZyzLE-3S2u0IZ0C59QOxNxNlbczgTE-KaI"/><div class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low text-on-surface"><span class="material-symbols-outlined text-body-lg text-primary">warehouse</span><span class="font-body-md text-body-md font-semibold text-on-surface">Unidade Matriz - Galpão 01</span><span class="material-symbols-outlined text-label-md text-outline">expand_more</span></div><div class="relative flex items-center w-80"><span class="material-symbols-outlined absolute left-3 text-body-md text-outline">search</span><input class="w-full pl-9 pr-14 py-1.5 rounded-lg bg-surface-container text-body-md font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest" placeholder="Buscar lote, item, SKU ou pallet..." type="text"/><kbd class="absolute right-2 px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-surface-container-highest text-on-surface-variant font-mono">⌘K</kbd></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-body-lg text-secondary">calendar_today</span><span class="font-body-sm text-body-sm font-medium">Data Operacional:</span><span class="font-data-tabular text-data-tabular font-semibold text-on-surface">24/10/2024</span></div><div class="h-6 w-px bg-surface-container-high"></div><button aria-label="Notificações de Ruptura" class="relative p-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-headline-sm">notifications</span><span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><div class="relative"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_bbm_ifViU6RB7W2PE4y8yKxoR1KEGjQsdNLFHHMekcv0HMFIRm5BMANwpO7Su0yrSahO7ZRb9RfW2w6JMnkPkV_OyN15PdIDXYFA1oER1HMrpf9FmNMqeNvaJHmCx20vorEKIoqPrp_MakiUFW0sqEuB4F-Wf3jd0foznps1mzv1JRs3BQe4acCcrUW1mDnGMRXjGOhqmq2GN8DF9llust01zfOZjXwT1AGzn2vukgog4XMriihH"/><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-tertiary ring-2 ring-surface-container-lowest"></span></div><div class="flex flex-col text-left"><span class="font-body-md text-body-md font-bold text-on-surface leading-none">Eduardo Biel</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight mt-0.5">Gestor de Estoque</span></div></div></div></header><main class="w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Sub-Header / Secondary Context Bar -->
+<div class="bg-surface-container-lowest px-space-xl py-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-md" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold">Gestão de Estoque &amp; Matéria-Prima</h1>
+<span class="px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-primary/10 text-primary font-semibold">WMS v4.8</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Controle dimensional de tarugos, perfis, chapas, tubos e níveis de reposição fabril</p>
+</div>
+</div>
+<!-- Quick Operational Stats & Sync CTA -->
+<div class="flex items-center gap-space-md self-end md:self-auto">
+<div class="flex items-center gap-2 px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span>Sincronizado via RFID há 4 min</span>
+</div>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md transition-colors" title="Atualizar inventário">
+<span class="material-symbols-outlined text-body-md">sync</span>
+<span>Atualizar</span>
+</button>
+<button class="inline-flex items-center gap-2 px-space-lg py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md shadow-sm transition-all" onclick="document.getElementById('modal-new-item').classList.toggle('hidden')">
+<span class="material-symbols-outlined text-body-lg">add_circle</span>
+<span>+ Nova Matéria-Prima</span>
+</button>
+</div>
+</div>
+<!-- Primary Tab Navigation Strip -->
+<div class="px-space-xl bg-surface-container-lowest shadow-sm mt-0.5">
+<nav class="flex items-center gap-space-lg overflow-x-auto no-scrollbar">
+<a class="flex items-center gap-2 py-3 px-1 border-b-2 border-primary text-primary font-headline-sm text-headline-sm whitespace-nowrap" href="#">
+<span class="material-symbols-outlined text-body-md">category</span>
+<span>Matéria-prima</span>
+<span class="px-2 py-0.5 rounded-full bg-primary text-on-primary text-label-sm font-label-sm font-bold">152</span>
+</a>
+<a class="flex items-center gap-2 py-3 px-1 border-b-2 border-transparent text-secondary hover:text-on-surface font-body-md text-body-md whitespace-nowrap transition-colors" href="#">
+<span class="material-symbols-outlined text-body-md">build_circle</span>
+<span>Materiais Improdutivos</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-label-sm font-label-sm">89</span>
+</a>
+<a class="flex items-center gap-2 py-3 px-1 border-b-2 border-transparent text-secondary hover:text-on-surface font-body-md text-body-md whitespace-nowrap transition-colors" href="#">
+<span class="material-symbols-outlined text-body-md">precision_manufacturing</span>
+<span>Peças &amp; Componentes</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-label-sm font-label-sm">96</span>
+</a>
+<a class="flex items-center gap-2 py-3 px-1 border-b-2 border-transparent text-secondary hover:text-on-surface font-body-md text-body-md whitespace-nowrap transition-colors" href="#">
+<span class="material-symbols-outlined text-body-md">history</span>
+<span>Movimentações Históricas</span>
+</a>
+<a class="flex items-center gap-2 py-3 px-1 border-b-2 border-transparent text-secondary hover:text-on-surface font-body-md text-body-md whitespace-nowrap transition-colors" href="#">
+<span class="material-symbols-outlined text-body-md">barcode_scanner</span>
+<span>Auditoria de Ruptura</span>
+<span class="px-1.5 py-0.5 rounded-full bg-error-container text-on-error-container text-label-sm font-label-sm font-bold">104</span>
+</a>
+</nav>
+</div>
+<!-- Main Content Space -->
+<div class="px-space-xl py-space-lg flex flex-col gap-space-lg">
+<!-- KPI Metric Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+<!-- Card 1: Total Catálogo -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+<div class="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">Total em Catálogo</span>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-kpi-value text-kpi-value text-on-surface">152</span>
+<span class="font-label-md text-label-md text-secondary">SKUs Ativos</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-sm">inventory</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1 text-tertiary font-semibold">
+<span class="material-symbols-outlined text-label-md">check_circle</span> 100% catalogado
+          </span>
+<span class="text-secondary">Chapas, Tubos e Perfis</span>
+</div>
+</div>
+<!-- Card 2: Nível Moderado / Atenção -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+<div class="absolute top-0 left-0 right-0 h-1 bg-secondary-fixed-dim"></div>
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">Abaixo do Mínimo</span>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-kpi-value text-kpi-value text-on-surface">0</span>
+<span class="font-label-md text-label-md text-secondary">Itens em Atenção</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-secondary-container/40 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-headline-sm">warning_amber</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span class="text-secondary font-medium">Estoque de segurança equilibrado</span>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-surface-container text-secondary">0% atenção</span>
+</div>
+</div>
+<!-- Card 3: Nível Crítico / Ruptura (Alert Accent) -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+<div class="absolute top-0 left-0 right-0 h-1 bg-error"></div>
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error font-bold">Ruptura Imediata</span>
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-kpi-value text-kpi-value text-error">104</span>
+<span class="font-label-md text-label-md text-error font-semibold">Itens Esgotados</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined text-headline-sm" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-label-md">priority_high</span> 68% requer compra
+          </span>
+<button class="text-label-sm font-label-sm text-primary hover:underline font-semibold" onclick="applyFilter('critico')">Filtrar Críticos →</button>
+</div>
+</div>
+<!-- Card 4: Valor Imobilizado -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+<div class="absolute top-0 left-0 right-0 h-1 bg-tertiary"></div>
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">Patrimônio Imobilizado</span>
+<div class="mt-2 flex items-baseline gap-1">
+<span class="font-kpi-value text-kpi-value text-on-surface">R$ 842.150</span>
+<span class="font-label-md text-label-md text-secondary">,00</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed/30 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-headline-sm">payments</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span class="text-tertiary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-label-md">trending_up</span> +3,2% neste mês
+          </span>
+<span class="text-secondary">48 itens com saldo</span>
+</div>
+</div>
+</div>
+<!-- Legacy Context & Industrial Reference Banner (Incorporating Screenshot Source) -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col lg:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="relative rounded-lg overflow-hidden w-28 h-12 shadow-sm shrink-0 bg-surface-container-highest">
+<img alt="Interface Legada de Estoque" class="w-full h-full object-cover opacity-80 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0uPCMVqDjyRe-gcHduiQ0dUMLips-3D0VtY9-HBOaxRptAno68tYkvxCR4bMEB32TdeHDyYFZTW_-BS4dc-e13H_GfyBFTKC58CfEaBZc2zbk9KeCkzs3lapDLZkDav1Z6KI7wol0fWTcjjVcMhOokmlg7-sHkeHCIBhOtaE8yJm9MlvsUhhckEDkT3kfmaiEVNa4VaRycbpYzWc58uM0eWmBKmM9FVJhoySG8GGH6QNuwwOHiAZkuC8xMavWoAbqLA"/>
+<span class="absolute bottom-0 right-0 px-1 py-0.5 bg-inverse-surface/80 text-inverse-on-surface text-[9px] font-mono leading-none">LEGADO</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Visualização de Modernização Ativa</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Importação direta da matriz de corte de tubos NBR 6591. Dados parametrizados com cálculo volumétrico em tempo real.</p>
+</div>
+</div>
+<div class="flex items-center gap-2 self-stretch lg:self-auto justify-end">
+<span class="font-label-sm text-label-sm text-secondary">Última auditoria física: 22/10/2024</span>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container transition-colors inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-md text-primary">qr_code_scanner</span>
+<span>Bipar Pallet</span>
+</button>
+</div>
+</div>
+<!-- Filters, Search & Bulk Operations Toolbar -->
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+<!-- Search and Quick Query Input -->
+<div class="flex-1 flex items-center gap-space-sm">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-body-md text-outline">search</span>
+<input class="w-full pl-9 pr-12 py-2 rounded-lg bg-surface-container-low text-body-md font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest shadow-sm" id="search-input" onkeyup="filterTable()" placeholder="Buscar por código SKU (ex: 10-044), bitola, NBR, ou endereço (ex: GALP-01 / R-04)..." type="text"/>
+<span class="absolute right-3 top-2.5 font-label-sm text-label-sm text-outline-variant font-mono">ESC p/ limpar</span>
+</div>
+<!-- Material Family Dropdown -->
+<div class="relative w-52 shrink-0">
+<select class="w-full py-2 px-3 rounded-lg bg-surface-container-low text-body-md font-body-md text-on-surface appearance-none focus:outline-none cursor-pointer">
+<option value="todos">Todas as Matérias-Primas</option>
+<option selected="" value="tubos">Tubos NBR 6591</option>
+<option value="chapas">Chapas de Aço Carbono</option>
+<option value="barras">Barras Laminadas</option>
+<option value="perfis">Perfis Estruturais W/I</option>
+<option value="inox">Ligas Especiais &amp; Inox</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-body-md text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Export & Display Actions -->
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm" title="Baixar relatório em XLS">
+<span class="material-symbols-outlined text-body-md text-tertiary">table_view</span>
+<span>Excel</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm" title="Exportar ficha técnica em PDF">
+<span class="material-symbols-outlined text-body-md text-error">picture_as_pdf</span>
+<span>PDF</span>
+</button>
+<div class="h-6 w-px bg-surface-container-high mx-1"></div>
+<button class="p-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition-colors" title="Configurar Colunas">
+<span class="material-symbols-outlined text-body-md">view_column</span>
+</button>
+<button class="p-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition-colors" title="Impressão de Etiquetas">
+<span class="material-symbols-outlined text-body-md">print</span>
+</button>
+</div>
+</div>
+<!-- Segmented Status Pills (Quick Toggles) -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-2">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mr-1">Filtrar Situação:</span>
+<button class="status-btn active px-3 py-1 rounded-full text-label-md font-label-md bg-primary text-on-primary transition-all" id="filter-btn-todos" onclick="setStatusFilter('todos')">
+            Todos <span class="ml-1 opacity-80">(152)</span>
+</button>
+<button class="status-btn px-3 py-1 rounded-full text-label-md font-label-md bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition-all" id="filter-btn-normal" onclick="setStatusFilter('normal')">
+<span class="inline-block w-2 h-2 rounded-full bg-tertiary mr-1.5"></span>
+            Normal <span class="ml-1 opacity-70">(48)</span>
+</button>
+<button class="status-btn px-3 py-1 rounded-full text-label-md font-label-md bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition-all" id="filter-btn-atencao" onclick="setStatusFilter('atencao')">
+<span class="inline-block w-2 h-2 rounded-full bg-secondary mr-1.5"></span>
+            Abaixo do Mínimo <span class="ml-1 opacity-70">(0)</span>
+</button>
+<button class="status-btn px-3 py-1 rounded-full text-label-md font-label-md bg-surface-container-low hover:bg-surface-container text-error transition-all font-semibold" id="filter-btn-critico" onclick="setStatusFilter('critico')">
+<span class="inline-block w-2 h-2 rounded-full bg-error mr-1.5"></span>
+            Crítico / Ruptura <span class="ml-1 bg-error-container text-on-error-container px-1.5 rounded-full text-label-sm">(104)</span>
+</button>
+</div>
+<div class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<span>Exibindo:</span>
+<span class="font-data-tabular text-data-tabular font-bold text-on-surface" id="displayed-counter">152 registros</span>
+</div>
+</div>
+</div>
+<!-- High-Performance Data Table -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-secondary font-label-sm text-label-sm uppercase tracking-wider select-none">
+<th class="py-3 px-4 w-12 text-center">
+<input class="rounded bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</th>
+<th class="py-3 px-4 w-32">Código / SKU</th>
+<th class="py-3 px-6">Descrição do Item &amp; Especificação</th>
+<th class="py-3 px-4 w-48">Localização / Galpão</th>
+<th class="py-3 px-6 w-64">Saldo Físico &amp; Cobertura</th>
+<th class="py-3 px-4 w-40 text-center">Status Operacional</th>
+<th class="py-3 px-4 w-44 text-right">Ações Imediatas</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-md text-body-md text-on-surface" id="inventory-table-body">
+<!-- Row 1: 10-044 (Crítico / Ruptura) -->
+<tr class="item-row hover:bg-surface-container-low/60 transition-colors group" data-sku="10-044" data-status="critico">
+<td class="py-3.5 px-4 text-center">
+<input class="rounded bg-surface-container text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-4 font-mono font-bold text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-sm text-outline">qr_code_2</span>
+<span>10-044</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Tubo NBR 6591 (Ø 22,22 x 1,2 x 5800 mm)</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-surface-container text-secondary">Matéria-prima / Tubos</span>
+<span class="font-label-sm text-label-sm text-outline">• Aço Industrial NBR 6591 • 5,8 metros</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-body-md text-primary">warehouse</span>
+<span class="font-mono font-medium text-body-sm">GALP-01 / R-04 / N-02</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-data-tabular text-data-tabular">
+<span class="font-bold text-error">0 kg</span>
+<span class="text-secondary text-body-sm">Mín: 500 kg</span>
+</div>
+<!-- Progress Bar: Empty Red -->
+<div class="w-full h-1.5 bg-error-container rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 0%"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-error-container text-on-error-container font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+                  Crítico / Ruptura
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-primary-container text-on-primary font-label-sm text-label-sm hover:bg-primary transition-colors font-semibold" onclick="openPointingModal('10-044', 'Tubo NBR 6591 (Ø 22,22 x 1,2 x 5800 mm)', 'entrada')" title="Apontar entrada de matéria-prima">
+                    + Entrada
+                  </button>
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors opacity-50 cursor-not-allowed" disabled="" onclick="openPointingModal('10-044', 'Tubo NBR 6591 (Ø 22,22 x 1,2 x 5800 mm)', 'baixa')" title="Sem saldo disponível para baixa">
+                    Baixa
+                  </button>
+<button class="p-1 text-outline hover:text-on-surface rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-body-md">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: 10-055 (Normal com Saldo) -->
+<tr class="item-row hover:bg-surface-container-low/60 transition-colors group" data-sku="10-055" data-status="normal">
+<td class="py-3.5 px-4 text-center">
+<input class="rounded bg-surface-container text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-4 font-mono font-bold text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-sm text-outline">qr_code_2</span>
+<span>10-055</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Tubo NBR 6591 (Ø 25,40 x 1,20 x 6000 mm)</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-surface-container text-secondary">Matéria-prima / Tubos</span>
+<span class="font-label-sm text-label-sm text-outline">• Polegada 1" Redondo • Lote L-8841</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-body-md text-primary">warehouse</span>
+<span class="font-mono font-medium text-body-sm">GALP-01 / R-02 / N-01</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-data-tabular text-data-tabular">
+<span class="font-bold text-tertiary">3.390 kg</span>
+<span class="text-secondary text-body-sm">Mín: 1.200 kg</span>
+</div>
+<!-- Progress Bar: 85% Green -->
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-tertiary-fixed/40 text-on-tertiary-container font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Normal
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors font-medium" onclick="openPointingModal('10-055', 'Tubo NBR 6591 (Ø 25,40 x 1,20 x 6000 mm)', 'entrada')">
+                    + Entrada
+                  </button>
+<button class="px-2 py-1 rounded bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm hover:bg-secondary-fixed transition-colors font-semibold" onclick="openPointingModal('10-055', 'Tubo NBR 6591 (Ø 25,40 x 1,20 x 6000 mm)', 'baixa')">
+                    Retirar
+                  </button>
+<button class="p-1 text-outline hover:text-on-surface rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-body-md">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: 10-060 (Normal com Saldo Moderado) -->
+<tr class="item-row hover:bg-surface-container-low/60 transition-colors group" data-sku="10-060" data-status="normal">
+<td class="py-3.5 px-4 text-center">
+<input class="rounded bg-surface-container text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-4 font-mono font-bold text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-sm text-outline">qr_code_2</span>
+<span>10-060</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Tubo NBR 6591 (Ø 25,40 x 1,50 x 6000 mm)</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-surface-container text-secondary">Matéria-prima / Tubos</span>
+<span class="font-label-sm text-label-sm text-outline">• Parede reforçada 1,5mm</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-body-md text-primary">warehouse</span>
+<span class="font-mono font-medium text-body-sm">GALP-01 / R-02 / N-03</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-data-tabular text-data-tabular">
+<span class="font-bold text-on-surface">258 kg</span>
+<span class="text-secondary text-body-sm">Mín: 200 kg</span>
+</div>
+<!-- Progress Bar: 67% Accent -->
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 67%"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-tertiary-fixed/40 text-on-tertiary-container font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Normal
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors font-medium" onclick="openPointingModal('10-060', 'Tubo NBR 6591 (Ø 25,40 x 1,50 x 6000 mm)', 'entrada')">
+                    + Entrada
+                  </button>
+<button class="px-2 py-1 rounded bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm hover:bg-secondary-fixed transition-colors font-semibold" onclick="openPointingModal('10-060', 'Tubo NBR 6591 (Ø 25,40 x 1,50 x 6000 mm)', 'baixa')">
+                    Retirar
+                  </button>
+<button class="p-1 text-outline hover:text-on-surface rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-body-md">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: 10-061 (Crítico / Ruptura) -->
+<tr class="item-row hover:bg-surface-container-low/60 transition-colors group" data-sku="10-061" data-status="critico">
+<td class="py-3.5 px-4 text-center">
+<input class="rounded bg-surface-container text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-4 font-mono font-bold text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-sm text-outline">qr_code_2</span>
+<span>10-061</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Tubo NBR 6591 (Ø 28,58 x 1,20 x 6000 mm)</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-surface-container text-secondary">Matéria-prima / Tubos</span>
+<span class="font-label-sm text-label-sm text-outline">• Polegada 1.1/8"</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-body-md text-primary">warehouse</span>
+<span class="font-mono font-medium text-body-sm">GALP-01 / R-03 / N-01</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-data-tabular text-data-tabular">
+<span class="font-bold text-error">0 kg</span>
+<span class="text-secondary text-body-sm">Mín: 450 kg</span>
+</div>
+<div class="w-full h-1.5 bg-error-container rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 0%"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-error-container text-on-error-container font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+                  Crítico / Ruptura
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-primary-container text-on-primary font-label-sm text-label-sm hover:bg-primary transition-colors font-semibold" onclick="openPointingModal('10-061', 'Tubo NBR 6591 (Ø 28,58 x 1,20 x 6000 mm)', 'entrada')">
+                    + Entrada
+                  </button>
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm opacity-50 cursor-not-allowed" disabled="">
+                    Baixa
+                  </button>
+<button class="p-1 text-outline hover:text-on-surface rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-body-md">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: 10-062 (Normal / Alto Giro) -->
+<tr class="item-row hover:bg-surface-container-low/60 transition-colors group" data-sku="10-062" data-status="normal">
+<td class="py-3.5 px-4 text-center">
+<input class="rounded bg-surface-container text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-4 font-mono font-bold text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-sm text-outline">qr_code_2</span>
+<span>10-062</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Tubo NBR 6591 (Ø 31,75 x 1,20 x 6000 mm)</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-surface-container text-secondary">Matéria-prima / Tubos</span>
+<span class="font-label-sm text-label-sm text-outline">• Polegada 1.1/4" • Padrão Automotivo</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-body-md text-primary">warehouse</span>
+<span class="font-mono font-medium text-body-sm">GALP-01 / R-01 / N-04</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-data-tabular text-data-tabular">
+<span class="font-bold text-tertiary">2.148 kg</span>
+<span class="text-secondary text-body-sm">Mín: 800 kg</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 78%"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-tertiary-fixed/40 text-on-tertiary-container font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Normal
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors font-medium" onclick="openPointingModal('10-062', 'Tubo NBR 6591 (Ø 31,75 x 1,20 x 6000 mm)', 'entrada')">
+                    + Entrada
+                  </button>
+<button class="px-2 py-1 rounded bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm hover:bg-secondary-fixed transition-colors font-semibold" onclick="openPointingModal('10-062', 'Tubo NBR 6591 (Ø 31,75 x 1,20 x 6000 mm)', 'baixa')">
+                    Retirar
+                  </button>
+<button class="p-1 text-outline hover:text-on-surface rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-body-md">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6: 10-064 (Saldo Normal) -->
+<tr class="item-row hover:bg-surface-container-low/60 transition-colors group" data-sku="10-064" data-status="normal">
+<td class="py-3.5 px-4 text-center">
+<input class="rounded bg-surface-container text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-4 font-mono font-bold text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-sm text-outline">qr_code_2</span>
+<span>10-064</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Tubo NBR 6591 (Ø 31,75 x 1,50 x 6000 mm)</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-surface-container text-secondary">Matéria-prima / Tubos</span>
+<span class="font-label-sm text-label-sm text-outline">• Carga Estrutural Pesada</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-body-md text-primary">warehouse</span>
+<span class="font-mono font-medium text-body-sm">GALP-01 / R-01 / N-05</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-data-tabular text-data-tabular">
+<span class="font-bold text-on-surface">644 kg</span>
+<span class="text-secondary text-body-sm">Mín: 500 kg</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 52%"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-tertiary-fixed/40 text-on-tertiary-container font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Normal
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors font-medium" onclick="openPointingModal('10-064', 'Tubo NBR 6591 (Ø 31,75 x 1,50 x 6000 mm)', 'entrada')">
+                    + Entrada
+                  </button>
+<button class="px-2 py-1 rounded bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm hover:bg-secondary-fixed transition-colors font-semibold" onclick="openPointingModal('10-064', 'Tubo NBR 6591 (Ø 31,75 x 1,50 x 6000 mm)', 'baixa')">
+                    Retirar
+                  </button>
+<button class="p-1 text-outline hover:text-on-surface rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-body-md">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 7: 10-067 (Crítico) -->
+<tr class="item-row hover:bg-surface-container-low/60 transition-colors group" data-sku="10-067" data-status="critico">
+<td class="py-3.5 px-4 text-center">
+<input class="rounded bg-surface-container text-primary focus:ring-0 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-4 font-mono font-bold text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-body-sm text-outline">qr_code_2</span>
+<span>10-067</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Tubo NBR 6591 (Ø 38,10 x 1,20 x 6000 mm)</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-surface-container text-secondary">Matéria-prima / Tubos</span>
+<span class="font-label-sm text-label-sm text-outline">• Polegada 1.1/2"</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-body-md text-primary">warehouse</span>
+<span class="font-mono font-medium text-body-sm">GALP-01 / R-04 / N-04</span>
+</div>
+</td>
+<td class="py-3.5 px-6">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-data-tabular text-data-tabular">
+<span class="font-bold text-error">0 kg</span>
+<span class="text-secondary text-body-sm">Mín: 600 kg</span>
+</div>
+<div class="w-full h-1.5 bg-error-container rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 0%"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-error-container text-on-error-container font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+                  Crítico / Ruptura
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-primary-container text-on-primary font-label-sm text-label-sm hover:bg-primary transition-colors font-semibold" onclick="openPointingModal('10-067', 'Tubo NBR 6591 (Ø 38,10 x 1,20 x 6000 mm)', 'entrada')">
+                    + Entrada
+                  </button>
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm opacity-50 cursor-not-allowed" disabled="">
+                    Baixa
+                  </button>
+<button class="p-1 text-outline hover:text-on-surface rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-body-md">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- High Density Table Footer & Smart Pagination -->
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm">
+<span>Linhas por página:</span>
+<select class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface text-body-sm font-body-sm focus:outline-none cursor-pointer">
+<option>10 itens</option>
+<option selected="">25 itens</option>
+<option>50 itens</option>
+<option>152 itens (Todos)</option>
+</select>
+<span class="hidden sm:inline">•</span>
+<span class="font-data-tabular text-data-tabular">Exibindo 1 a 7 de 152 matérias-primas</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded-lg bg-surface-container-lowest text-outline hover:text-on-surface transition-colors shadow-sm disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-body-md">first_page</span>
+</button>
+<button class="p-1.5 rounded-lg bg-surface-container-lowest text-outline hover:text-on-surface transition-colors shadow-sm disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-body-md">chevron_left</span>
+</button>
+<span class="px-3 py-1 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-bold">1</span>
+<button class="px-3 py-1 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm">2</button>
+<button class="px-3 py-1 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm">3</button>
+<span class="px-1 text-outline font-label-md">...</span>
+<button class="px-3 py-1 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors shadow-sm">7</button>
+<button class="p-1.5 rounded-lg bg-surface-container-lowest text-outline hover:text-on-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-body-md">chevron_right</span>
+</button>
+<button class="p-1.5 rounded-lg bg-surface-container-lowest text-outline hover:text-on-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-body-md">last_page</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Batch Material Movement / Fast Pointing Dock -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-headline-sm">input</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Apontamento Rápido no Pátio (Entrada Direta de Lote)</h2>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2.5 py-1 rounded-full">Foco Terminal RF: Ativo [Alt + E]</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-6 gap-space-md items-end">
+<div class="md:col-span-2 flex flex-col gap-1">
+<label class="font-label-sm text-label-sm uppercase text-secondary font-semibold">SKU / Código do Tubo</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md font-mono text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" placeholder="Ex: 10-044 ou bipar código..." type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm uppercase text-secondary font-semibold">Tipo Movimento</label>
+<select class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md text-on-surface focus:outline-none cursor-pointer shadow-sm">
+<option>Entrada (Compra)</option>
+<option>Saída (Ordem OP)</option>
+<option>Transferência</option>
+<option>Ajuste Balanço</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm uppercase text-secondary font-semibold">Peso / Qtd (Kg)</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md font-data-tabular font-bold text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" placeholder="0.00" type="number"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm uppercase text-secondary font-semibold">Endereço Destino</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md font-mono text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" type="text" value="GALP-01 / R-04"/>
+</div>
+<div>
+<button class="w-full py-2 px-4 rounded-lg bg-tertiary-container hover:bg-tertiary text-on-tertiary font-label-md text-label-md font-bold shadow-sm transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-body-md">task_alt</span>
+<span>Gravar Apontamento</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Pointing Modal (Hidden by Default) -->
+<div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm hidden flex items-center justify-center p-4" id="pointing-modal">
+<div class="bg-surface-container-lowest rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+<div class="p-space-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-headline-sm text-primary" id="modal-icon">archive</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold" id="modal-title">Apontar Movimentação</h3>
+</div>
+<button class="p-1 rounded text-outline hover:text-on-surface" onclick="closePointingModal()">
+<span class="material-symbols-outlined text-body-lg">close</span>
+</button>
+</div>
+<div class="p-space-lg flex flex-col gap-space-md">
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Item Selecionado:</span>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold mt-0.5" id="modal-item-name">Tubo NBR 6591</p>
+<span class="font-mono text-label-sm text-primary font-bold" id="modal-sku-tag">SKU: 10-044</span>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Quantidade (KG)</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-headline-sm font-bold text-on-surface focus:outline-none" placeholder="0.00" type="number"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Nota Fiscal / OP</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md text-on-surface focus:outline-none" placeholder="Ex: NF-29402" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Observações / Motivo</label>
+<textarea class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md text-on-surface focus:outline-none" placeholder="Descreva especificidades do lote recebido..." rows="2"></textarea>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-low flex justify-end gap-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors" onclick="closePointingModal()">Cancelar</button>
+<button class="px-4 py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md font-bold shadow-sm transition-colors" onclick="savePointing()">Confirmar Registro</button>
+</div>
+</div>
+</div>
+<!-- Modal New Item (Hidden by Default) -->
+<div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm hidden flex items-center justify-center p-4" id="modal-new-item">
+<div class="bg-surface-container-lowest rounded-xl shadow-xl max-w-xl w-full overflow-hidden flex flex-col">
+<div class="p-space-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-headline-sm text-primary">add_box</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Cadastrar Nova Matéria-Prima</h3>
+</div>
+<button class="p-1 rounded text-outline hover:text-on-surface" onclick="document.getElementById('modal-new-item').classList.add('hidden')">
+<span class="material-symbols-outlined text-body-lg">close</span>
+</button>
+</div>
+<div class="p-space-lg grid grid-cols-2 gap-space-md">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Código SKU</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md font-mono text-on-surface focus:outline-none" placeholder="Ex: 10-099" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Família / Categoria</label>
+<select class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md text-on-surface focus:outline-none">
+<option>Matéria-prima / Tubos NBR</option>
+<option>Matéria-prima / Chapas</option>
+<option>Matéria-prima / Perfis</option>
+</select>
+</div>
+<div class="col-span-2 flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Descrição Técnica Completa</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md text-on-surface focus:outline-none" placeholder="Ex: Tubo NBR 6591 (Ø 40,00 x 2,00 x 6000 mm)" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Estoque Mínimo (Kg)</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md text-on-surface focus:outline-none" placeholder="500" type="number"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Endereço Inicial</label>
+<input class="px-3 py-2 rounded-lg bg-surface-container-low text-body-md text-on-surface focus:outline-none" placeholder="GALP-01 / R-01 / N-01" type="text"/>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-low flex justify-end gap-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md" onclick="document.getElementById('modal-new-item').classList.add('hidden')">Cancelar</button>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-bold" onclick="document.getElementById('modal-new-item').classList.add('hidden')">Salvar Matéria-Prima</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Inline Interaction Logic -->
+<script>
+  let activeFilter = 'todos';
+
+  function filterTable() {
+    const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.item-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowText = row.innerText.toLowerCase();
+      const rowStatus = row.getAttribute('data-status');
+      
+      const matchesSearch = rowText.includes(searchVal);
+      const matchesStatus = (activeFilter === 'todos' || rowStatus === activeFilter);
+
+      if (matchesSearch && matchesStatus) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    document.getElementById('displayed-counter').innerText = visibleCount + ' registros';
+  }
+
+  function setStatusFilter(status) {
+    activeFilter = status;
+    
+    // Update button visual states
+    const buttons = document.querySelectorAll('.status-btn');
+    buttons.forEach(btn => {
+      btn.classList.remove('bg-primary', 'text-on-primary');
+      btn.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+    });
+
+    const activeBtn = document.getElementById('filter-btn-' + status);
+    if (activeBtn) {
+      activeBtn.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+      activeBtn.classList.add('bg-primary', 'text-on-primary');
+    }
+
+    filterTable();
+  }
+
+  function applyFilter(status) {
+    setStatusFilter(status);
+  }
+
+  function openPointingModal(sku, name, type) {
+    const modal = document.getElementById('pointing-modal');
+    document.getElementById('modal-sku-tag').innerText = 'SKU: ' + sku;
+    document.getElementById('modal-item-name').innerText = name;
+    
+    const titleEl = document.getElementById('modal-title');
+    const iconEl = document.getElementById('modal-icon');
+    
+    if (type === 'entrada') {
+      titleEl.innerText = 'Apontar Entrada de Matéria-Prima';
+      iconEl.innerText = 'add_circle';
+      iconEl.className = 'material-symbols-outlined text-headline-sm text-tertiary';
+    } else {
+      titleEl.innerText = 'Apontar Baixa / Consumo de Fábrica';
+      iconEl.innerText = 'remove_circle';
+      iconEl.className = 'material-symbols-outlined text-headline-sm text-error';
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  function closePointingModal() {
+    document.getElementById('pointing-modal').classList.add('hidden');
+  }
+
+  function savePointing() {
+    closePointingModal();
+  }
+
+  // Keyboard shortcut ESC to clear filters
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.getElementById('search-input').value = '';
+      closePointingModal();
+      setStatusFilter('todos');
+    }
+  });
+</script></main></div></body></html>
