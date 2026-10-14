@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Plus } from 'lucide-react';
 import {
   type AbaEstoque,
   type TelaOuAba,
@@ -18,6 +18,9 @@ import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards'
 import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
 import { StockTable } from '@/web/components/dashboard/StockTable';
 import { ItemDetailsDrawer } from '@/web/components/dashboard/ItemDetailsDrawer';
+import { ItemCreateDrawer } from '@/web/components/dashboard/drawers/ItemCreateDrawer';
+import { MovementFormDrawer } from '@/web/components/dashboard/drawers/MovementFormDrawer';
+import { QuickItemPickerDrawer } from '@/web/components/dashboard/drawers/QuickItemPickerDrawer';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
@@ -33,6 +36,25 @@ export default function AlmoxarifadoDashboardPage() {
   const [filtroSituacao, setFiltroSituacao] = useState<'todos' | StatusCriticidade>('todos');
   const [itemSelecionado, setItemSelecionado] = useState<DashboardItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Estados dos Drawers e Modais Operacionais da Fase 3
+  const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
+  const [movementDrawerState, setMovementDrawerState] = useState<{
+    isOpen: boolean;
+    item: DashboardItem | null;
+    tipo: 'Entrada' | 'Saída';
+  }>({
+    isOpen: false,
+    item: null,
+    tipo: 'Entrada',
+  });
+  const [pickerDrawerState, setPickerDrawerState] = useState<{
+    isOpen: boolean;
+    tipo: 'Entrada' | 'Saída';
+  }>({
+    isOpen: false,
+    tipo: 'Entrada',
+  });
 
   // Otimização de busca com debounce de 300ms
   const buscaDebounced = useDebounce(termoBusca, 300);
@@ -73,9 +95,52 @@ export default function AlmoxarifadoDashboardPage() {
     setIsDrawerOpen(true);
   };
 
-  const handleRegistrarBaixaRapida = (item: DashboardItem) => {
-    setItemSelecionado(item);
-    setIsDrawerOpen(true);
+  const handleOpenMovement = (item: DashboardItem, tipo: 'Entrada' | 'Saída') => {
+    setMovementDrawerState({
+      isOpen: true,
+      item,
+      tipo,
+    });
+  };
+
+  const handleOpenMovementFromAtencao = async (
+    itemAtencao: { id: string; nome: string; codigo: string; aba: AbaEstoque },
+    tipo: 'Entrada' | 'Saída'
+  ) => {
+    const itemExistente = itens.find((i) => i.id === itemAtencao.id);
+    if (itemExistente) {
+      handleOpenMovement(itemExistente, tipo);
+      return;
+    }
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/core/services/firebase');
+      const docSnap = await getDoc(doc(db, 'items', itemAtencao.id));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const aba: AbaEstoque = itemAtencao.aba;
+        const itemCompleto: DashboardItem = {
+          id: docSnap.id,
+          codigo: String(data.codigo || itemAtencao.codigo),
+          descricao: String(data.descricao || data.nome || itemAtencao.nome),
+          categoria: String(data.categoria || METADADOS_ABAS[aba].titulo),
+          unidade: data.unidade || 'UNIDADE',
+          estoqueAtual: Number(data.estoqueAtual) || 0,
+          estoqueSeguranca: Number(data.estoqueSeguranca) || 0,
+          capacidadeMaxima: Number(data.capacidadeMaxima) || 100,
+          aba,
+          tipo: data.tipo || 'PRODUTIVO_MATERIA_PRIMA',
+          ativo: data.ativo ?? true,
+          especificacoes: (data.especificacoes as Record<string, string>) || {},
+          localizacaoFisica: data.localizacaoFisica || undefined,
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || new Date().toISOString(),
+        };
+        handleOpenMovement(itemCompleto, tipo);
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar item para movimentação:', err);
+    }
   };
 
   const handleCloseDrawer = () => {
@@ -170,16 +235,10 @@ export default function AlmoxarifadoDashboardPage() {
               /* 1. Hub Executivo / Dashboard Inicial */
               <InicioDashboardView
                 onNavegar={handleSelectTela}
-                onRegistrarEntrada={() => {
-                  toast('Selecione o produto no catálogo para registrar a entrada.', { type: 'info' });
-                  handleSelectTela('mp');
-                }}
-                onRegistrarSaida={() => {
-                  toast('Selecione o produto no catálogo para registrar a saída.', { type: 'info' });
-                  handleSelectTela('mp');
-                }}
+                onRegistrarEntrada={() => setPickerDrawerState({ isOpen: true, tipo: 'Entrada' })}
+                onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
                 onNovoPedido={() => handleSelectTela('vendas')}
-                onNovoCadastro={() => handleSelectTela('clientes')}
+                onNovoCadastro={() => setIsItemCreateOpen(true)}
                 onSelectItem={async (itemAtencao) => {
                   setTelaAtiva(itemAtencao.aba);
                   await handleSelectSearchResult({
@@ -191,17 +250,8 @@ export default function AlmoxarifadoDashboardPage() {
                     targetItemId: itemAtencao.id,
                   });
                 }}
-                onAdicionarEntrada={async (itemAtencao) => {
-                  setTelaAtiva(itemAtencao.aba);
-                  toast(`Abrindo detalhes de ${itemAtencao.nome} para entrada rápida`, { type: 'info' });
-                  await handleSelectSearchResult({
-                    id: itemAtencao.id,
-                    type: 'item',
-                    title: itemAtencao.nome,
-                    subtitle: itemAtencao.codigo,
-                    targetAba: itemAtencao.aba,
-                    targetItemId: itemAtencao.id,
-                  });
+                onAdicionarEntrada={(itemAtencao) => {
+                  handleOpenMovementFromAtencao(itemAtencao, 'Entrada');
                 }}
               />
             ) : isAbaEstoque && metadadosAba ? (
@@ -220,6 +270,22 @@ export default function AlmoxarifadoDashboardPage() {
 
                   {/* Ações do Cabeçalho */}
                   <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsItemCreateOpen(true)}
+                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow-xs"
+                      title="Cadastrar novo item nesta categoria"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>
+                        {telaAtiva === 'mp'
+                          ? 'Nova matéria-prima'
+                          : telaAtiva === 'imp'
+                          ? 'Novo material improdutivo'
+                          : 'Nova peça de moto'}
+                      </span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => refetch()}
@@ -243,12 +309,18 @@ export default function AlmoxarifadoDashboardPage() {
                   isLoading={isLoading}
                 />
 
-                {/* Barra de Filtros e Busca Rápida */}
+                {/* Barra de Filtros e Busca Rápida com Contagem por Situação */}
                 <StockFilterToolbar
                   busca={termoBusca}
                   onBuscaChange={setTermoBusca}
                   filtroSituacao={filtroSituacao}
                   onFiltroSituacaoChange={setFiltroSituacao}
+                  contagemPorSituacao={{
+                    todos: totalAba,
+                    ok: Math.max(0, totalAba - totalAbaixoMinimo - totalCriticos),
+                    low: totalAbaixoMinimo,
+                    crit: totalCriticos,
+                  }}
                   totalFiltrados={itens.length}
                 />
 
@@ -256,7 +328,9 @@ export default function AlmoxarifadoDashboardPage() {
                 <StockTable
                   itens={itens}
                   onSelectItem={handleSelectItem}
-                  onRegistrarBaixaRapida={handleRegistrarBaixaRapida}
+                  onRegistrarEntrada={(item) => handleOpenMovement(item, 'Entrada')}
+                  onRegistrarSaida={(item) => handleOpenMovement(item, 'Saída')}
+                  onRegistrarBaixaRapida={(item) => handleOpenMovement(item, 'Saída')}
                   selectedItemId={itemSelecionado?.id}
                   isLoading={isLoading}
                   onClearFilters={handleClearFilters}
@@ -291,6 +365,57 @@ export default function AlmoxarifadoDashboardPage() {
           item={itemSelecionado}
           isOpen={isDrawerOpen}
           onClose={handleCloseDrawer}
+          onRegistrarEntrada={(item) => {
+            handleCloseDrawer();
+            handleOpenMovement(item, 'Entrada');
+          }}
+          onRegistrarSaida={(item) => {
+            handleCloseDrawer();
+            handleOpenMovement(item, 'Saída');
+          }}
+        />
+
+        {/* Gaveta de Criação de Item */}
+        <ItemCreateDrawer
+          isOpen={isItemCreateOpen}
+          onClose={() => setIsItemCreateOpen(false)}
+          aba={abaEstoqueAtiva}
+          onItemCreated={(item) => {
+            refetch();
+            toast(`Material ${item.descricao} cadastrado com sucesso!`, { type: 'success' });
+          }}
+        />
+
+        {/* Gaveta de Movimentação Física (Entrada / Saída) */}
+        <MovementFormDrawer
+          isOpen={movementDrawerState.isOpen}
+          tipo={movementDrawerState.tipo}
+          item={movementDrawerState.item}
+          onClose={() => setMovementDrawerState((prev) => ({ ...prev, isOpen: false }))}
+          onSuccess={() => {
+            refetch();
+            toast(
+              movementDrawerState.tipo === 'Entrada'
+                ? 'Entrada registrada com sucesso!'
+                : 'Retirada registrada com sucesso!',
+              { type: 'success' }
+            );
+          }}
+        />
+
+        {/* Modal Seletor Rápido de Materiais (usado pelas Ações Rápidas do Início) */}
+        <QuickItemPickerDrawer
+          isOpen={pickerDrawerState.isOpen}
+          tipo={pickerDrawerState.tipo}
+          onClose={() => setPickerDrawerState((prev) => ({ ...prev, isOpen: false }))}
+          onSelectItem={(item) => {
+            setPickerDrawerState((prev) => ({ ...prev, isOpen: false }));
+            setMovementDrawerState({
+              isOpen: true,
+              item,
+              tipo: pickerDrawerState.tipo,
+            });
+          }}
         />
 
         {/* Notificações Toast Operacionais Flutuantes */}
