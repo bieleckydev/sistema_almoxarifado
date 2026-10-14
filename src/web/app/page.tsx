@@ -21,6 +21,8 @@ import { ItemDetailsDrawer } from '@/web/components/dashboard/ItemDetailsDrawer'
 import { ItemCreateDrawer } from '@/web/components/dashboard/drawers/ItemCreateDrawer';
 import { MovementFormDrawer } from '@/web/components/dashboard/drawers/MovementFormDrawer';
 import { QuickItemPickerDrawer } from '@/web/components/dashboard/drawers/QuickItemPickerDrawer';
+import { VendasView } from '@/web/components/gestao/vendas/VendasView';
+import { OrderCreateDrawer } from '@/web/components/gestao/vendas/OrderCreateDrawer';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
@@ -37,8 +39,9 @@ export default function AlmoxarifadoDashboardPage() {
   const [itemSelecionado, setItemSelecionado] = useState<DashboardItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Estados dos Drawers e Modais Operacionais da Fase 3
+  // Estados dos Drawers e Modais Operacionais
   const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
+  const [isOrderCreateOpen, setIsOrderCreateOpen] = useState(false);
   const [movementDrawerState, setMovementDrawerState] = useState<{
     isOpen: boolean;
     item: DashboardItem | null;
@@ -336,8 +339,11 @@ export default function AlmoxarifadoDashboardPage() {
                   onClearFilters={handleClearFilters}
                 />
               </div>
+            ) : telaAtiva === 'vendas' ? (
+              /* 3. Módulo de Vendas e Pedidos */
+              <VendasView onNovoPedido={() => setIsOrderCreateOpen(true)} />
             ) : (
-              /* 3. Placeholder / Próximos Módulos (Vendas, Clientes, Saída manual) */
+              /* 4. Placeholder / Próximos Módulos (Clientes, Saída manual) */
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-fade-in">
                 <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mb-4">
                   <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
@@ -373,6 +379,12 @@ export default function AlmoxarifadoDashboardPage() {
             handleCloseDrawer();
             handleOpenMovement(item, 'Saída');
           }}
+        />
+
+        {/* Gaveta de Criação de Pedido de Venda */}
+        <OrderCreateDrawer
+          isOpen={isOrderCreateOpen}
+          onClose={() => setIsOrderCreateOpen(false)}
         />
 
         {/* Gaveta de Criação de Item */}
