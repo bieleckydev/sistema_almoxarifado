@@ -55,7 +55,7 @@ export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
       {activeError && (
         <div
           role="alert"
-          className="flex items-start gap-2.5 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs leading-relaxed animate-in fade-in duration-150"
+          className="flex items-start gap-2.5 p-3 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs leading-relaxed"
         >
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
           <div className="flex-1 font-medium">{activeError}</div>
@@ -63,12 +63,12 @@ export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
       )}
 
       {/* Campo: E-mail Corporativo */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <label
           htmlFor="email"
-          className="block text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wide uppercase"
+          className="block text-xs font-medium text-slate-700 dark:text-slate-300"
         >
-          E-mail Corporativo
+          E-mail corporativo
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -88,17 +88,17 @@ export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
               if (error) clearError();
             }}
             placeholder="colaborador@empresa.com.br"
-            className="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0f5c7a]/30 focus:border-[#0f5c7a] dark:focus:border-[#4cb3d9] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full pl-9 pr-3.5 py-1.5 text-xs bg-white dark:bg-[#232325] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-md border border-slate-300 dark:border-[#3e3e42] focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>
       </div>
 
       {/* Campo: Senha de Acesso */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <div className="flex items-center justify-between">
           <label
             htmlFor="password"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wide uppercase"
+            className="block text-xs font-medium text-slate-700 dark:text-slate-300"
           >
             Senha
           </label>
@@ -124,7 +124,7 @@ export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
               if (error) clearError();
             }}
             placeholder="••••••••"
-            className="w-full pl-9 pr-10 py-2 text-sm bg-slate-50 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0f5c7a]/30 focus:border-[#0f5c7a] dark:focus:border-[#4cb3d9] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full pl-9 pr-10 py-1.5 text-xs bg-white dark:bg-[#232325] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-md border border-slate-300 dark:border-[#3e3e42] focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           />
           <button
             type="button"
@@ -133,7 +133,7 @@ export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
             disabled={isLoading}
             title={showPassword ? 'Ocultar senha' : 'Exibir senha'}
             aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors focus:outline-none"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors focus:outline-none cursor-pointer"
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -144,7 +144,7 @@ export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0f5c7a] hover:bg-[#0c4b64] active:bg-[#093a4e] text-white font-medium text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#0f5c7a]/40 focus:ring-offset-2 dark:focus:ring-offset-[#17212a] disabled:opacity-60 disabled:cursor-not-allowed shadow-xs"
+        className="w-full mt-2 inline-flex items-center justify-center gap-2 h-9 px-4 rounded-md bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 active:bg-blue-900 text-white font-semibold text-xs transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       >
         {isLoading ? (
           <>
@@ -152,7 +152,7 @@ export function LoginForm({ onSuccess, redirectTo = '/' }: LoginFormProps) {
             <span>Autenticando...</span>
           </>
         ) : (
-          <span>Entrar no Sistema</span>
+          <span>Entrar no sistema</span>
         )}
       </button>
     </form>

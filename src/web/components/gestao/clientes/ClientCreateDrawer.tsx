@@ -106,9 +106,9 @@ export function ClientCreateDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop escurecido */}
+      {/* Scrim / Backdrop escurecido */}
       <div
-        className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -118,19 +118,19 @@ export function ClientCreateDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Novo cadastro de parceiro"
-        className="relative w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
+        className="relative w-full max-w-md bg-white dark:bg-[#2b2b2e] border-l border-slate-200 dark:border-[#3e3e42] flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
       >
         {/* Cabeçalho */}
-        <div className="sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm z-20 px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+        <div className="sticky top-0 bg-white dark:bg-[#2b2b2e] z-20 px-6 py-4 border-b border-slate-200 dark:border-[#3e3e42] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-              <Users className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-md bg-blue-50 dark:bg-[#192b45] text-[#1d4ea3] dark:text-[#7ab8f5] flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+              <h2 className="text-base font-bold text-slate-900 dark:text-[#ececee] leading-tight">
                 Novo cadastro
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
                 Clientes, fornecedores, transportadoras e contatos.
               </p>
             </div>
@@ -141,7 +141,7 @@ export function ClientCreateDrawer({
             type="button"
             onClick={onClose}
             aria-label="Fechar painel"
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-[#343438] hover:bg-slate-200 dark:hover:bg-[#3e3e42] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -152,9 +152,9 @@ export function ClientCreateDrawer({
           {erro && (
             <div
               role="alert"
-              className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5 animate-in fade-in"
+              className="p-3 rounded-md bg-rose-50 dark:bg-[#40201d] border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-[#f0796b] text-xs flex items-center gap-2.5 animate-in fade-in"
             >
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-[#f0796b]" />
               <span>{erro}</span>
             </div>
           )}
@@ -167,7 +167,7 @@ export function ClientCreateDrawer({
             <select
               value={tipo}
               onChange={(e) => setTipo(e.target.value as TipoParceiro)}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
             >
               {OPCOES_TIPO.map((opt) => (
                 <option key={opt.valor} value={opt.valor}>
@@ -188,7 +188,7 @@ export function ClientCreateDrawer({
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Grajaú Motos Distribuidora Ltda"
               required
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
             />
           </div>
 
@@ -202,7 +202,7 @@ export function ClientCreateDrawer({
               value={documento}
               onChange={(e) => setDocumento(e.target.value)}
               placeholder="00.000.000/0001-00 ou 000.000.000-00"
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+              className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 font-mono"
             />
           </div>
 
@@ -217,7 +217,7 @@ export function ClientCreateDrawer({
                 value={contato}
                 onChange={(e) => setContato(e.target.value)}
                 placeholder="Ex: João Silva"
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
               />
             </div>
 
@@ -230,7 +230,7 @@ export function ClientCreateDrawer({
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
                 placeholder="(11) 98765-4321"
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 font-mono"
               />
             </div>
           </div>
@@ -245,24 +245,24 @@ export function ClientCreateDrawer({
               value={cidade}
               onChange={(e) => setCidade(e.target.value)}
               placeholder="Ex: São Paulo, Diadema, Curitiba"
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
             />
           </div>
 
           {/* Botões de Ação */}
-          <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+          <div className="mt-auto pt-4 border-t border-slate-200 dark:border-[#3e3e42] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={criarClienteMutation.isPending}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="h-9 px-4 rounded-md text-xs font-medium text-slate-700 dark:text-[#ececee] hover:bg-slate-100 dark:hover:bg-[#343438] border border-slate-300 dark:border-[#3e3e42] transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={criarClienteMutation.isPending}
-              className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="h-9 px-4 rounded-md text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] hover:bg-[#163c7e] dark:hover:bg-[#4898d5] text-white dark:text-[#06182e] transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {criarClienteMutation.isPending ? (
                 <>

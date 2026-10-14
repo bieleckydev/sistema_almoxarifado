@@ -186,9 +186,9 @@ export function OrderCreateDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop escurecido */}
+      {/* Scrim / Backdrop escurecido */}
       <div
-        className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -198,19 +198,19 @@ export function OrderCreateDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Novo pedido de venda"
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
+        className="relative w-full max-w-lg bg-white dark:bg-[#2b2b2e] border-l border-slate-200 dark:border-[#3e3e42] flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
       >
         {/* Cabeçalho */}
-        <div className="sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm z-20 px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+        <div className="sticky top-0 bg-white dark:bg-[#2b2b2e] z-20 px-6 py-4 border-b border-slate-200 dark:border-[#3e3e42] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-              <ShoppingCart className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-md bg-blue-50 dark:bg-[#192b45] text-[#1d4ea3] dark:text-[#7ab8f5] flex items-center justify-center shrink-0">
+              <ShoppingCart className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+              <h2 className="text-base font-bold text-slate-900 dark:text-[#ececee] leading-tight">
                 Novo pedido
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
                 Pedidos a entregar, por cliente e prazo.
               </p>
             </div>
@@ -221,7 +221,7 @@ export function OrderCreateDrawer({
             type="button"
             onClick={onClose}
             aria-label="Fechar painel"
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-[#343438] hover:bg-slate-200 dark:hover:bg-[#3e3e42] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -232,9 +232,9 @@ export function OrderCreateDrawer({
           {erro && (
             <div
               role="alert"
-              className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5 animate-in fade-in"
+              className="p-3 rounded-md bg-rose-50 dark:bg-[#40201d] border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-[#f0796b] text-xs flex items-center gap-2.5 animate-in fade-in"
             >
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-[#f0796b]" />
               <span>{erro}</span>
             </div>
           )}
@@ -249,7 +249,7 @@ export function OrderCreateDrawer({
               onChange={(e) => setClienteId(e.target.value)}
               disabled={isLoadingClientes}
               required
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
             >
               {isLoadingClientes ? (
                 <option value="">Carregando parceiros...</option>
@@ -275,17 +275,17 @@ export function OrderCreateDrawer({
               value={prazoEntrega}
               onChange={(e) => setPrazoEntrega(e.target.value)}
               required
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
             />
           </div>
 
           {/* Seção Itens do Pedido */}
-          <div className="flex flex-col gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col gap-3 pt-2 border-t border-slate-200 dark:border-[#3e3e42]">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Itens do pedido
               </h3>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 {itens.length} {itens.length === 1 ? 'linha' : 'linhas'}
               </span>
             </div>
@@ -300,17 +300,17 @@ export function OrderCreateDrawer({
                 return (
                   <div
                     key={index}
-                    className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 flex flex-col gap-2.5"
+                    className="p-3 rounded-md border border-slate-200 dark:border-[#3e3e42] bg-slate-50 dark:bg-[#232325] flex flex-col gap-2.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-semibold text-slate-500">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                         Item #{index + 1}
                       </span>
                       {itens.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
-                          className="p-1 rounded text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+                          className="p-1 rounded text-slate-400 hover:text-rose-500 dark:hover:text-[#f0796b] transition-colors"
                           title="Remover item da lista"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -327,7 +327,7 @@ export function OrderCreateDrawer({
                           value={linha.itemId}
                           onChange={(e) => handleItemChange(index, 'itemId', e.target.value)}
                           disabled={isLoadingCatalogo}
-                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2.5 py-1.5 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
                         >
                           {isLoadingCatalogo ? (
                             <option value="">Carregando catálogo...</option>
@@ -363,7 +363,7 @@ export function OrderCreateDrawer({
                           step="1"
                           value={linha.quantidade}
                           onChange={(e) => handleItemChange(index, 'quantidade', e.target.value)}
-                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                          className="w-full px-2.5 py-1.5 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 font-mono"
                         />
                       </div>
                     </div>
@@ -375,7 +375,7 @@ export function OrderCreateDrawer({
             <button
               type="button"
               onClick={handleAddItem}
-              className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer border border-blue-200 dark:border-blue-900/50 self-start mt-1"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-slate-700 dark:text-[#ececee] bg-white dark:bg-[#232325] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer border border-slate-300 dark:border-[#3e3e42] self-start mt-1"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ Adicionar item</span>
@@ -383,7 +383,7 @@ export function OrderCreateDrawer({
           </div>
 
           {/* Observações */}
-          <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-200 dark:border-[#3e3e42]">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Observações do pedido (opcional)
             </label>
@@ -392,24 +392,24 @@ export function OrderCreateDrawer({
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Ex: Pedido para reposição de balcão ou instrução de entrega"
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 resize-none"
             />
           </div>
 
           {/* Botões de Ação */}
-          <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+          <div className="mt-auto pt-4 border-t border-slate-200 dark:border-[#3e3e42] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={criarPedidoMutation.isPending}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="h-9 px-4 rounded-md text-xs font-medium text-slate-700 dark:text-[#ececee] hover:bg-slate-100 dark:hover:bg-[#343438] border border-slate-300 dark:border-[#3e3e42] transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={criarPedidoMutation.isPending}
-              className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="h-9 px-4 rounded-md text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] hover:bg-[#163c7e] dark:hover:bg-[#4898d5] text-white dark:text-[#06182e] transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {criarPedidoMutation.isPending ? (
                 <>

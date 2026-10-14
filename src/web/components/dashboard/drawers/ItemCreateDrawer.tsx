@@ -168,7 +168,7 @@ export function ItemCreateDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Scrim / Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -178,13 +178,13 @@ export function ItemCreateDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={`Cadastrar item em ${METADADOS_ABAS[aba].titulo}`}
-        className="relative w-full max-w-md bg-white dark:bg-[#17212a] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-200"
+        className="relative w-full max-w-md bg-white dark:bg-[#2b2b2e] border-l border-slate-200 dark:border-[#3e3e42] flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-200"
       >
         {/* Cabeçalho */}
-        <div className="sticky top-0 bg-white/95 dark:bg-[#17212a]/95 backdrop-blur-sm z-20 px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="sticky top-0 bg-white dark:bg-[#2b2b2e] z-20 px-6 py-4 border-b border-slate-200 dark:border-[#3e3e42] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <PackagePlus className="w-5 h-5 text-[#1d4ea3] dark:text-[#5aa9ea]" />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-base font-bold text-slate-900 dark:text-[#ececee]">
               Novo item · {METADADOS_ABAS[aba].titulo}
             </h2>
           </div>
@@ -194,7 +194,7 @@ export function ItemCreateDrawer({
             type="button"
             onClick={onClose}
             aria-label="Fechar formulário"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-[#343438] hover:bg-slate-200 dark:hover:bg-[#3e3e42] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -203,7 +203,7 @@ export function ItemCreateDrawer({
         {/* Formulário */}
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-xs">
           {erro && (
-            <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 flex items-center gap-2">
+            <div className="p-3 rounded-md bg-rose-50 dark:bg-[#40201d] border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-[#f0796b] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{erro}</span>
             </div>
@@ -218,7 +218,7 @@ export function ItemCreateDrawer({
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Ex: Chapa de aço 3 mm, Luva de raspa, Pastilha de freio"
-              className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500"
+              className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
             />
           </label>
 
@@ -232,7 +232,7 @@ export function ItemCreateDrawer({
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                 placeholder="Ex: 10-0300"
-                className="p-2.5 font-mono uppercase rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500"
+                className="p-2.5 font-mono uppercase rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
               />
               <span className="text-[10px] text-slate-400">
                 Prefixos: {PREFIXOS_SUGERIDOS[aba].join(', ')}
@@ -246,7 +246,7 @@ export function ItemCreateDrawer({
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
                 placeholder="Ex: Chapas, EPI, Freios"
-                className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500"
+                className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
               />
             </label>
           </div>
@@ -257,7 +257,7 @@ export function ItemCreateDrawer({
             <select
               value={unidade}
               onChange={(e) => setUnidade(e.target.value)}
-              className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500"
+              className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
             >
               {UNIDADES_OPCOES.map((u) => (
                 <option key={u.valor} value={u.valor}>
@@ -276,7 +276,7 @@ export function ItemCreateDrawer({
                 min={0}
                 value={estoqueInicial}
                 onChange={(e) => setEstoqueInicial(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500 tabular-nums"
+                className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 tabular-nums"
               />
             </label>
 
@@ -288,7 +288,7 @@ export function ItemCreateDrawer({
                 required
                 value={estoqueSeguranca}
                 onChange={(e) => setEstoqueSeguranca(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500 tabular-nums"
+                className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 tabular-nums"
               />
             </label>
           </div>
@@ -302,13 +302,13 @@ export function ItemCreateDrawer({
               required
               value={capacidadeMaxima}
               onChange={(e) => setCapacidadeMaxima(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500 tabular-nums"
+              className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 tabular-nums"
             />
           </label>
 
           {/* Campos Técnicos Específicos da Categoria */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2 uppercase tracking-wider">
+          <div className="pt-2 border-t border-slate-200 dark:border-[#3e3e42]">
+            <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
               Informações de {METADADOS_ABAS[aba].titulo.toLowerCase()}
             </h3>
 
@@ -321,7 +321,7 @@ export function ItemCreateDrawer({
                     value={especificacoes[campo] || ''}
                     onChange={(e) => handleSpecChange(campo, e.target.value)}
                     placeholder={`Informar ${campo.toLowerCase()}`}
-                    className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1.5 focus:ring-blue-500"
+                    className="p-2 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
                   />
                 </label>
               ))}
@@ -332,7 +332,7 @@ export function ItemCreateDrawer({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-4 w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] hover:bg-blue-800 dark:hover:bg-blue-400 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm"
+            className="mt-4 w-full h-9 px-4 rounded-md text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] hover:bg-[#163c7e] dark:hover:bg-[#4898d5] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
