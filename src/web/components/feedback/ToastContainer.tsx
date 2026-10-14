@@ -19,7 +19,7 @@ export function ToastContainer() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className="pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium shadow-xl bg-[#17212b] dark:bg-[#e6edf3] text-white dark:text-[#0e151b] border border-slate-700/50 dark:border-slate-300/40 animate-in fade-in slide-in-from-bottom-2 duration-200 transition-all"
+          className="pointer-events-auto flex items-center gap-2.5 px-3.5 py-2 rounded-md text-xs font-medium shadow-lg bg-[#232325] text-white border border-[#3e3e42] animate-in fade-in slide-in-from-bottom-2 duration-150 transition-all"
         >
           {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
           {t.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />}

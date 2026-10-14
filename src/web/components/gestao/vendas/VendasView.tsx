@@ -132,36 +132,36 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
 
       {/* 3 Cards de KPIs do Topo */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col justify-between">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <div className="p-3.5 rounded-lg bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] border-t-3 border-t-[#4fa8e0] flex flex-col justify-between">
+          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
             Pedidos a entregar
           </span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white tabular-nums">
+            <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-[#ececee] tabular-nums">
               {isLoading ? '—' : pedidosAEntregar}
             </span>
             <span className="text-xs text-slate-400">em aberto</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs border-l-4 border-l-rose-500 flex flex-col justify-between">
-          <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+        <div className="p-3.5 rounded-lg bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] border-t-3 border-t-[#d9372f] flex flex-col justify-between">
+          <span className="text-xs font-semibold text-rose-600 dark:text-[#f0796b]">
             Atrasados
           </span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums">
+            <span className="text-2xl font-bold tracking-tight text-rose-600 dark:text-[#f0796b] tabular-nums">
               {isLoading ? '—' : pedidosAtrasados}
             </span>
             <span className="text-xs text-slate-400">fora do prazo</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs border-l-4 border-l-amber-500 flex flex-col justify-between">
-          <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+        <div className="p-3.5 rounded-lg bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] border-t-3 border-t-[#f2b705] flex flex-col justify-between">
+          <span className="text-xs font-semibold text-amber-700 dark:text-[#f3c462]">
             Sem estoque suficiente
           </span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-bold tracking-tight text-amber-700 dark:text-amber-400 tabular-nums">
+            <span className="text-2xl font-bold tracking-tight text-amber-700 dark:text-[#f3c462] tabular-nums">
               {isLoading ? '—' : pedidosSemEstoque}
             </span>
             <span className="text-xs text-slate-400">com déficit</span>
@@ -173,16 +173,16 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
       {alertaEstoque && (
         <div
           role="alert"
-          className="mb-4 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between gap-3 animate-in fade-in"
+          className="mb-4 p-3 rounded-md bg-rose-50 dark:bg-[#40201d] border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-[#f0796b] text-xs flex items-center justify-between gap-3 animate-in fade-in"
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-[#f0796b]" />
             <span>{alertaEstoque}</span>
           </div>
           <button
             type="button"
             onClick={() => setAlertaEstoque(null)}
-            className="p-1 rounded text-rose-600 hover:text-rose-800 dark:text-rose-400 cursor-pointer"
+            className="p-1 rounded text-rose-600 hover:text-rose-800 dark:text-[#f0796b] cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -198,7 +198,7 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Filtrar por número do pedido, cliente ou item..."
-            className="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-9 pr-8 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
           />
           {busca && (
             <button
@@ -217,11 +217,11 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
       </div>
 
       {/* Tabela de Pedidos de Alta Densidade */}
-      <div className="w-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
+      <div className="w-full bg-white dark:bg-[#2b2b2e] rounded-lg border border-slate-200 dark:border-[#3e3e42] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 font-semibold select-none">
+              <tr className="border-b border-slate-200 dark:border-[#3e3e42] bg-slate-50 dark:bg-[#232325] text-slate-600 dark:text-[#a3a3a9] font-semibold select-none">
                 <th className="py-2.5 px-3 whitespace-nowrap">Pedido</th>
                 <th className="py-2.5 px-3">Cliente</th>
                 <th className="py-2.5 px-3">Itens</th>
@@ -230,7 +230,7 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
                 <th className="py-2.5 px-3 text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100 dark:divide-[#3e3e42] text-xs">
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
@@ -256,15 +256,15 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
                   return (
                     <tr
                       key={pedido.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                      className="hover:bg-slate-50/80 dark:hover:bg-[#232325] transition-colors"
                     >
                       {/* Pedido #ID */}
-                      <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white whitespace-nowrap font-mono">
+                      <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-[#ececee] whitespace-nowrap font-mono">
                         #{pedido.numeroSequencial || pedido.id}
                       </td>
 
                       {/* Cliente */}
-                      <td className="py-2.5 px-3 font-medium text-slate-800 dark:text-slate-200">
+                      <td className="py-2.5 px-3 font-medium text-slate-800 dark:text-[#ececee]">
                         {pedido.clienteNome}
                       </td>
 
@@ -282,7 +282,7 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
                                 key={idx}
                                 className={`text-[11px] leading-tight flex items-baseline gap-1.5 ${
                                   semSaldoItem && !isEntregue
-                                    ? 'text-amber-800 dark:text-amber-300 font-medium'
+                                    ? 'text-amber-800 dark:text-[#f3c462] font-medium'
                                     : ''
                                 }`}
                               >
@@ -292,7 +292,7 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
                                 <span className="text-slate-400">·</span>
                                 <span>{it.nome}</span>
                                 {semSaldoItem && !isEntregue && (
-                                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
+                                  <span className="text-[10px] text-amber-600 dark:text-[#f3c462] font-mono">
                                     (saldo: {it.estoqueAtual})
                                   </span>
                                 )}
@@ -323,23 +323,23 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
                             type="button"
                             onClick={() => handleAvancarStatus(pedido)}
                             disabled={isMutating}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 ${
+                            className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 ${
                               isPendente
-                                ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/60'
-                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs'
+                                ? 'bg-white dark:bg-[#232325] text-slate-700 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] border border-slate-300 dark:border-[#3e3e42]'
+                                : 'bg-[#1d4ea3] dark:bg-[#5aa9ea] hover:bg-[#163c7e] dark:hover:bg-[#4898d5] text-white dark:text-[#06182e]'
                             }`}
                           >
                             {isMutating ? (
                               <RefreshCw className="w-3 h-3 animate-spin" />
                             ) : isPendente ? (
-                              <PackageCheck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                              <PackageCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                             ) : (
-                              <Truck className="w-3.5 h-3.5 text-white" />
+                              <Truck className="w-3.5 h-3.5 text-white dark:text-[#06182e]" />
                             )}
                             <span>{isPendente ? 'Marcar separado' : 'Entregar'}</span>
                           </button>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-[#72d596] font-medium">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Entregue</span>
                           </span>

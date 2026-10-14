@@ -65,14 +65,14 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
   const getTipoBadgeStyle = (tipo: TipoParceiro) => {
     switch (tipo) {
       case 'CLIENTE':
-        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60';
+        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60';
       case 'FORNECEDOR':
-        return 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60';
+        return 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60';
       case 'TRANSPORTADORA':
-        return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800/60';
+        return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-[#232325] dark:text-slate-300 dark:border-[#3e3e42]';
       case 'OUTRO':
       default:
-        return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+        return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-[#232325] dark:text-slate-400 dark:border-[#3e3e42]';
     }
   };
 
@@ -83,21 +83,21 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
       case 'FORNECEDOR':
         return <Building2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />;
       case 'TRANSPORTADORA':
-        return <Truck className="w-3 h-3 text-purple-600 dark:text-purple-400" />;
+        return <Truck className="w-3 h-3 text-slate-500 dark:text-slate-400" />;
       default:
-        return <HelpCircle className="w-3 h-3 text-slate-500" />;
+        return <HelpCircle className="w-3 h-3 text-slate-400" />;
     }
   };
 
   return (
     <div className="flex-1 flex flex-col min-w-0 animate-fade-in">
       {/* Cabeçalho */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-[#3e3e42]">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-slate-900 dark:text-white">
             Clientes
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
             Cadastro de clientes, fornecedores, transportadoras e outros contatos.
           </p>
         </div>
@@ -106,7 +106,7 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
           <button
             type="button"
             onClick={() => onNovoCadastro(filtroTipo === 'TODOS' ? undefined : filtroTipo)}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Novo cadastro</span>
@@ -116,7 +116,7 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
             type="button"
             onClick={() => refetch()}
             disabled={isLoading || isFetching}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-[#2b2b2e] border border-slate-300 dark:border-[#3e3e42] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer disabled:opacity-50"
             title="Atualizar lista de parceiros"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
@@ -127,9 +127,9 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
 
       {/* Chips de Filtragem por Tipo e Barra de Busca */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        {/* Chips de Tipo */}
+        {/* Segmented Filter */}
         <div
-          className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-700/60"
+          className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-[#232325] rounded-md border border-slate-200 dark:border-[#3e3e42]"
           role="group"
           aria-label="Filtro de categoria de parceiro"
         >
@@ -146,21 +146,15 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
                 type="button"
                 onClick={() => setFiltroTipo(chave)}
                 aria-pressed={isActive}
-                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 text-xs font-medium rounded-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                   isActive
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold'
+                    ? 'bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-white border border-slate-200 dark:border-[#3e3e42] font-semibold'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span>{rotulo}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isActive
-                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      : 'bg-slate-200/60 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400'
-                  }`}
-                >
-                  {count}
+                <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                  ({count})
                 </span>
               </button>
             );
@@ -175,7 +169,7 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por nome, documento, contato ou cidade..."
-            className="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-9 pr-8 py-1.5 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           {busca && (
             <button
@@ -190,11 +184,11 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
       </div>
 
       {/* Tabela de Clientes e Parceiros */}
-      <div className="w-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
+      <div className="w-full bg-white dark:bg-[#2b2b2e] rounded-lg border border-slate-200 dark:border-[#3e3e42] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 font-semibold select-none">
+              <tr className="border-b border-slate-200 dark:border-[#3e3e42] bg-slate-50 dark:bg-[#232325] text-slate-600 dark:text-slate-300 font-semibold select-none">
                 <th className="py-2.5 px-3">Nome / Razão Social</th>
                 <th className="py-2.5 px-3 whitespace-nowrap">Tipo</th>
                 <th className="py-2.5 px-3 whitespace-nowrap font-mono">CNPJ / CPF</th>
@@ -203,7 +197,7 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
                 <th className="py-2.5 px-3">Cidade</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100 dark:divide-[#3e3e42]">
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
@@ -221,17 +215,17 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
                 clientes.map((c) => (
                   <tr
                     key={c.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                    className="hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors"
                   >
                     {/* Nome ou Razão Social */}
-                    <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">
+                    <td className="py-2 px-3 font-semibold text-slate-900 dark:text-white">
                       {c.nome}
                     </td>
 
                     {/* Tipo com Badge */}
-                    <td className="py-2.5 px-3 whitespace-nowrap">
+                    <td className="py-2 px-3 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border ${getTipoBadgeStyle(
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border ${getTipoBadgeStyle(
                           c.tipo
                         )}`}
                       >
@@ -241,22 +235,22 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
                     </td>
 
                     {/* Documento (CNPJ/CPF) */}
-                    <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                    <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
                       {c.documento || '—'}
                     </td>
 
                     {/* Contato */}
-                    <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">
+                    <td className="py-2 px-3 text-slate-700 dark:text-slate-300">
                       {c.contato || '—'}
                     </td>
 
                     {/* Telefone */}
-                    <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                    <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
                       {c.telefone || '—'}
                     </td>
 
                     {/* Cidade */}
-                    <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">
+                    <td className="py-2 px-3 text-slate-700 dark:text-slate-300">
                       {c.cidade || '—'}
                     </td>
                   </tr>

@@ -187,12 +187,12 @@ export function SaidaManualView({
   return (
     <div className="flex-1 flex flex-col min-w-0 animate-fade-in">
       {/* 1. Cabeçalho Principal */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-[#3e3e42]">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold tracking-normal text-slate-900 dark:text-white">
             Saída manual
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
             Registre o que sai (ou entra) no estoque e acompanhe quanto entrou e quanto saiu.
           </p>
         </div>
@@ -201,7 +201,7 @@ export function SaidaManualView({
           <button
             type="button"
             onClick={handleExportarCSV}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer"
             title="Exportar dados do relatório para arquivo CSV"
           >
             <Download className="w-3.5 h-3.5" />
@@ -212,7 +212,7 @@ export function SaidaManualView({
             type="button"
             onClick={() => refetch()}
             disabled={isLoading || isFetching}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-[#2b2b2e] border border-slate-300 dark:border-[#3e3e42] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors cursor-pointer disabled:opacity-50"
             title="Recarregar movimentações"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
@@ -224,9 +224,9 @@ export function SaidaManualView({
       {/* 2. Painel Embutido: Registrar movimentação */}
       <section
         aria-label="Registrar movimentação avulsa"
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 mb-6 shadow-2xs"
+        className="bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-lg p-4 mb-6"
       >
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
           Registrar movimentação
         </h2>
 
@@ -241,7 +241,7 @@ export function SaidaManualView({
                 value={dataMov}
                 max={hoje()}
                 onChange={(e) => setDataMov(e.target.value)}
-                className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </label>
 
@@ -252,7 +252,7 @@ export function SaidaManualView({
                 name="tipo"
                 value={tipoMov}
                 onChange={(e) => setTipoMov(e.target.value as 'Saída' | 'Entrada')}
-                className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="Saída">Saída</option>
                 <option value="Entrada">Entrada</option>
@@ -266,7 +266,7 @@ export function SaidaManualView({
                 name="p"
                 value={itemId}
                 onChange={(e) => setItemId(e.target.value)}
-                className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none truncate"
+                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none truncate"
               >
                 {itensPorAba.mp.length > 0 && (
                   <optgroup label="Matéria-prima">
@@ -310,7 +310,7 @@ export function SaidaManualView({
                 min="1"
                 value={quantidade}
                 onChange={(e) => setQuantidade(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </label>
 
@@ -324,7 +324,7 @@ export function SaidaManualView({
                 onChange={(e) => setQuem(e.target.value)}
                 placeholder="Ex: Produção, Oficina, Fornecedor"
                 required
-                className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </label>
 
@@ -337,7 +337,7 @@ export function SaidaManualView({
                 value={observacao}
                 onChange={(e) => setObservacao(e.target.value)}
                 placeholder="Opcional"
-                className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="h-8 px-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </label>
           </div>
@@ -359,7 +359,7 @@ export function SaidaManualView({
             <button
               type="submit"
               disabled={isRegistrando}
-              className="inline-flex items-center justify-center gap-1.5 h-8 px-4 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-4 rounded-md text-xs font-semibold text-white bg-[#1d4ea3] dark:bg-[#3273dc] hover:bg-blue-800 dark:hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50"
             >
               {isRegistrando ? (
                 <>
@@ -376,7 +376,7 @@ export function SaidaManualView({
 
       {/* 3. Seção: Relatório de entradas e saídas */}
       <section className="mb-6">
-        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2.5">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-2.5">
           Relatório de entradas e saídas
         </h2>
 
@@ -392,7 +392,7 @@ export function SaidaManualView({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               aria-label="Buscar movimentações"
-              className="w-full h-8 pl-8 pr-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full h-8 pl-8 pr-7 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             {busca && (
               <button
@@ -406,8 +406,12 @@ export function SaidaManualView({
             )}
           </div>
 
-          {/* Chips de Período */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 shrink-0">
+          {/* Segmented Chips de Período */}
+          <div
+            className="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-[#232325] rounded-md border border-slate-200 dark:border-[#3e3e42] overflow-x-auto shrink-0"
+            role="group"
+            aria-label="Filtro de período"
+          >
             {PERIODOS.map((p) => {
               const isAtivo = periodo === p;
               return (
@@ -416,10 +420,10 @@ export function SaidaManualView({
                   type="button"
                   onClick={() => setPeriodo(p)}
                   aria-pressed={isAtivo}
-                  className={`inline-flex items-center h-8 px-3 rounded-md text-xs transition-colors cursor-pointer whitespace-nowrap ${
+                  className={`inline-flex items-center h-7 px-2.5 rounded-sm text-xs transition-colors cursor-pointer whitespace-nowrap ${
                     isAtivo
-                      ? 'bg-blue-600 text-white font-semibold shadow-2xs'
-                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'
+                      ? 'bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-white border border-slate-200 dark:border-[#3e3e42] font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'
                   }`}
                 >
                   {p}
@@ -430,26 +434,26 @@ export function SaidaManualView({
         </div>
 
         {/* Tabela Sintética Consolidada */}
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+        <div className="border border-slate-200 dark:border-[#3e3e42] rounded-lg overflow-hidden bg-white dark:bg-[#2b2b2e]">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th scope="col" className="py-2.5 px-4 font-semibold">
+                <tr className="bg-slate-50 dark:bg-[#232325] border-b border-slate-200 dark:border-[#3e3e42] text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  <th scope="col" className="py-2 px-3 font-semibold">
                     Item
                   </th>
-                  <th scope="col" className="py-2.5 px-4 font-semibold">
+                  <th scope="col" className="py-2 px-3 font-semibold">
                     Entrou
                   </th>
-                  <th scope="col" className="py-2.5 px-4 font-semibold">
+                  <th scope="col" className="py-2 px-3 font-semibold">
                     Saiu
                   </th>
-                  <th scope="col" className="py-2.5 px-4 font-semibold">
+                  <th scope="col" className="py-2 px-3 font-semibold">
                     Estoque atual
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#3e3e42]">
                 {resumoItens.length > 0 ? (
                   resumoItens.map((r) => {
                     const unidadeFmt =
@@ -459,9 +463,9 @@ export function SaidaManualView({
                     return (
                       <tr
                         key={r.itemId}
-                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                        className="hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors"
                       >
-                        <td className="py-2.5 px-4">
+                        <td className="py-2 px-3">
                           <button
                             type="button"
                             onClick={() => onSelectItem?.(r.item)}
@@ -477,33 +481,33 @@ export function SaidaManualView({
                         </td>
 
                         {/* Entrou */}
-                        <td className="py-2.5 px-4">
+                        <td className="py-2 px-3">
                           {r.totalEntrou > 0 ? (
                             <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
                               +{r.totalEntrou.toLocaleString('pt-BR')} {unidadeFmt}
                             </span>
                           ) : (
-                            <span className="text-slate-400 dark:text-slate-600 font-mono">
+                            <span className="text-slate-400 dark:text-slate-500 font-mono">
                               —
                             </span>
                           )}
                         </td>
 
                         {/* Saiu */}
-                        <td className="py-2.5 px-4">
+                        <td className="py-2 px-3">
                           {r.totalSaiu > 0 ? (
                             <span className="font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
                               −{r.totalSaiu.toLocaleString('pt-BR')} {unidadeFmt}
                             </span>
                           ) : (
-                            <span className="text-slate-400 dark:text-slate-600 font-mono">
+                            <span className="text-slate-400 dark:text-slate-500 font-mono">
                               —
                             </span>
                           )}
                         </td>
 
                         {/* Estoque Atual */}
-                        <td className="py-2.5 px-4 font-medium text-slate-900 dark:text-white tabular-nums">
+                        <td className="py-2 px-3 font-medium text-slate-900 dark:text-white tabular-nums">
                           {r.estoqueAtual.toLocaleString('pt-BR')} {unidadeFmt}
                         </td>
                       </tr>
@@ -527,11 +531,11 @@ export function SaidaManualView({
 
       {/* 4. Seção: Movimentações do período */}
       <section>
-        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2.5">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-2.5">
           Movimentações do período
         </h2>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl divide-y divide-slate-100 dark:divide-slate-800/80 shadow-2xs overflow-hidden">
+        <div className="bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-lg divide-y divide-slate-100 dark:divide-[#3e3e42] overflow-hidden">
           {movimentacoes.length > 0 ? (
             movimentacoes.map((m) => {
               const unidadeFmt = m.item
@@ -544,7 +548,7 @@ export function SaidaManualView({
               return (
                 <div
                   key={m.id}
-                  className="p-3.5 flex items-center justify-between gap-4 text-xs hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                  className="p-3 flex items-center justify-between gap-4 text-xs hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors"
                 >
                   {/* Detalhes da Movimentação */}
                   <div className="min-w-0 flex-1">
@@ -552,7 +556,7 @@ export function SaidaManualView({
                       <button
                         type="button"
                         onClick={() => onSelectItem?.(m.item!)}
-                        className="font-semibold text-slate-900 dark:text-white text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors block truncate"
+                        className="font-semibold text-slate-900 dark:text-white text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors block truncate cursor-pointer"
                       >
                         {m.item.descricao}
                       </button>
@@ -581,7 +585,7 @@ export function SaidaManualView({
                   {/* Quantidade com Sinal e Cor */}
                   <div className="shrink-0 text-right">
                     <b
-                      className={`text-sm tabular-nums font-semibold flex items-center justify-end gap-0.5 ${
+                      className={`text-xs tabular-nums font-semibold flex items-center justify-end gap-0.5 ${
                         isEntrada
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-rose-600 dark:text-rose-400'
