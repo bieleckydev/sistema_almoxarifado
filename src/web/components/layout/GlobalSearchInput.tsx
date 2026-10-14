@@ -70,7 +70,7 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
     <div ref={containerRef} className={`relative flex-1 max-w-md w-full ${className}`}>
       {/* Campo de Busca Principal com atalho visível */}
       <div className="relative flex items-center">
-        <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-3 w-4 h-4 text-outline pointer-events-none" />
 
         <input
           ref={inputRef}
@@ -83,15 +83,15 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
           onFocus={() => {
             if (termo.trim()) setIsOpen(true);
           }}
-          placeholder="Buscar item, cliente, pedido ou NF-e   ( / )"
+          placeholder="Buscar lote, item, SKU ou pedido..."
           autoComplete="off"
           aria-label="Busca geral no almoxarifado"
-          className="w-full pl-9 pr-16 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#2b2b2e] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-1.5 focus:ring-[#1d4ea3] dark:focus:ring-[#5aa9ea] transition-colors"
+          className="w-full pl-9 pr-14 py-1.5 text-xs sm:text-sm rounded-lg bg-surface-container text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-1.5 focus:ring-primary transition-all border-0 shadow-inner"
         />
 
-        <div className="absolute right-2.5 flex items-center gap-1.5">
+        <div className="absolute right-2 flex items-center gap-1.5">
           {isLoading ? (
-            <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
           ) : termo ? (
             <button
               type="button"
@@ -100,14 +100,14 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
                 setIsOpen(false);
                 inputRef.current?.focus();
               }}
-              className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              className="p-1 rounded text-outline hover:text-on-surface cursor-pointer"
               title="Limpar busca"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-slate-200/60 dark:bg-[#1a1a1c] rounded border border-slate-300/60 dark:border-[#3e3e42] select-none">
-              /
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold text-on-surface-variant bg-surface-container-highest rounded border border-outline-variant/30 select-none">
+              ⌘K
             </kbd>
           )}
         </div>
@@ -115,9 +115,9 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
 
       {/* Dropdown com Resultados Categorizados */}
       {isOpen && termo.trim().length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#2b2b2e] border border-slate-200 dark:border-[#3e3e42] rounded-md shadow-lg overflow-hidden z-50 max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-[#3e3e42]">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-lg overflow-hidden z-50 max-h-[380px] overflow-y-auto divide-y divide-outline-variant/20">
           {resultados.length === 0 ? (
-            <div className="p-5 text-center text-xs text-slate-500 dark:text-slate-400">
+            <div className="p-5 text-center text-xs text-on-surface-variant">
               Nada encontrado para &ldquo;{termo}&rdquo;.
             </div>
           ) : (
@@ -128,24 +128,24 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
                   key={res.id}
                   type="button"
                   onClick={() => handleSelect(res)}
-                  className="w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                  className="w-full px-4 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-surface-container transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-1.5 rounded-md bg-slate-100 dark:bg-[#1a1a1c] text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors shrink-0">
+                    <div className="p-2 rounded-lg bg-surface-container text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors shrink-0">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <b className="block text-xs font-semibold text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <b className="block text-xs font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
                         {res.title}
                       </b>
-                      <small className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      <small className="block text-[11px] text-on-surface-variant truncate">
                         {res.subtitle}
                       </small>
                     </div>
                   </div>
 
                   {res.badge && (
-                    <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 shrink-0">
+                    <span className="font-label-sm text-[10px] uppercase font-bold text-on-surface-variant px-2 py-0.5 rounded bg-surface-container-highest shrink-0">
                       {res.badge}
                     </span>
                   )}
