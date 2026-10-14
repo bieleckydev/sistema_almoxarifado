@@ -100,9 +100,184 @@ export const STATUS_LABELS: Record<StatusCriticidade, string> = {
 };
 
 /**
- * Tipos de tela ou aba navegáveis no sistema V2.
+ * Tipos de tela ou aba navegáveis no sistema V2/V5.
  */
 export type TelaOuAba = 'inicio' | AbaEstoque | 'vendas' | 'clientes' | 'saida';
+
+/**
+ * Módulos corporativos introduzidos na V5 (Ribbon / Sidebar de Módulos).
+ */
+export type ModuloCorporativo = 'inicio' | 'estoque' | 'compras' | 'vendas';
+
+export type RibbonIconName =
+  | 'inicio'
+  | 'mp'
+  | 'imp'
+  | 'motos'
+  | 'vendas'
+  | 'clientes'
+  | 'saida'
+  | 'entrada'
+  | 'retirada'
+  | 'novo'
+  | 'rel'
+  | 'cal';
+
+export interface RibbonButtonDef {
+  action: string;
+  label: string;
+  icon: RibbonIconName;
+}
+
+export interface RibbonGroupDef {
+  title: string;
+  buttons: RibbonButtonDef[];
+}
+
+export interface RibbonTabDef {
+  name: string;
+  groups: RibbonGroupDef[];
+}
+
+export interface ModuloConfig {
+  id: ModuloCorporativo;
+  nome: string;
+  icon: RibbonIconName;
+  viewInicial: TelaOuAba;
+  abas: RibbonTabDef[];
+}
+
+/**
+ * Configuração hierárquica dos módulos corporativos e suas faixas de opções (Ribbon).
+ * Mapeamento fiel da estrutura MOD de almoxarifado5.html.
+ */
+export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConfig> = {
+  estoque: {
+    id: 'estoque',
+    nome: 'Estoque',
+    icon: 'mp',
+    viewInicial: 'mp',
+    abas: [
+      {
+        name: 'Materiais',
+        groups: [
+          {
+            title: 'Consulta',
+            buttons: [
+              { action: 'v:mp', label: 'Matéria-prima', icon: 'mp' },
+              { action: 'v:imp', label: 'Materiais improdutivos', icon: 'imp' },
+              { action: 'v:motos', label: 'Peças de motos', icon: 'motos' },
+            ],
+          },
+          {
+            title: 'Cadastro',
+            buttons: [
+              { action: 'novoitem:mp', label: 'Nova matéria-prima', icon: 'novo' },
+              { action: 'novoitem:imp', label: 'Novo improdutivo', icon: 'novo' },
+              { action: 'novoitem:motos', label: 'Nova peça de moto', icon: 'novo' },
+            ],
+          },
+        ],
+      },
+      {
+        name: 'Movimentação',
+        groups: [
+          {
+            title: 'Registrar',
+            buttons: [
+              { action: 'pick:Entrada', label: 'Adicionar entrada', icon: 'entrada' },
+              { action: 'pick:Saída', label: 'Retirar para produção', icon: 'retirada' },
+              { action: 'v:saida', label: 'Saída manual', icon: 'saida' },
+            ],
+          },
+          {
+            title: 'Relatórios',
+            buttons: [
+              { action: 'v:saida', label: 'Entradas e saídas', icon: 'rel' },
+              { action: 'csv', label: 'Baixar CSV', icon: 'rel' },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  compras: {
+    id: 'compras',
+    nome: 'Compras',
+    icon: 'entrada',
+    viewInicial: 'saida',
+    abas: [
+      {
+        name: 'Recebimentos',
+        groups: [
+          {
+            title: 'Entregas',
+            buttons: [
+              { action: 'pick:Entrada', label: 'Receber material', icon: 'entrada' },
+              { action: 'fc:FORNECEDOR', label: 'Fornecedores', icon: 'clientes' },
+              { action: 'novocad:FORNECEDOR', label: 'Novo fornecedor', icon: 'novo' },
+            ],
+          },
+          {
+            title: 'Relatórios',
+            buttons: [
+              { action: 'v:saida', label: 'Entradas por NF-e', icon: 'rel' },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  vendas: {
+    id: 'vendas',
+    nome: 'Vendas',
+    icon: 'vendas',
+    viewInicial: 'vendas',
+    abas: [
+      {
+        name: 'Pedidos',
+        groups: [
+          {
+            title: 'Pedidos',
+            buttons: [
+              { action: 'v:vendas', label: 'Pedidos a entregar', icon: 'vendas' },
+              { action: 'novopedido', label: 'Novo pedido', icon: 'novo' },
+            ],
+          },
+        ],
+      },
+      {
+        name: 'Cadastros',
+        groups: [
+          {
+            title: 'Entidades',
+            buttons: [
+              { action: 'fc:TODOS', label: 'Todos os cadastros', icon: 'clientes' },
+              { action: 'fc:CLIENTE', label: 'Clientes', icon: 'clientes' },
+              { action: 'novocad:CLIENTE', label: 'Novo cadastro', icon: 'novo' },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+};
+
+/**
+ * Mapeia a tela/view ativa para o seu respectivo módulo corporativo pai.
+ * Equivalente à função modDe(v) do protótipo almoxarifado5.html.
+ */
+export function obterModuloDeTela(
+  view: TelaOuAba,
+  moduloAtual?: ModuloCorporativo | null
+): ModuloCorporativo {
+  if (view === 'inicio') return 'inicio';
+  if (view === 'mp' || view === 'imp' || view === 'motos') return 'estoque';
+  if (view === 'vendas') return 'vendas';
+  if (view === 'saida') return moduloAtual === 'compras' ? 'compras' : 'estoque';
+  if (view === 'clientes') return moduloAtual === 'compras' ? 'compras' : 'vendas';
+  return 'estoque';
+}
 
 export const CLIENTES_INICIAIS: Cliente[] = [
   {
