@@ -62,9 +62,9 @@ export function ItemDetailsDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Scrim / Backdrop escurecido */}
+      {/* Scrim / Backdrop escurecido com blur sutil */}
       <div
-        className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -74,20 +74,20 @@ export function ItemDetailsDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={`Detalhes do produto ${item.descricao}`}
-        className="relative w-full max-w-md bg-white dark:bg-[#2b2b2e] border-l border-slate-200 dark:border-[#3e3e42] flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
+        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250 shadow-2xl"
       >
         {/* Cabeçalho do Drawer */}
-        <div className="sticky top-0 bg-white dark:bg-[#2b2b2e] z-20 px-6 py-4 border-b border-slate-200 dark:border-[#3e3e42] flex items-start justify-between gap-4">
+        <div className="sticky top-0 bg-surface-container-lowest/95 backdrop-blur-md z-20 px-6 py-4 border-b border-outline-variant/20 flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1.5">
             <StockStatusBadge
               estoqueAtual={item.estoqueAtual}
               estoqueSeguranca={item.estoqueSeguranca}
               size="sm"
             />
-            <h2 className="text-xl font-bold text-slate-900 dark:text-[#ececee] leading-tight">
+            <h2 className="font-headline text-xl font-bold text-on-surface leading-tight">
               {item.descricao}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+            <p className="text-xs text-on-surface-variant font-mono">
               {item.codigo} · {item.categoria}
             </p>
           </div>
@@ -97,7 +97,7 @@ export function ItemDetailsDrawer({
             type="button"
             onClick={onClose}
             aria-label="Fechar painel de detalhes"
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-[#343438] dark:hover:bg-[#3e3e42] transition-colors cursor-pointer shrink-0"
+            className="p-1.5 rounded-xl text-outline hover:text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -106,15 +106,15 @@ export function ItemDetailsDrawer({
         {/* Corpo do Drawer */}
         <div className="p-6 flex flex-col gap-5 flex-1">
           {/* Destaque de Quantidade Atual */}
-          <div className="p-4 rounded-lg bg-slate-50 dark:bg-[#232325] border border-slate-200 dark:border-[#3e3e42] flex flex-col gap-2.5">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col gap-2.5">
+            <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
               Saldo Físico Atual
             </span>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-extrabold text-slate-900 dark:text-[#ececee] tracking-tight tabular-nums">
+              <span className="font-kpi-value text-3xl font-extrabold text-on-surface tracking-tight tabular-nums">
                 {item.estoqueAtual.toLocaleString('pt-BR')}
               </span>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+              <span className="text-sm font-semibold text-on-surface-variant">
                 {unidadeFormatada}
               </span>
             </div>
@@ -136,64 +136,64 @@ export function ItemDetailsDrawer({
             <button
               type="button"
               onClick={() => onRegistrarEntrada?.(item)}
-              className="flex-1 h-9 px-3.5 rounded-md text-xs font-semibold bg-[#1d4ea3] dark:bg-[#5aa9ea] text-white dark:text-[#06182e] hover:bg-[#163c7e] dark:hover:bg-[#4898d5] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              className="flex-1 h-9 px-3.5 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-on-primary transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             >
               <ArrowUpRight className="w-4 h-4" />
-              <span>Adicionar entrada</span>
+              <span>Adicionar Entrada</span>
             </button>
 
             <button
               type="button"
               onClick={() => onRegistrarSaida?.(item)}
-              className="flex-1 h-9 px-3.5 rounded-md text-xs font-medium border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-800 dark:text-[#ececee] hover:bg-slate-50 dark:hover:bg-[#343438] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              className="flex-1 h-9 px-3.5 rounded-xl text-xs font-medium border border-outline-variant/30 bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             >
-              <ArrowDownRight className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <span>Retirar para produção</span>
+              <ArrowDownRight className="w-4 h-4 text-outline" />
+              <span>Retirar p/ Produção</span>
             </button>
           </div>
 
           {/* Grid de Informações de Armazenamento */}
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
+            <h3 className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2.5">
               Parâmetros de Estoque
             </h3>
             <dl className="grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-md bg-slate-50 dark:bg-[#232325] border border-slate-200 dark:border-[#3e3e42]">
-                <dt className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Estoque Mínimo</dt>
-                <dd className="text-sm font-semibold text-slate-900 dark:text-[#ececee] tabular-nums">
+              <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20">
+                <dt className="text-xs text-on-surface-variant mb-0.5">Estoque Mínimo</dt>
+                <dd className="text-sm font-semibold text-on-surface tabular-nums">
                   {item.estoqueSeguranca.toLocaleString('pt-BR')} {unidadeFormatada}
                 </dd>
               </div>
 
-              <div className="p-3 rounded-md bg-slate-50 dark:bg-[#232325] border border-slate-200 dark:border-[#3e3e42]">
-                <dt className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Capacidade Máxima</dt>
-                <dd className="text-sm font-semibold text-slate-900 dark:text-[#ececee] tabular-nums">
+              <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20">
+                <dt className="text-xs text-on-surface-variant mb-0.5">Capacidade Máxima</dt>
+                <dd className="text-sm font-semibold text-on-surface tabular-nums">
                   {item.capacidadeMaxima.toLocaleString('pt-BR')} {unidadeFormatada}
                 </dd>
               </div>
 
-              <div className="p-3 rounded-md bg-slate-50 dark:bg-[#232325] border border-slate-200 dark:border-[#3e3e42]">
-                <dt className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Endereço Físico</dt>
-                <dd className="text-sm font-mono font-semibold text-slate-900 dark:text-[#ececee]">
+              <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20">
+                <dt className="text-xs text-on-surface-variant mb-0.5">Endereço Físico</dt>
+                <dd className="text-sm font-mono font-semibold text-on-surface">
                   {item.localizacaoFisica || 'Não alocado'}
                 </dd>
               </div>
 
               {faltaParaMinimo > 0 ? (
-                <div className="p-3 rounded-md bg-rose-50 dark:bg-[#40201d] border border-rose-200 dark:border-rose-900/60">
-                  <dt className="text-xs text-rose-700 dark:text-[#f0796b] font-medium mb-0.5">
+                <div className="p-3 rounded-xl bg-error-container/40 border border-error/20">
+                  <dt className="text-xs text-error font-medium mb-0.5">
                     Reposição Necessária
                   </dt>
-                  <dd className="text-sm font-bold text-rose-700 dark:text-[#f0796b] tabular-nums">
+                  <dd className="text-sm font-bold text-error tabular-nums">
                     {formatarTextoFalta(faltaParaMinimo, item.unidade, { sufixo: '' })}
                   </dd>
                 </div>
               ) : (
-                <div className="p-3 rounded-md bg-emerald-50 dark:bg-[#163323] border border-emerald-200 dark:border-emerald-900/60">
-                  <dt className="text-xs text-emerald-700 dark:text-[#72d596] font-medium mb-0.5">
+                <div className="p-3 rounded-xl bg-tertiary-fixed/30 border border-tertiary/20">
+                  <dt className="text-xs text-tertiary font-medium mb-0.5">
                     Margem de Segurança
                   </dt>
-                  <dd className="text-sm font-bold text-emerald-700 dark:text-[#72d596] tabular-nums">
+                  <dd className="text-sm font-bold text-tertiary tabular-nums">
                     +{(item.estoqueAtual - item.estoqueSeguranca).toLocaleString('pt-BR')} {unidadeFormatada}
                   </dd>
                 </div>
@@ -204,14 +204,14 @@ export function ItemDetailsDrawer({
           {/* Especificações Técnicas (Atributos Livres) */}
           {especificacoes.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
+              <h3 className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2.5">
                 Especificações do Material
               </h3>
-              <div className="rounded-md border border-slate-200 dark:border-[#3e3e42] overflow-hidden divide-y divide-slate-200 dark:divide-[#3e3e42] text-xs">
+              <div className="rounded-xl border border-outline-variant/20 overflow-hidden divide-y divide-outline-variant/15 text-xs bg-surface-container-low">
                 {especificacoes.map(([chave, valor]) => (
-                  <div key={chave} className="flex justify-between py-2 px-3 bg-white dark:bg-[#232325]">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">{chave}</span>
-                    <span className="text-slate-900 dark:text-[#ececee] font-semibold text-right max-w-[65%]">
+                  <div key={chave} className="flex justify-between py-2 px-3">
+                    <span className="text-on-surface-variant font-medium">{chave}</span>
+                    <span className="text-on-surface font-semibold text-right max-w-[65%]">
                       {valor}
                     </span>
                   </div>
@@ -222,18 +222,18 @@ export function ItemDetailsDrawer({
 
           {/* Histórico Recente de Movimentações */}
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <h3 className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" /> Movimentações Recentes
             </h3>
 
             {isLoadingExtrato ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-12 bg-slate-100 dark:bg-[#343438]/50 rounded-md animate-pulse" />
+                  <div key={i} className="h-12 bg-surface-container-low rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : movimentacoes.length === 0 ? (
-              <div className="p-4 text-center rounded-md border border-slate-200 dark:border-[#3e3e42] bg-slate-50 dark:bg-[#232325] text-slate-500 dark:text-slate-400 text-xs">
+              <div className="p-4 text-center rounded-xl border border-outline-variant/20 bg-surface-container-low text-on-surface-variant text-xs">
                 Sem movimentações recentes registradas para este item.
               </div>
             ) : (
@@ -244,14 +244,14 @@ export function ItemDetailsDrawer({
                   return (
                     <div
                       key={mov.id}
-                      className="p-2.5 rounded-md bg-slate-50 dark:bg-[#232325] border border-slate-200 dark:border-[#3e3e42] flex items-center justify-between gap-3 text-xs"
+                      className="p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between gap-3 text-xs"
                     >
                       <div className="flex items-center gap-2.5">
                         <div
-                          className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
+                          className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
                             isEntrada
-                              ? 'bg-emerald-100 dark:bg-[#163323] text-emerald-600 dark:text-[#72d596]'
-                              : 'bg-rose-100 dark:bg-[#40201d] text-rose-600 dark:text-[#f0796b]'
+                              ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                              : 'bg-error-container text-on-error-container'
                           }`}
                         >
                           {isEntrada ? (
@@ -261,20 +261,20 @@ export function ItemDetailsDrawer({
                           )}
                         </div>
                         <div>
-                          <b className="block text-slate-900 dark:text-[#ececee] font-semibold">
+                          <b className="block text-on-surface font-semibold">
                             {mov.tipo} · {mov.responsavel}
                           </b>
-                          <span className="text-slate-500 dark:text-slate-400 text-xs">
+                          <span className="text-on-surface-variant text-xs">
                             {mov.dataHora}
                           </span>
                         </div>
                       </div>
 
                       <b
-                        className={`text-sm tabular-nums ${
+                        className={`text-sm tabular-nums font-semibold ${
                           isEntrada
-                            ? 'text-emerald-600 dark:text-[#72d596]'
-                            : 'text-rose-600 dark:text-[#f0796b]'
+                            ? 'text-tertiary'
+                            : 'text-error'
                         }`}
                       >
                         {isEntrada ? '+' : '−'}

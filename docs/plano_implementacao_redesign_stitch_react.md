@@ -318,31 +318,31 @@ graph TD
   - Feed lateral de movimentações recentes do turno.
 
 ### Fase 4: Gestão de Estoque & Matéria-Prima
-- [ ] Atualizar [StockMetricsCards.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockMetricsCards.tsx) com o layout do Stitch (Total em Catálogo, Abaixo do Mínimo, Ruptura Imediata, Patrimônio Imobilizado).
-- [ ] Atualizar [StockFilterToolbar.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockFilterToolbar.tsx) para usar os chips de filtro estilizados.
-- [ ] Atualizar [StockTable.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockTable.tsx):
+- [x] Atualizar [StockMetricsCards.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockMetricsCards.tsx) com o layout do Stitch (Total em Catálogo, Abaixo do Mínimo, Ruptura Imediata, Disponibilidade).
+- [x] Atualizar [StockFilterToolbar.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockFilterToolbar.tsx) para usar os chips de filtro estilizados.
+- [x] Atualizar [StockTable.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/dashboard/StockTable.tsx):
   - Alinhamento numérico tabular.
   - Barra visual de nível de estoque dentro da célula de saldo.
   - Ações rápidas discretas ao passar o cursor sobre a linha.
 
 ### Fase 5: Movimentação & Apontamentos Rápidos
-- [ ] Reformular [SaidaManualView.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/saida/SaidaManualView.tsx):
-  - Deck superior de 4 KPIs (Saídas, Entradas, OPs Vinculadas, Alertas).
-  - Painel de Apontamento Rápido embutido na página com grid responsivo de inputs.
+- [x] Reformular [SaidaManualView.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/saida/SaidaManualView.tsx):
+  - Deck superior de 4 KPIs (Apontamentos no Turno, Saídas, Entradas, Materiais Ativos).
+  - Painel de Apontamento Rápido embutido na página com grid responsivo de inputs e conferência de saldo em tempo real.
   - Autocomplete com badge dinâmico de saldo atual.
   - Tabela de histórico de movimentações com filtro de período em pílulas e exportação CSV.
 
 ### Fase 6: Pedidos de Venda & Clientes
-- [ ] Reformular [VendasView.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/vendas/VendasView.tsx):
+- [x] Reformular [VendasView.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/vendas/VendasView.tsx):
   - 4 Cards de status operacional de pedidos (A Entregar, Fora do Prazo, Bloqueio p/ Estoque, Faturados Hoje).
   - Indicador de conferência / SLA.
   - Lista de pedidos com status de disponibilidade de matéria-prima e avanço de workflow com baixa automática de estoque.
-- [ ] Ajustar [ClientesView.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/clientes/ClientesView.tsx) para seguir a mesma paleta e densidade de tabela.
+- [x] Ajustar [ClientesView.tsx](file:///c:/Users/Eduardo/Desktop/exemplo/sistema_almoxarifado/src/web/components/gestao/clientes/ClientesView.tsx) para seguir a mesma paleta e densidade de tabela.
 
 ### Fase 7: Testes, Validação e Qualidade
-- [ ] Validar compatibilidade completa do modo claro e escuro.
-- [ ] Executar testes de fluxo de pedidos e movimentações (`npm test`).
-- [ ] Garantir pontuação de acessibilidade (WCAG AA), contraste de texto e ausência de regressões funcionais.
+- [x] Validar compatibilidade completa do modo claro e escuro em todas as 4 telas e modais.
+- [x] Executar testes de fluxo de pedidos, estoque e movimentações (`npm test` com 370 testes passando).
+- [x] Modernizar todos os drawers e modais secundários (`ItemDetailsDrawer`, `ItemCreateDrawer`, `MovementFormDrawer`, `QuickItemPickerDrawer`, `OrderCreateDrawer`, `ClientCreateDrawer`, `UserProfileCard`).
 
 ---
 

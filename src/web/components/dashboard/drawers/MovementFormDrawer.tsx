@@ -166,7 +166,7 @@ export function MovementFormDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Scrim / Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -176,23 +176,27 @@ export function MovementFormDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={isEntrada ? 'Registrar entrada de material' : 'Registrar retirada para produção'}
-        className="relative w-full max-w-md bg-white dark:bg-[#2b2b2e] border-l border-slate-200 dark:border-[#3e3e42] flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-200"
+        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-200 shadow-2xl"
       >
         {/* Cabeçalho */}
-        <div className="sticky top-0 bg-white dark:bg-[#2b2b2e] z-20 px-6 py-4 border-b border-slate-200 dark:border-[#3e3e42] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {isEntrada ? (
-              <ArrowUpRight className="w-5 h-5 text-emerald-500 dark:text-[#72d596]" />
-            ) : (
-              <ArrowDownRight className="w-5 h-5 text-rose-500 dark:text-[#f0796b]" />
-            )}
+        <div className="sticky top-0 bg-surface-container-lowest/95 backdrop-blur-md z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`p-1.5 rounded-xl ${
+                isEntrada
+                  ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                  : 'bg-error-container text-on-error-container'
+              }`}
+            >
+              {isEntrada ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
+            </span>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-[#ececee] leading-tight">
+              <h2 className="font-headline text-base font-bold text-on-surface leading-tight">
                 {isEntrada ? 'Entrada de material' : 'Retirada para produção'}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">
+              <p className="text-xs text-on-surface-variant font-normal">
                 {item.descricao} · saldo atual{' '}
-                <span className="font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
+                <span className="font-semibold text-on-surface tabular-nums">
                   {item.estoqueAtual.toLocaleString('pt-BR')} {unidadeFmt}
                 </span>
               </p>
@@ -204,7 +208,7 @@ export function MovementFormDrawer({
             type="button"
             onClick={onClose}
             aria-label="Fechar formulário"
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-[#343438] hover:bg-slate-200 dark:hover:bg-[#3e3e42] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-outline hover:text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -213,7 +217,7 @@ export function MovementFormDrawer({
         {/* Formulário */}
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-xs">
           {erro && (
-            <div className="p-3 rounded-md bg-rose-50 dark:bg-[#40201d] border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-[#f0796b] flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-error-container/40 border border-error/20 text-error flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{erro}</span>
             </div>
@@ -221,7 +225,7 @@ export function MovementFormDrawer({
 
           {/* Data e Quantidade */}
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
+            <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
               <span>{isEntrada ? 'Data de chegada *' : 'Data da retirada *'}</span>
               <input
                 type="date"
@@ -229,11 +233,11 @@ export function MovementFormDrawer({
                 max={hoje}
                 value={dataMov}
                 onChange={(e) => setDataMov(e.target.value)}
-                className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
+                className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </label>
 
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
+            <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
               <span>Quantidade ({unidadeFmt}) *</span>
               <input
                 type="number"
@@ -241,7 +245,7 @@ export function MovementFormDrawer({
                 required
                 value={quantidade}
                 onChange={(e) => setQuantidade(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 tabular-nums font-semibold"
+                className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all tabular-nums font-semibold"
               />
             </label>
           </div>
@@ -250,7 +254,7 @@ export function MovementFormDrawer({
           {isEntrada && (
             <div className="space-y-3 pt-1">
               {camposEntrada.map((campo) => (
-                <label key={campo} className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
+                <label key={campo} className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
                   <span>{campo}</span>
                   <input
                     type="text"
@@ -262,7 +266,7 @@ export function MovementFormDrawer({
                       }))
                     }
                     placeholder={`Informar ${campo.toLowerCase()}`}
-                    className="p-2 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
+                    className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </label>
               ))}
@@ -271,7 +275,7 @@ export function MovementFormDrawer({
 
           {/* Campo de Retirada (Saída) */}
           {!isEntrada && (
-            <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
+            <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
               <span>Retirado por / setor *</span>
               <input
                 type="text"
@@ -279,20 +283,20 @@ export function MovementFormDrawer({
                 value={quem}
                 onChange={(e) => setQuem(e.target.value)}
                 placeholder="Ex: Produção, Serralheria, Oficina, Manutenção"
-                className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
+                className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </label>
           )}
 
           {/* Observações Gerais */}
-          <label className="flex flex-col gap-1 font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
             <span>Observação</span>
             <input
               type="text"
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               placeholder="Ex: Ordem de produção #104, reposição preventiva, etc."
-              className="p-2.5 rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
+              className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </label>
 
@@ -300,10 +304,10 @@ export function MovementFormDrawer({
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`mt-4 w-full h-9 px-4 rounded-md text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
+            className={`mt-4 w-full h-10 px-4 rounded-xl text-xs font-semibold text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 ${
               isEntrada
-                ? 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500'
-                : 'bg-rose-600 hover:bg-rose-700 dark:bg-rose-600 dark:hover:bg-rose-500'
+                ? 'bg-tertiary hover:bg-tertiary/90 text-on-tertiary'
+                : 'bg-error hover:bg-error/90 text-on-error'
             }`}
           >
             {isSubmitting ? (

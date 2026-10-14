@@ -110,7 +110,7 @@ export function QuickItemPickerDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Scrim / Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -120,22 +120,26 @@ export function QuickItemPickerDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={isEntrada ? 'Escolha o item para entrada' : 'Escolha o item para saída'}
-        className="relative w-full max-w-md bg-white dark:bg-[#2b2b2e] border-l border-slate-200 dark:border-[#3e3e42] flex flex-col h-full z-10 animate-in slide-in-from-right duration-200"
+        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 animate-in slide-in-from-right duration-200 shadow-2xl"
       >
         {/* Cabeçalho */}
-        <div className="p-6 pb-4 border-b border-slate-200 dark:border-[#3e3e42] flex items-start justify-between gap-3 shrink-0">
+        <div className="p-6 pb-4 border-b border-outline-variant/20 flex items-start justify-between gap-3 shrink-0">
           <div>
-            <div className="flex items-center gap-2">
-              {isEntrada ? (
-                <ArrowUpRight className="w-5 h-5 text-emerald-500 dark:text-[#72d596]" />
-              ) : (
-                <ArrowDownRight className="w-5 h-5 text-rose-500 dark:text-[#f0796b]" />
-              )}
-              <h2 className="text-base font-bold text-slate-900 dark:text-[#ececee] leading-tight">
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`p-1.5 rounded-xl ${
+                  isEntrada
+                    ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                    : 'bg-error-container text-on-error-container'
+                }`}
+              >
+                {isEntrada ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
+              </span>
+              <h2 className="font-headline text-base font-bold text-on-surface leading-tight">
                 {isEntrada ? 'Registrar entrada' : 'Registrar saída'}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-on-surface-variant mt-1 font-normal">
               Escolha o item do almoxarifado para movimentar.
             </p>
           </div>
@@ -145,16 +149,16 @@ export function QuickItemPickerDrawer({
             type="button"
             onClick={onClose}
             aria-label="Fechar seletor"
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-[#343438] hover:bg-slate-200 dark:hover:bg-[#3e3e42] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-outline hover:text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Campo de Busca Rápida */}
-        <div className="p-4 border-b border-slate-200 dark:border-[#3e3e42] shrink-0">
+        <div className="p-4 border-b border-outline-variant/20 shrink-0">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none" />
             <input
               ref={inputRef}
               type="search"
@@ -162,19 +166,19 @@ export function QuickItemPickerDrawer({
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar por nome, código ou lote..."
               aria-label="Filtrar materiais"
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-md border border-slate-300 dark:border-[#3e3e42] bg-white dark:bg-[#232325] text-slate-900 dark:text-[#ececee] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
         </div>
 
         {/* Lista de Produtos Encontrados */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-[#3e3e42]/60">
+        <div className="flex-1 overflow-y-auto divide-y divide-outline-variant/10">
           {isLoading ? (
-            <div className="p-6 text-center text-xs text-slate-400 animate-pulse">
+            <div className="p-6 text-center text-xs text-on-surface-variant animate-pulse">
               Carregando catálogo de materiais...
             </div>
           ) : itensFiltrados.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-400">
+            <div className="p-8 text-center text-xs text-on-surface-variant">
               Nenhum material encontrado com o termo informado.
             </div>
           ) : (
@@ -187,24 +191,24 @@ export function QuickItemPickerDrawer({
                   key={item.id}
                   type="button"
                   onClick={() => onSelectItem(item)}
-                  className="w-full p-3.5 flex items-center justify-between gap-3 text-left hover:bg-slate-50 dark:hover:bg-[#232325] transition-colors cursor-pointer group"
+                  className="w-full p-3.5 flex items-center justify-between gap-3 text-left hover:bg-surface-container-low transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-md bg-slate-100 dark:bg-[#232325] border border-slate-200 dark:border-[#3e3e42] flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
-                      <Package className="w-3.5 h-3.5" />
+                    <div className="w-8 h-8 rounded-xl bg-surface-container-high border border-outline-variant/20 flex items-center justify-center text-on-surface-variant shrink-0">
+                      <Package className="w-4 h-4" />
                     </div>
 
                     <div className="min-w-0">
-                      <b className="block text-xs font-semibold text-slate-900 dark:text-[#ececee] truncate group-hover:text-blue-600 dark:group-hover:text-[#5aa9ea] transition-colors">
+                      <b className="block text-xs font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
                         {item.descricao}
                       </b>
-                      <small className="block text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-normal">
+                      <small className="block text-[11px] text-on-surface-variant truncate mt-0.5 font-normal">
                         {item.codigo} · {abaNome}
                       </small>
                     </div>
                   </div>
 
-                  <span className="text-xs font-mono font-medium text-slate-700 dark:text-slate-300 tabular-nums shrink-0 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#232325] border border-slate-200 dark:border-[#3e3e42]">
+                  <span className="text-xs font-mono font-medium text-on-surface tabular-nums shrink-0 px-2 py-0.5 rounded-lg bg-surface-container border border-outline-variant/20">
                     {item.estoqueAtual.toLocaleString('pt-BR')} {unidadeFmt}
                   </span>
                 </button>
