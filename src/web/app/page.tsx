@@ -16,6 +16,7 @@ import { useItensEstoque } from '@/web/hooks/useItensEstoque';
 import { useDebounce } from '@/web/hooks/useDebounce';
 import { useDashboardResumo } from '@/web/hooks/useDashboardResumo';
 import { AppSidebar } from '@/web/components/layout/AppSidebar';
+import { AppTopHeader } from '@/web/components/layout/AppTopHeader';
 import { AppRibbonHeader } from '@/web/components/layout/AppRibbonHeader';
 import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards';
 import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
@@ -300,8 +301,8 @@ export default function AlmoxarifadoDashboardPage() {
 
   return (
     <AuthGuard>
-      <div className="flex flex-col md:flex-row min-h-screen bg-[#e9eff7] dark:bg-[#232325] text-[#17212b] dark:text-[#ececee]">
-        {/* Menu Lateral de Navegação em Módulos V5 */}
+      <div className="flex flex-col md:flex-row min-h-screen bg-surface text-on-surface">
+        {/* Menu Lateral de Navegação em Módulos WMS Stitch */}
         <AppSidebar
           moduloAtivo={moduloAtivo}
           telaAtiva={telaAtiva}
@@ -312,16 +313,14 @@ export default function AlmoxarifadoDashboardPage() {
           pedidosAtrasadosCount={resumoGeral?.vendas.atrasados ?? 0}
         />
 
-        {/* Coluna Central com Ribbon e Conteúdo */}
+        {/* Coluna Central com Header e Conteúdo */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Faixa de Opções Superior (Ribbon Menu V5) */}
-          <AppRibbonHeader
-            moduloAtivo={moduloAtivo}
+          {/* Barra Superior Master WMS Stitch */}
+          <AppTopHeader
             telaAtiva={telaAtiva}
-            abaRibbonAtiva={abaRibbonAtiva}
-            onSelectAbaRibbon={setAbaRibbonAtiva}
-            onRibbonAction={handleRibbonAction}
+            onSelectTela={handleSelectTela}
             onSelectSearchResult={handleSelectSearchResult}
+            totalAlertas={totalCriticosGerais}
           />
 
           {/* Conteúdo Principal Full-Width de Alta Densidade */}
