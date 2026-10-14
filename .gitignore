@@ -39,3 +39,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 **/next-env.d.ts
+
+# Antigravity Agent local configs and secrets
+.agents/mcp_config.json
+**/mcp_config.json
+
