@@ -112,7 +112,20 @@ export function StockTable({
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
                 tabIndex={0}
-                className={`transition-colors outline-none focus-within:bg-slate-50/80 dark:focus-within:bg-slate-800/40 ${
+                role="row"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onSelectItem(item);
+                  }
+                }}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (!target.closest('button')) {
+                    onSelectItem(item);
+                  }
+                }}
+                className={`transition-colors outline-none cursor-pointer focus:ring-1.5 focus:ring-blue-500/50 focus-within:bg-slate-50/80 dark:focus-within:bg-slate-800/40 ${
                   isSelected
                     ? 'bg-blue-50/60 dark:bg-blue-950/25'
                     : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30'
