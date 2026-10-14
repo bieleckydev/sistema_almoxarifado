@@ -1,76 +1,169 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Package,
-  LayoutDashboard,
+  Home,
   Layers,
-  Wrench,
-  Bike,
+  ArrowDownToLine,
   ShoppingCart,
-  Users,
-  ArrowLeftRight,
+  ChevronLeft,
+  ChevronRight,
   LogOut,
   User as UserIcon,
   Shield,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   type AbaEstoque,
   type TelaOuAba,
-  METADADOS_ABAS,
-} from '@/web/data/mock-almoxarifado';
+  type ModuloCorporativo,
+  obterModuloDeTela,
+} from '../../data/mock-almoxarifado';
 import { useAuthStore } from '@/core/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 
 export interface AppSidebarProps {
   /**
-   * Identificador da tela ou aba atualmente ativa.
-   * Suporta retrocompatibilidade com 'abaAtiva'.
+   * Módulo corporativo atualmente selecionado na aplicação.
+   */
+  moduloAtivo?: ModuloCorporativo;
+  /**
+   * Identificador da tela ou aba atualmente ativa (para compatibilidade).
    */
   telaAtiva?: TelaOuAba;
   abaAtiva?: TelaOuAba;
+  /**
+   * Callback disparado ao selecionar um módulo corporativo.
+   */
+  onSelectModulo?: (modulo: ModuloCorporativo) => void;
   /**
    * Callback disparado ao selecionar uma tela ou aba.
    */
   onSelectTela?: (tela: TelaOuAba) => void;
   onSelectAba?: ((aba: TelaOuAba) => void) | ((aba: AbaEstoque) => void);
   /**
-   * Contagem de itens críticos por aba de estoque.
+   * Total de itens críticos no estoque para exibição da badge no módulo de Estoque.
    */
+  totalCriticos?: number;
   contagemCriticos?: Record<AbaEstoque, number>;
   /**
-   * Contagem de pedidos de venda em atraso para alertar na aba de Vendas.
+   * Contagem de pedidos de venda em atraso para alertar no módulo de Vendas.
    */
   pedidosAtrasadosCount?: number;
+  /**
+   * Estado colapsado / mini controlado externamente (opcional)
+   */
+  isMini?: boolean;
+  onToggleMini?: () => void;
   className?: string;
 }
 
-const ABA_ICONS: Record<AbaEstoque, React.ComponentType<{ className?: string }>> = {
-  mp: Layers,
-  imp: Wrench,
-  motos: Bike,
-};
+interface ItemModuloMenu {
+  id: ModuloCorporativo;
+  nome: string;
+  viewPadrao: TelaOuAba;
+  icon: LucideIcon;
+  getBadgeCount?: (props: { critCount: number; atrCount: number }) => number;
+  getBadgeTitle?: (count: number) => string;
+}
+
+const ITENS_MODULOS: ItemModuloMenu[] = [
+  {
+    id: 'inicio',
+    nome: 'Início',
+    viewPadrao: 'inicio',
+    icon: Home,
+  },
+  {
+    id: 'estoque',
+    nome: 'Estoque',
+    viewPadrao: 'mp',
+    icon: Layers,
+    getBadgeCount: ({ critCount }) => critCount,
+    getBadgeTitle: (count) =>
+      `${count} ${count === 1 ? 'item crítico' : 'itens críticos'}`,
+  },
+  {
+    id: 'compras',
+    nome: 'Compras',
+    viewPadrao: 'saida',
+    icon: ArrowDownToLine,
+  },
+  {
+    id: 'vendas',
+    nome: 'Vendas',
+    viewPadrao: 'vendas',
+    icon: ShoppingCart,
+    getBadgeCount: ({ atrCount }) => atrCount,
+    getBadgeTitle: (count) =>
+      `${count} ${count === 1 ? 'pedido atrasado' : 'pedidos atrasados'}`,
+  },
+];
 
 export function AppSidebar({
+  moduloAtivo,
   telaAtiva,
   abaAtiva,
+  onSelectModulo,
   onSelectTela,
   onSelectAba,
+  totalCriticos,
   contagemCriticos = { mp: 0, imp: 0, motos: 0 },
   pedidosAtrasadosCount = 0,
+  isMini: isMiniProp,
+  onToggleMini: onToggleMiniProp,
   className = '',
 }: AppSidebarProps) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
-  // Suporte transparente para ambos os nomes de prop
-  const activeKey: TelaOuAba = telaAtiva || abaAtiva || 'mp';
+  // Estado local persistido no localStorage para o modo mini
+  const [isMiniLocal, setIsMiniLocal] = useState<boolean>(false);
 
-  const handleSelect = (chave: TelaOuAba) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const salvo = localStorage.getItem('sidebar_mini');
+      if (salvo !== null) {
+        setIsMiniLocal(salvo === 'true');
+      }
+    }
+  }, []);
+
+  const isMini = isMiniProp !== undefined ? isMiniProp : isMiniLocal;
+
+  const handleToggleMini = () => {
+    if (onToggleMiniProp) {
+      onToggleMiniProp();
+    } else {
+      setIsMiniLocal((prev) => {
+        const next = !prev;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('sidebar_mini', String(next));
+        }
+        return next;
+      });
+    }
+  };
+
+  // Resolução da tela ativa e do módulo ativo correspondente
+  const activeKey: TelaOuAba = telaAtiva || abaAtiva || 'inicio';
+  const moduloAtual: ModuloCorporativo =
+    moduloAtivo || obterModuloDeTela(activeKey);
+
+  // Total de itens críticos
+  const criticosTotais =
+    totalCriticos !== undefined
+      ? totalCriticos
+      : Object.values(contagemCriticos).reduce((acc, curr) => acc + curr, 0);
+
+  const handleSelectModulo = (modulo: ModuloCorporativo, viewPadrao: TelaOuAba) => {
+    if (onSelectModulo) {
+      onSelectModulo(modulo);
+    }
     if (onSelectTela) {
-      onSelectTela(chave);
+      onSelectTela(viewPadrao);
     } else if (onSelectAba) {
-      (onSelectAba as (aba: TelaOuAba) => void)(chave);
+      (onSelectAba as (aba: TelaOuAba) => void)(viewPadrao);
     }
   };
 
@@ -81,219 +174,166 @@ export function AppSidebar({
 
   return (
     <aside
-      className={`w-full md:w-64 bg-[#0b0c0f] dark:bg-[#050607] text-[#d5e4ec] p-5 flex flex-col justify-between shrink-0 transition-colors md:min-h-screen ${className}`}
+      className={`bg-[#0b0c0f] dark:bg-[#050607] text-[#d5e4ec] flex flex-col justify-between shrink-0 transition-all duration-200 border-r border-slate-200/10 dark:border-slate-800 md:min-h-screen z-20 ${
+        isMini ? 'w-full md:w-[54px] p-2' : 'w-full md:w-[178px] p-3'
+      } ${className}`}
+      aria-label="Barra de módulos corporativos"
     >
-      <div className="flex flex-col gap-5">
-        {/* Logotipo e Identidade com faixa decorativa tricolor */}
-        <div className="flex flex-col px-2 pt-1 pb-3 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#1d4ea3] text-white rounded-xl shadow-inner">
-              <Package className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="font-bold text-base tracking-tight text-white leading-tight">
-                Almoxarifado
-              </h1>
-              <p className="text-xs text-[#d5e4ec]/70 font-normal">
-                Monitoração de estoque
-              </p>
-            </div>
-          </div>
-          {/* Barra de acento tricolor da versão 2 */}
-          <div className="h-0.5 w-full mt-3 rounded-full bg-gradient-to-r from-[#4fa8e0] via-[#4fa8e0] via-55% via-[#d9372f] via-78% to-[#f2b705]" />
-        </div>
+      <div className="flex flex-col gap-3">
+        {/* Cabeçalho da Sidebar (.mh com título Módulos e botão #modtog) */}
+        <div
+          className={`flex items-center pb-2 border-b border-white/10 ${
+            isMini ? 'justify-center' : 'justify-between px-1'
+          }`}
+        >
+          {!isMini && (
+            <span className="font-semibold text-xs tracking-wider uppercase text-[#d5e4ec]/70 select-none">
+              Módulos
+            </span>
+          )}
 
-        {/* Navegação Global */}
-        <nav className="flex flex-col gap-1" aria-label="Navegação do almoxarifado">
-          {/* 1. Hub Executivo: Início */}
           <button
             type="button"
-            onClick={() => handleSelect('inicio')}
-            aria-current={activeKey === 'inicio' ? 'page' : undefined}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer text-left ${
-              activeKey === 'inicio'
-                ? 'bg-white/15 text-white font-semibold shadow-xs border-l-3 border-[#f2b705]'
-                : 'text-[#d5e4ec]/85 hover:bg-white/10 hover:text-white'
-            }`}
+            id="modtog"
+            onClick={handleToggleMini}
+            title={isMini ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+            aria-label={isMini ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+            className="p-1 rounded-md text-[#d5e4ec]/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-3">
-              <LayoutDashboard
-                className={`w-4 h-4 ${
-                  activeKey === 'inicio' ? 'text-[#f2b705]' : 'text-[#d5e4ec]/70'
-                }`}
-              />
-              <span>Início</span>
-            </div>
-
-            {pedidosAtrasadosCount > 0 && (
-              <span
-                className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#c8322b] text-white shadow-xs"
-                title={`${pedidosAtrasadosCount} pedido(s) atrasado(s)`}
-              >
-                {pedidosAtrasadosCount}
-              </span>
+            {isMini ? (
+              <ChevronRight className="w-4 h-4 text-[#4fa8e0]" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
             )}
           </button>
+        </div>
 
-          {/* 2. Seção Estoque */}
-          <div className="text-[11px] font-bold tracking-wider text-[#d5e4ec]/45 uppercase px-3 pt-3 pb-1 select-none">
-            Estoque
-          </div>
-
-          {(Object.keys(METADADOS_ABAS) as AbaEstoque[]).map((chave) => {
-            const info = METADADOS_ABAS[chave];
-            const Icon = ABA_ICONS[chave];
-            const isActive = activeKey === chave;
-            const critCount = contagemCriticos[chave] || 0;
+        {/* Lista dos 4 Módulos Corporativos (.mods) */}
+        <nav className="flex flex-col gap-1" aria-label="Módulos corporativos">
+          {ITENS_MODULOS.map((item) => {
+            const Icon = item.icon;
+            const isCurrent = moduloAtual === item.id;
+            const badgeCount = item.getBadgeCount
+              ? item.getBadgeCount({
+                  critCount: criticosTotais,
+                  atrCount: pedidosAtrasadosCount,
+                })
+              : 0;
+            const badgeTitle = item.getBadgeTitle
+              ? item.getBadgeTitle(badgeCount)
+              : '';
 
             return (
               <button
-                key={chave}
+                key={item.id}
                 type="button"
-                onClick={() => handleSelect(chave)}
-                aria-current={isActive ? 'page' : undefined}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer text-left ${
-                  isActive
+                data-mod={item.id}
+                onClick={() => handleSelectModulo(item.id, item.viewPadrao)}
+                aria-current={isCurrent ? 'true' : undefined}
+                title={isMini ? `${item.nome}${badgeCount > 0 ? ` (${badgeTitle})` : ''}` : undefined}
+                className={`w-full flex items-center rounded-lg text-xs font-medium transition-all cursor-pointer text-left relative ${
+                  isMini
+                    ? 'justify-center py-2 px-1'
+                    : 'justify-between px-3 py-2'
+                } ${
+                  isCurrent
                     ? 'bg-white/15 text-white font-semibold shadow-xs border-l-3 border-[#f2b705]'
-                    : 'text-[#d5e4ec]/85 hover:bg-white/10 hover:text-white'
+                    : 'text-[#d5e4ec]/80 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div
+                  className={`flex items-center gap-2.5 min-w-0 ${
+                    isMini ? 'justify-center' : ''
+                  }`}
+                >
                   <Icon
-                    className={`w-4 h-4 ${
-                      isActive ? 'text-[#4fa8e0]' : 'text-[#d5e4ec]/70'
+                    className={`w-4 h-4 shrink-0 ${
+                      isCurrent ? 'text-[#4fa8e0]' : 'text-[#4fa8e0]/75'
                     }`}
                   />
-                  <span>{info.titulo}</span>
+                  {!isMini && <span className="truncate">{item.nome}</span>}
                 </div>
 
-                {critCount > 0 && (
-                  <span
-                    className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#c8322b] text-white shadow-xs"
-                    title={`${critCount} ${
-                      critCount === 1 ? 'item em nível crítico' : 'itens em nível crítico'
-                    }`}
-                  >
-                    {critCount}
-                  </span>
+                {/* Badges de Notificação Operacional */}
+                {badgeCount > 0 && (
+                  <>
+                    {!isMini ? (
+                      <span
+                        className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#c8322b] text-white shadow-xs shrink-0"
+                        title={badgeTitle}
+                      >
+                        {badgeCount}
+                      </span>
+                    ) : (
+                      <span
+                        className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#c8322b] ring-1 ring-[#0b0c0f]"
+                        title={badgeTitle}
+                      />
+                    )}
+                  </>
                 )}
               </button>
             );
           })}
-
-          {/* 3. Seção Gestão */}
-          <div className="text-[11px] font-bold tracking-wider text-[#d5e4ec]/45 uppercase px-3 pt-3 pb-1 select-none">
-            Gestão
-          </div>
-
-          {/* Vendas & Pedidos */}
-          <button
-            type="button"
-            onClick={() => handleSelect('vendas')}
-            aria-current={activeKey === 'vendas' ? 'page' : undefined}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer text-left ${
-              activeKey === 'vendas'
-                ? 'bg-white/15 text-white font-semibold shadow-xs border-l-3 border-[#f2b705]'
-                : 'text-[#d5e4ec]/85 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <ShoppingCart
-                className={`w-4 h-4 ${
-                  activeKey === 'vendas' ? 'text-[#4fa8e0]' : 'text-[#d5e4ec]/70'
-                }`}
-              />
-              <span>Vendas</span>
-            </div>
-
-            {pedidosAtrasadosCount > 0 && (
-              <span
-                className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#c8322b] text-white shadow-xs"
-                title={`${pedidosAtrasadosCount} pedido(s) atrasado(s)`}
-              >
-                {pedidosAtrasadosCount}
-              </span>
-            )}
-          </button>
-
-          {/* Clientes & Parceiros */}
-          <button
-            type="button"
-            onClick={() => handleSelect('clientes')}
-            aria-current={activeKey === 'clientes' ? 'page' : undefined}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer text-left ${
-              activeKey === 'clientes'
-                ? 'bg-white/15 text-white font-semibold shadow-xs border-l-3 border-[#f2b705]'
-                : 'text-[#d5e4ec]/85 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <Users
-                className={`w-4 h-4 ${
-                  activeKey === 'clientes' ? 'text-[#4fa8e0]' : 'text-[#d5e4ec]/70'
-                }`}
-              />
-              <span>Clientes</span>
-            </div>
-          </button>
-
-          {/* Saída Manual & Relatórios */}
-          <button
-            type="button"
-            onClick={() => handleSelect('saida')}
-            aria-current={activeKey === 'saida' ? 'page' : undefined}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer text-left ${
-              activeKey === 'saida'
-                ? 'bg-white/15 text-white font-semibold shadow-xs border-l-3 border-[#f2b705]'
-                : 'text-[#d5e4ec]/85 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <ArrowLeftRight
-                className={`w-4 h-4 ${
-                  activeKey === 'saida' ? 'text-[#4fa8e0]' : 'text-[#d5e4ec]/70'
-                }`}
-              />
-              <span>Saída manual</span>
-            </div>
-          </button>
         </nav>
       </div>
 
-      {/* Perfil do Usuário Autenticado e Ação de Sair */}
+      {/* Perfil e Logout */}
       {user && (
-        <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-cyan-300 shrink-0">
-                {user.role === 'mestre' ? (
-                  <Shield className="w-4 h-4 text-amber-400" />
-                ) : (
-                  <UserIcon className="w-4 h-4" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-white truncate leading-tight">
-                  {user.name}
-                </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[10px] text-cyan-200/70 uppercase tracking-wider font-semibold">
+        <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
+          {!isMini ? (
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-cyan-300 shrink-0">
+                  {user.role === 'mestre' ? (
+                    <Shield className="w-3.5 h-3.5 text-amber-400" />
+                  ) : (
+                    <UserIcon className="w-3.5 h-3.5" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium text-white truncate leading-tight">
+                    {user.name}
+                  </p>
+                  <span className="text-[9px] text-cyan-200/70 uppercase tracking-wider font-semibold">
                     {user.role}
                   </span>
                 </div>
               </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={handleLogout}
-              title="Encerrar sessão"
-              aria-label="Encerrar sessão"
-              className="p-1.5 rounded-lg text-[#d5e4ec]/70 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-white/20"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Encerrar sessão"
+                aria-label="Encerrar sessão"
+                className="p-1 rounded-md text-[#d5e4ec]/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div
+                className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-cyan-300 shrink-0"
+                title={`${user.name} (${user.role})`}
+              >
+                {user.role === 'mestre' ? (
+                  <Shield className="w-3.5 h-3.5 text-amber-400" />
+                ) : (
+                  <UserIcon className="w-3.5 h-3.5" />
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Encerrar sessão"
+                aria-label="Encerrar sessão"
+                className="p-1 rounded-md text-[#d5e4ec]/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </aside>
