@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- Declaração acima: este arquivo é uma página HTML moderna (HTML5). -->
+<!-- Raiz da página: idioma português do Brasil; data-theme="light" liga o tema claro, que é o padrão (o botão Tema troca para "dark"). -->
+<html lang="pt-BR" data-theme="light">
+<!-- Cabeçalho: informações da página que não aparecem na tela. -->
+<head>
+<!-- Codificação UTF-8, para os acentos aparecerem certo. -->
+<meta charset="utf-8">
+<!-- Ajusta a página à largura do celular e usa a tela inteira (viewport-fit=cover). -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Título que aparece na aba do navegador. -->
+<title>Almoxarifado · Monitoração de estoque</title>
+<!-- Abre antes a conexão com o Google Fonts, para a fonte carregar mais rápido. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- Mesma coisa para o servidor que entrega os arquivos da fonte. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Carrega a fonte IBM Plex Sans (pesos 400, 500, 600 e 700). -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Liga o arquivo sistema.css, que fica na mesma pasta e guarda todos os estilos (cores, tamanhos e posições). -->
+<link rel="stylesheet" href="sistema.css">
+<!-- Fim do cabeçalho. -->
+</head>
+<!-- Corpo: tudo o que aparece na tela. -->
+<body>
+<!-- Estrutura geral: menu à esquerda e conteúdo à direita. -->
+<div class="app2">
+ <!-- Menu lateral preto: o JavaScript desenha os itens dentro de #nav. -->
+ <nav class="side" aria-label="Menu principal">
+  <!-- Nome do sistema (clicar leva ao Início). -->
+  <div class="brand" data-v="inicio"><i>A</i>Almoxarifado</div>
+  <!-- Traço colorido de identidade. -->
+  <div class="stripe"></div>
+  <!-- Aqui entram os itens do menu (display:contents deixa os botões direto na coluna). -->
+  <div id="nav" style="display:contents"></div>
+ </nav>
+ <!-- Coluna do conteúdo: barra de ações em cima e a tela embaixo. -->
+ <div class="col">
+  <!-- Barra superior fixa: busca e as ações mais usadas, visíveis em todas as telas. -->
+  <header class="topbar">
+   <!-- Busca geral por item, cliente, pedido ou NF-e; #gsr é a lista de resultados (começa escondida). -->
+   <div class="gs"><input type="search" id="gs" placeholder="Pesquisar item, cliente, pedido ou NF-e  ( / )" autocomplete="off" aria-label="Pesquisar"><div class="gsr" id="gsr" hidden></div></div>
+   <!-- Ações principais: registrar entrada (chegou material) e registrar saída (a produção retirou); Tema alterna claro e escuro. -->
+   <div class="acts"><button class="btn" data-pick="Entrada">+ Registrar entrada</button><button class="btn out" data-pick="Saída">Registrar saída</button><button class="btn out" id="theme" title="Alternar tema claro e escuro">Tema</button></div>
+  </header>
+  <!-- Conteúdo da tela escolhida: preenchido pelo JavaScript. -->
+  <main id="main"></main>
+ </div>
+</div>
+<!-- Fundo escuro que cobre a tela quando o painel lateral está aberto; clicar nele fecha o painel. -->
+<div class="scrim" id="scrim"></div>
+<!-- Aviso de confirmação que aparece por alguns segundos embaixo da tela (ex.: "Entrada registrada"). -->
+<div id="toast" role="status" aria-live="polite"></div>
+<!-- Painel lateral direito (gaveta): mostra detalhes do item e os formulários; começa escondido. -->
+<aside class="drawer" id="drawer" aria-label="Detalhes do produto" aria-hidden="true"></aside>
+
+<!-- Início do JavaScript: a parte que faz o sistema funcionar (dados, telas, cliques e formulários). -->
+<script src="sistema.js"></script>
+</body>
+</html>
