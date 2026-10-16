@@ -1,0 +1,322 @@
+/* =====================================================================
+ sistema.css - estilos do sistema de almoxarifado (layout simples)
+ Cada regra tem um comentário acima dela explicando o que faz e onde fica.
+ As variáveis (--nome) do começo guardam as cores; mude lá para trocar o visual.
+ ===================================================================== */
+
+/* Cores do tema CLARO e medidas globais (variáveis que o resto do arquivo usa com var(--nome)); a 2ª linha reserva as áreas seguras do celular. */
+:root{--bg:#e9eff7;--surface:#fff;--side:#0b0c0f;--side-ink:#d5e4ec;--ink:#17212b;--muted:#5b6876;--line:#d9dfe5;--brand:#1d4ea3;--brand-ink:#fff;--ok:#2e7d4f;--low:#a85f00;--crit:#c8322b;--red:#d9372f;--okbg:#e1f1e8;--lowbg:#fbecd0;--critbg:#f8dedb;--track:#e3e8ed;--sky:#4fa8e0;--yellow:#f2b705;--rib:#e8edf4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* Tema ESCURO automático: só vale se o sistema do usuário estiver no escuro e ele não tiver escolhido "claro" no botão Tema. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#232325;--surface:#2b2b2e;--side:#1a1a1c;--side-ink:#b9c9d3;--ink:#ececee;--muted:#a3a3a9;--line:#3e3e42;--brand:#5aa9ea;--brand-ink:#06182e;--ok:#5ec58a;--low:#e9a23b;--crit:#f0796b;--red:#f0796b;--okbg:#18372a;--lowbg:#3b2f17;--critbg:#40201d;--track:#3a3a3e;--sky:#7cc3f2;--yellow:#f5c431;--rib:#2f2f32}}
+
+/* Tema ESCURO manual: vale quando o html tem data-theme="dark" (é o padrão desta página); define as cores neutras escuras. */
+:root[data-theme="dark"]{--bg:#232325;--surface:#2b2b2e;--side:#1a1a1c;--side-ink:#b9c9d3;--ink:#ececee;--muted:#a3a3a9;--line:#3e3e42;--brand:#5aa9ea;--brand-ink:#06182e;--ok:#5ec58a;--low:#e9a23b;--crit:#f0796b;--red:#f0796b;--okbg:#18372a;--lowbg:#3b2f17;--critbg:#40201d;--track:#3a3a3e;--sky:#7cc3f2;--yellow:#f5c431;--rib:#2f2f32}
+
+/* Faz a rolagem por âncoras respeitar a área segura do topo (notch do celular). */
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+
+/* Em todos os elementos, a largura inclui borda e espaçamento interno (facilita calcular tamanhos). */
+*{box-sizing:border-box}
+
+/* Corpo da página: sem margem, cor de fundo e do texto do tema, fonte IBM Plex Sans de 15px e números alinhados em coluna. */
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+
+/* Botões herdam a fonte e a cor do texto e mostram a mãozinha ao passar o mouse. */
+button{font:inherit;color:inherit;cursor:pointer}
+
+/* Contorno azul visível ao navegar pelo teclado (acessibilidade). */
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* [Sobra do layout antigo] Botão do menu lateral (lista vertical). */
+.nav{background:none;border:0;text-align:left;padding:10px 12px;border-radius:8px;color:inherit;display:flex;justify-content:space-between;align-items:center}
+
+/* [Sobra do layout antigo] Realce do botão do menu quando o mouse passa. */
+.nav:hover{background:rgba(255,255,255,.07)}
+
+/* [Sobra do layout antigo] Botão do menu da página aberta. */
+.nav[aria-current="page"]{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+
+/* Selo vermelho arredondado com um número (alertas) que aparece no menu de módulos. */
+.badge{background:var(--crit);color:#fff;border-radius:99px;font-size:12px;padding:0 8px;font-weight:600}
+
+/* Área principal de conteúdo: espaçamento interno, largura máxima de 1180px e ocupa toda a largura disponível. */
+main{padding:28px clamp(16px,3vw,40px) 48px;max-width:1180px;width:100%}
+
+/* Título principal da página (h1): tamanho que se adapta à tela, com limite de largura. */
+h1{font-size:clamp(24px,3.2vw,34px);line-height:1.2;margin:0 0 6px;font-weight:600;max-width:24ch}
+
+/* Texto de apoio (subtítulo) logo abaixo do título, em cor mais apagada. */
+.sub{color:var(--muted);margin:0 0 24px}
+
+/* Faixa de cartões de resumo: grade que cria quantas colunas de 170px couberem. */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+
+/* Cartão de resumo: fundo, borda fina, cantos arredondados e espaçamento interno. */
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+
+/* Número grande dentro do cartão de resumo. */
+.stat b{display:block;font-size:28px;font-weight:600;line-height:1.1}
+
+/* Legenda pequena do cartão de resumo, em cor apagada. */
+.stat span{color:var(--muted);font-size:13.5px}
+
+/* Números do cartão "crítico" em vermelho e do "abaixo do mínimo" em âmbar. */
+.stat.crit b{color:var(--crit)}.stat.low b{color:var(--low)}
+
+/* Duas colunas lado a lado (a primeira um pouco maior), usada em painéis; vira uma coluna no celular. */
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+
+/* Painel em caixa: fundo, borda, cantos arredondados e espaçamento interno. */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+
+/* Título (h2) dentro de um painel. */
+.panel h2{font-size:16px;margin:0 0 10px}
+
+/* Linha de ferramentas (busca e filtros): itens lado a lado que quebram de linha se faltar espaço. */
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+
+/* Campo de busca: cresce para ocupar espaço (mínimo 240px), com borda, cantos e cores do tema. */
+input[type=search]{flex:1 1 240px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
+
+/* Botão em formato de pílula (filtros, ações secundárias). */
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 14px}
+
+/* Filtro selecionado: fica com fundo azul e texto claro. */
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+
+/* Caixa que envolve as tabelas: rolagem horizontal se a tabela for larga, com borda. */
+.wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+
+/* Tabela ocupa 100% da largura, com bordas coladas e largura mínima de 640px. */
+table{border-collapse:collapse;width:100%;min-width:640px}
+
+/* Células da tabela: espaçamento interno, texto à esquerda e linha fina embaixo. */
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+
+/* Cabeçalho da tabela: texto menor, mais leve e apagado. */
+th{font-weight:500;color:var(--muted);font-size:13.5px}
+
+/* Remove a linha de baixo da última linha da tabela. */
+tbody tr:last-child td{border-bottom:0}
+
+/* Linhas clicáveis da tabela: mãozinha e fundo diferente ao passar o mouse. */
+tr.row{cursor:pointer}tr.row:hover{background:var(--bg)}
+
+/* Texto pequeno abaixo do nome na célula, em linha própria e cor apagada. */
+td small{display:block;color:var(--muted)}
+
+/* Barra de nível do estoque: trilho cinza de 8px; position:relative serve de referência para a marca do mínimo. */
+.gauge{position:relative;height:8px;background:var(--track);border-radius:4px;min-width:120px}
+
+/* Parte colorida da barra: posicionada dentro do trilho (position:absolute) colada à esquerda. */
+.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+
+/* Marca vertical do estoque mínimo, posicionada em cima da barra e um pouco mais alta que ela. */
+.gauge u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.55}
+
+/* Cor da barra conforme a situação: verde (normal), âmbar (abaixo do mínimo) e vermelho (crítico). */
+.s-ok i{background:var(--ok)}.s-low i{background:var(--low)}.s-crit i{background:var(--crit)}
+
+/* Etiqueta (tag) base: bloco pequeno com cantos arredondados e texto em negrito. */
+.tag{display:inline-block;border-radius:6px;padding:2px 9px;font-size:13px;font-weight:600}
+
+/* Cores das etiquetas: normal (verde), abaixo do mínimo (âmbar) e crítico (vermelho). */
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.low{background:var(--lowbg);color:var(--low)}.tag.crit{background:var(--critbg);color:var(--crit)}
+
+/* Linha de lista: texto à esquerda e informação à direita, com linha fina embaixo. */
+.li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+
+/* A última linha da lista fica sem linha de baixo. */
+.li:last-child{border:0}
+
+/* Botão dentro da lista parece texto comum (sem fundo e sem borda). */
+.li button{background:none;border:0;text-align:left;padding:0}
+
+/* Cor do sinal de entrada (verde) e de saída (vermelho) nas quantidades. */
+.in{color:var(--ok)}.out{color:var(--crit)}
+
+/* Mensagem de "nada encontrado": centralizada, com espaço e cor apagada. */
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+/* Fundo escuro que cobre a tela quando o painel lateral abre: fixo, invisível até abrir, com transição suave. */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+
+/* Painel lateral (gaveta): fixo no lado direito, largura até 420px, escondido fora da tela (deslocado 100%). */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .22s;padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px));overflow-y:auto}
+
+/* Quando o body tem a classe "open": o fundo escuro aparece e a gaveta desliza para dentro da tela. */
+body.open .scrim{opacity:1;pointer-events:auto}body.open .drawer{transform:none}
+
+/* Título (h2) dentro da gaveta, maior. */
+.drawer h2{margin:6px 0 2px;font-size:22px}
+
+/* Botão "Fechar" da gaveta: flutua no canto direito, com borda. */
+.close{float:right;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+
+/* Lista de pares (dl): duas colunas, rótulo à esquerda e valor à direita. */
+dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:18px 0}dt{color:var(--muted)}dd{margin:0}
+
+/* Número muito grande (quantidade em estoque no painel do item). */
+.big{font-size:40px;font-weight:600;line-height:1}
+
+/* Cabeçalho da página: título à esquerda e botão de ação à direita, na mesma linha. */
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+
+/* Botão principal: fundo azul, texto claro, cantos arredondados, texto em negrito. */
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:8px;padding:10px 16px;font-weight:600;white-space:nowrap}
+
+/* Rótulos dos formulários: um embaixo do outro, texto pequeno e apagado. */
+form label{display:block;margin:0 0 12px;font-size:13.5px;color:var(--muted)}
+
+/* Campos dos formulários: largura total, borda e cores do tema. */
+form input,form select{display:block;width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+
+/* Duas colunas iguais para campos lado a lado no formulário. */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Subtítulo de seção dentro do formulário ou do painel. */
+.sec{font-size:15px;margin:18px 0 10px}
+
+/* Mensagem de erro dos formulários: vermelha, com altura reservada para não "pular" a tela. */
+.err{color:var(--crit);min-height:1.4em;margin:0 0 8px}
+
+/* Ficha de informações: caixa com borda e cantos arredondados. */
+.ficha{border:1px solid var(--line);border-radius:10px;margin:12px 0 18px}
+
+/* Cada linha da ficha: rótulo à esquerda e valor à direita, com linha fina embaixo. */
+.ficha div{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border-bottom:1px solid var(--line)}
+
+/* Última linha da ficha sem borda; rótulo apagado e valor alinhado à direita. */
+.ficha div:last-child{border:0}.ficha span{color:var(--muted)}.ficha b{font-weight:500;text-align:right}
+
+/* [Sobra do layout antigo] Marca amarela na lateral do botão do menu aberto. */
+.nav[aria-current="page"]{box-shadow:inset 3px 0 var(--yellow)}
+
+/* [Sobra do layout antigo] Título de grupo do menu lateral, em letras maiúsculas. */
+.grp{font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.6;padding:16px 12px 4px}
+
+/* Linha colorida no topo dos cartões de resumo: azul, amarela (abaixo do mínimo) ou vermelha (crítico). */
+.stat{border-top:3px solid var(--sky)}.stat.low{border-top-color:var(--yellow)}.stat.crit{border-top-color:var(--red)}
+
+/* Linha azul escura no topo das tabelas. */
+.wrap{border-top:3px solid var(--brand)}
+
+/* Etiqueta informativa (ex.: Pendente, Separado, tipo de cadastro) em azul claro translúcido. */
+.tag.info{background:color-mix(in srgb,var(--sky) 22%,transparent);color:var(--brand)}
+
+/* Grade responsiva de campos do formulário de saída manual (colunas de no mínimo 170px). */
+.row3{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+
+/* Linha de botões de filtro que quebra de linha se faltar espaço. */
+.chips{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+
+/* Linha de botões de ação do painel do item (adicionar entrada, retirar). */
+.acoes{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+
+/* Grade de cartões da tela Início (colunas de no mínimo 220px). */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:26px}
+
+/* Cartão clicável da tela Início: caixa com linha azul no topo, conteúdo empilhado em coluna. */
+.card{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--sky);border-radius:10px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:2px;color:var(--ink)}
+
+/* Ao passar o mouse no cartão: linha do topo vira amarela e aparece uma sombra. */
+.card:hover{border-top-color:var(--yellow);box-shadow:0 2px 10px rgba(0,0,0,.1)}
+
+/* Número grande dentro do cartão do Início. */
+.card b{font-size:34px;font-weight:600;line-height:1.1}
+
+/* Textos do cartão em cor apagada; o título do cartão em destaque. */
+.card>span{color:var(--muted)}.card>.card-t{color:var(--ink);font-weight:600;font-size:17px}
+
+/* Linha de etiquetas no rodapé do cartão do Início. */
+.card-s{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+
+/* Título de seção da tela Início (Estoque, Gestão). */
+.sec2{font-size:18px;margin:6px 0 12px}
+
+/* [Sobra do layout antigo] Permite à coluna principal encolher sem estourar a tela. */
+.col{min-width:0}
+
+/* Caixa da busca geral: position:relative para o resultado se posicionar logo abaixo dela. */
+.gs{position:relative;flex:0 1 440px;width:100%}.gs input{width:100%}
+
+/* Lista de resultados da busca geral: position:absolute logo abaixo do campo, com sombra e rolagem. */
+.gsr{position:absolute;top:100%;left:0;right:0;margin-top:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:360px;overflow:auto;z-index:10}
+
+/* Cada resultado da busca geral e cada item da lista de escolha: linha clicável de largura total. */
+.gsr button,.pk{display:flex;justify-content:space-between;gap:12px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 14px}
+
+/* Realce ao passar o mouse e texto secundário pequeno nesses resultados. */
+.gsr button:hover,.pk:hover{background:var(--bg)}.gsr small,.pk small{display:block;color:var(--muted)}
+
+/* [Sobra do layout antigo] Espaço entre ícone e texto no menu lateral. */
+.nav{gap:10px}.nav .nl{flex:1}
+
+/* Tamanho e traço dos ícones (SVG): 18px, só contorno, usando a cor do texto; vale também nos cartões. */
+.nav svg,.card svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* Ícone do cartão do Início: maior e em azul. */
+.card svg{color:var(--brand);width:24px;height:24px;margin-bottom:8px}
+
+/* Botão pequeno de ação nas linhas das tabelas e listas (+ Entrada, Retirar). */
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 10px;font-size:13px;white-space:nowrap}
+
+/* Botão pequeno fica azul ao passar o mouse. */
+.mini:hover{border-color:var(--brand);color:var(--brand)}
+
+/* Garante a aparência do botão pequeno quando está dentro de uma lista. */
+.li .mini{border:1px solid var(--line);background:var(--surface);padding:4px 10px;text-align:center}
+
+/* Linha de botões de ação rápida da tela Início. */
+.quick{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 22px}
+
+/* Coluna de ações da tabela: sem quebra de linha e alinhada à direita. */
+td.acts{white-space:nowrap;text-align:right}
+
+/* Contador pequeno dentro dos botões de filtro. */
+.chip small{opacity:.7;margin-left:4px}
+
+/* Aviso de confirmação: fixo no centro embaixo da tela, invisível até aparecer. */
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:50;max-width:90vw}
+
+/* Quando o aviso tem a classe "on", fica visível e sobe para a posição final. */
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* Garante que o fundo escuro e a gaveta fiquem na frente de tudo (z-index maior que a faixa superior). */
+.scrim{z-index:40}.drawer{z-index:41;color:var(--ink)}
+
+/* Para quem prefere menos movimento no sistema: desliga as animações da gaveta e do fundo. */
+@media (prefers-reduced-motion:reduce){.drawer,.scrim{transition:none}}
+
+
+/* ======== LAYOUT: menu lateral, barra superior e conteúdo ======== */
+
+/* Estrutura: coluna do menu (232px) e coluna do conteúdo, ocupando a altura da tela. */
+.app2{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+/* Menu lateral preto (cor principal do cliente): fixo ao rolar e com rolagem própria se faltar altura. */
+.side{background:var(--side);color:var(--side-ink);padding:20px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+/* Nome do sistema com o quadradinho "A", no topo do menu; clicar leva ao Início. */
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:600;font-size:17px;padding:0 8px;cursor:pointer}
+/* Quadradinho azul com a letra A. */
+.brand i{width:30px;height:30px;border-radius:7px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-style:normal;font-weight:700}
+/* Traço azul, vermelho e amarelo (identidade do cliente) sob o nome. */
+.stripe{height:3px;margin:14px 8px 10px;background:linear-gradient(90deg,var(--sky) 0 55%,var(--red) 55% 78%,var(--yellow) 78%)}
+/* Itens do menu: texto claro sobre o fundo preto, com realce ao passar o mouse. */
+.side .nav{color:var(--side-ink)}
+.side .nav:hover{background:rgba(255,255,255,.08)}
+/* Item da tela aberta: fundo mais claro, texto branco e marca amarela na lateral. */
+.side .nav[aria-current="page"]{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+/* Títulos dos grupos do menu (Estoque, Movimentações, Comercial): letras pequenas e apagadas. */
+.side .grp{color:var(--side-ink)}
+/* Barra superior fixa: busca à esquerda e botões de ação à direita. */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:12px clamp(16px,3vw,40px);background:var(--surface);border-bottom:1px solid var(--line)}
+/* Busca geral: ocupa o espaço disponível até 420px. */
+.topbar .gs{flex:1 1 300px;max-width:420px}
+/* Grupo de botões (entrada, saída, tema) empurrado para a direita. */
+.acts{display:flex;gap:8px;margin-left:auto}
+/* Botão secundário: fundo do tema e borda fina (o principal é o azul). */
+.btn.out{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+/* Em telas pequenas: o menu vira uma faixa horizontal no topo. */
+@media (max-width:860px){.app2{grid-template-columns:1fr}.side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;overflow:visible}.side .grp{display:none}.brand,.stripe{width:100%}.topbar{flex-wrap:wrap}.topbar .gs{max-width:none}}
