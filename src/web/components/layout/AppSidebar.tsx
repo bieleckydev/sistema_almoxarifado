@@ -4,13 +4,17 @@ import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Package,
+  Layers,
+  Wrench,
+  Bike,
+  PackageCheck,
   ArrowLeftRight,
   ShoppingCart,
+  Receipt,
+  Users,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  User as UserIcon,
-  Shield,
   Radio,
   type LucideIcon,
 } from 'lucide-react';
@@ -29,7 +33,7 @@ export interface AppSidebarProps {
    */
   moduloAtivo?: ModuloCorporativo;
   /**
-   * Identificador da tela ou aba atualmente ativa (para compatibilidade).
+   * Identificador da tela ou aba atualmente ativa.
    */
   telaAtiva?: TelaOuAba;
   abaAtiva?: TelaOuAba;
@@ -52,6 +56,10 @@ export interface AppSidebarProps {
    */
   pedidosAtrasadosCount?: number;
   /**
+   * Contagem de pedidos aguardando faturamento / emissão de nota.
+   */
+  pedidosAFaturarCount?: number;
+  /**
    * Estado colapsado / mini controlado externamente (opcional)
    */
   isMini?: boolean;
@@ -59,48 +67,115 @@ export interface AppSidebarProps {
   className?: string;
 }
 
-interface ItemModuloMenu {
-  id: ModuloCorporativo;
+interface ItemNavegacao {
+  tela: TelaOuAba;
   nome: string;
-  viewPadrao: TelaOuAba;
   icon: LucideIcon;
-  getBadgeCount?: (props: { critCount: number; atrCount: number }) => number;
+  moduloPai: ModuloCorporativo;
+  getBadgeCount?: (ctx: {
+    criticosTotais: number;
+    contagemCriticos: Record<AbaEstoque, number>;
+    pedidosAtrasadosCount: number;
+    pedidosAFaturarCount: number;
+  }) => number;
   getBadgeTitle?: (count: number) => string;
-  badgeVariant?: 'error' | 'secondary';
+  badgeVariant?: 'error' | 'secondary' | 'primary';
 }
 
-const ITENS_MODULOS: ItemModuloMenu[] = [
+interface GrupoNavegacao {
+  titulo: string;
+  itens: ItemNavegacao[];
+}
+
+const GRUPOS_MENU: GrupoNavegacao[] = [
   {
-    id: 'inicio',
-    nome: 'Início / Visão Geral',
-    viewPadrao: 'inicio',
-    icon: LayoutDashboard,
+    titulo: '',
+    itens: [
+      {
+        tela: 'inicio',
+        nome: 'Início / Visão Geral',
+        icon: LayoutDashboard,
+        moduloPai: 'inicio',
+      },
+    ],
   },
   {
-    id: 'estoque',
-    nome: 'Estoque & Almoxarifado',
-    viewPadrao: 'mp',
-    icon: Package,
-    getBadgeCount: ({ critCount }) => critCount,
-    getBadgeTitle: (count) =>
-      `${count} ${count === 1 ? 'item crítico' : 'itens críticos'}`,
-    badgeVariant: 'error',
+    titulo: 'Estoque',
+    itens: [
+      {
+        tela: 'mp',
+        nome: 'Matéria-prima',
+        icon: Layers,
+        moduloPai: 'estoque',
+        getBadgeCount: ({ contagemCriticos }) => contagemCriticos.mp || 0,
+        getBadgeTitle: (count) => `${count} item(ns) crítico(s) em MP`,
+        badgeVariant: 'error',
+      },
+      {
+        tela: 'imp',
+        nome: 'Materiais Improdutivos',
+        icon: Wrench,
+        moduloPai: 'estoque',
+        getBadgeCount: ({ contagemCriticos }) => contagemCriticos.imp || 0,
+        getBadgeTitle: (count) => `${count} item(ns) crítico(s) em Improdutivos`,
+        badgeVariant: 'error',
+      },
+      {
+        tela: 'motos',
+        nome: 'Peças & Componentes',
+        icon: Bike,
+        moduloPai: 'estoque',
+        getBadgeCount: ({ contagemCriticos }) => contagemCriticos.motos || 0,
+        getBadgeTitle: (count) => `${count} item(ns) crítico(s) em Peças`,
+        badgeVariant: 'error',
+      },
+      {
+        tela: 'terc',
+        nome: 'Material de Terceiros',
+        icon: PackageCheck,
+        moduloPai: 'estoque',
+      },
+    ],
   },
   {
-    id: 'compras',
-    nome: 'Movimentações & Saídas',
-    viewPadrao: 'saida',
-    icon: ArrowLeftRight,
+    titulo: 'Movimentações',
+    itens: [
+      {
+        tela: 'saida',
+        nome: 'Entradas e Saídas',
+        icon: ArrowLeftRight,
+        moduloPai: 'compras',
+      },
+    ],
   },
   {
-    id: 'vendas',
-    nome: 'Pedidos & Vendas',
-    viewPadrao: 'vendas',
-    icon: ShoppingCart,
-    getBadgeCount: ({ atrCount }) => atrCount,
-    getBadgeTitle: (count) =>
-      `${count} ${count === 1 ? 'pedido atrasado' : 'pedidos atrasados'}`,
-    badgeVariant: 'secondary',
+    titulo: 'Comercial',
+    itens: [
+      {
+        tela: 'vendas',
+        nome: 'Pedidos de Venda',
+        icon: ShoppingCart,
+        moduloPai: 'vendas',
+        getBadgeCount: ({ pedidosAtrasadosCount }) => pedidosAtrasadosCount,
+        getBadgeTitle: (count) => `${count} pedido(s) atrasado(s)`,
+        badgeVariant: 'error',
+      },
+      {
+        tela: 'fat',
+        nome: 'Faturamento',
+        icon: Receipt,
+        moduloPai: 'vendas',
+        getBadgeCount: ({ pedidosAFaturarCount }) => pedidosAFaturarCount,
+        getBadgeTitle: (count) => `${count} pedido(s) a faturar`,
+        badgeVariant: 'primary',
+      },
+      {
+        tela: 'clientes',
+        nome: 'Clientes & Parceiros',
+        icon: Users,
+        moduloPai: 'vendas',
+      },
+    ],
   },
 ];
 
@@ -114,6 +189,7 @@ export function AppSidebar({
   totalCriticos,
   contagemCriticos = { mp: 0, imp: 0, motos: 0 },
   pedidosAtrasadosCount = 0,
+  pedidosAFaturarCount = 0,
   isMini: isMiniProp,
   onToggleMini: onToggleMiniProp,
   className = '',
@@ -230,76 +306,105 @@ export function AppSidebar({
         )}
 
         {/* Lista de Navegação Principal */}
-        <nav className="flex flex-col gap-1.5" aria-label="Módulos corporativos">
-          {ITENS_MODULOS.map((item) => {
-            const Icon = item.icon;
-            const isCurrent = moduloAtual === item.id;
-            const badgeCount = item.getBadgeCount
-              ? item.getBadgeCount({
-                critCount: criticosTotais,
-                atrCount: pedidosAtrasadosCount,
-              })
-              : 0;
-            const badgeTitle = item.getBadgeTitle
-              ? item.getBadgeTitle(badgeCount)
-              : '';
-
-            return (
-              <button
-                key={item.id}
-                type="button"
-                data-mod={item.id}
-                onClick={() => handleSelectModulo(item.id, item.viewPadrao)}
-                aria-current={isCurrent ? 'true' : undefined}
-                title={isMini ? `${item.nome}${badgeCount > 0 ? ` (${badgeTitle})` : ''}` : undefined}
-                className={`w-full flex items-center rounded-lg text-xs transition-all cursor-pointer text-left relative ${isMini
-                  ? 'justify-center py-2.5 px-1'
-                  : 'justify-between px-3 py-2.5'
-                  } ${isCurrent
-                    ? 'bg-primary-container text-on-primary font-semibold shadow-sm'
-                    : 'text-inverse-on-surface/80 hover:bg-white/10 hover:text-white font-medium'
-                  }`}
-              >
-                <div
-                  className={`flex items-center gap-2.5 min-w-0 ${isMini ? 'justify-center' : ''
-                    }`}
-                >
-                  <Icon
-                    className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-on-primary' : 'text-outline-variant'
-                      }`}
-                  />
-                  {!isMini && <span className="truncate">{item.nome}</span>}
+        <nav className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-210px)] pr-0.5" aria-label="Menu WMS Operacional">
+          {GRUPOS_MENU.map((grupo, gIndex) => (
+            <div key={grupo.titulo || `g-${gIndex}`} className="flex flex-col gap-1">
+              {!isMini && grupo.titulo && (
+                <div className="px-2 pt-2.5 pb-0.5 font-label-sm text-[10px] uppercase tracking-wider text-outline-variant font-bold select-none">
+                  {grupo.titulo}
                 </div>
+              )}
+              {isMini && grupo.titulo && (
+                <div className="my-1 border-t border-white/10" />
+              )}
+              {grupo.itens.map((item) => {
+                const Icon = item.icon;
+                const isCurrent = activeKey === item.tela;
+                const badgeCount = item.getBadgeCount
+                  ? item.getBadgeCount({
+                    criticosTotais,
+                    contagemCriticos,
+                    pedidosAtrasadosCount,
+                    pedidosAFaturarCount,
+                  })
+                  : 0;
+                const badgeTitle = item.getBadgeTitle
+                  ? item.getBadgeTitle(badgeCount)
+                  : '';
 
-                {/* Badges de Notificação Operacional */}
-                {badgeCount > 0 && (
-                  <>
-                    {!isMini ? (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold shrink-0 ${item.badgeVariant === 'secondary'
-                          ? 'bg-secondary-container text-on-secondary-fixed'
-                          : 'bg-error text-on-error'
+                return (
+                  <button
+                    key={item.tela}
+                    type="button"
+                    data-tela={item.tela}
+                    onClick={() => {
+                      if (onSelectModulo) {
+                        onSelectModulo(item.moduloPai);
+                      }
+                      if (onSelectTela) {
+                        onSelectTela(item.tela);
+                      } else if (onSelectAba) {
+                        (onSelectAba as (aba: TelaOuAba) => void)(item.tela);
+                      }
+                    }}
+                    aria-current={isCurrent ? 'true' : undefined}
+                    title={
+                      isMini
+                        ? `${item.nome}${badgeCount > 0 ? ` (${badgeTitle})` : ''}`
+                        : undefined
+                    }
+                    className={`w-full flex items-center rounded-lg text-xs transition-all cursor-pointer text-left relative ${isMini
+                      ? 'justify-center py-2 px-1'
+                      : 'justify-between px-2.5 py-2'
+                      } ${isCurrent
+                        ? 'bg-primary-container text-on-primary font-semibold shadow-xs'
+                        : 'text-inverse-on-surface/80 hover:bg-white/10 hover:text-white font-medium'
+                      }`}
+                  >
+                    <div
+                      className={`flex items-center gap-2.5 min-w-0 ${isMini ? 'justify-center' : ''
+                        }`}
+                    >
+                      <Icon
+                        className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-on-primary' : 'text-outline-variant'
                           }`}
-                        title={badgeTitle}
-                      >
-                        {item.badgeVariant === 'error' && badgeCount > 1
-                          ? `${badgeCount} críticos`
-                          : badgeCount}
-                      </span>
-                    ) : (
-                      <span
-                        className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${item.badgeVariant === 'secondary'
-                          ? 'bg-secondary-container'
-                          : 'bg-error'
-                          } ring-2 ring-inverse-surface`}
-                        title={badgeTitle}
                       />
+                      {!isMini && <span className="truncate text-xs">{item.nome}</span>}
+                    </div>
+
+                    {/* Badges de Notificação Operacional */}
+                    {badgeCount > 0 && (
+                      <>
+                        {!isMini ? (
+                          <span
+                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${item.badgeVariant === 'error'
+                              ? 'bg-error text-on-error'
+                              : item.badgeVariant === 'primary'
+                                ? 'bg-primary-fixed text-on-primary-fixed'
+                                : 'bg-secondary-container text-on-secondary-fixed'
+                              }`}
+                            title={badgeTitle}
+                          >
+                            {badgeCount}
+                          </span>
+                        ) : (
+                          <span
+                            className={`absolute top-1 right-1 w-2 h-2 rounded-full ${item.badgeVariant === 'error'
+                              ? 'bg-error'
+                              : item.badgeVariant === 'primary'
+                                ? 'bg-primary-fixed'
+                                : 'bg-secondary-container'
+                              } ring-2 ring-inverse-surface`}
+                            title={badgeTitle}
+                          />
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </button>
-            );
-          })}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
 
