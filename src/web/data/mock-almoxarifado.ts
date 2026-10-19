@@ -102,7 +102,14 @@ export const STATUS_LABELS: Record<StatusCriticidade, string> = {
 /**
  * Tipos de tela ou aba navegáveis no sistema V2/V5.
  */
-export type TelaOuAba = 'inicio' | AbaEstoque | 'vendas' | 'clientes' | 'saida';
+export type TelaOuAba =
+  | 'inicio'
+  | AbaEstoque
+  | 'vendas'
+  | 'clientes'
+  | 'saida'
+  | 'fat'
+  | 'terc';
 
 /**
  * Módulos corporativos introduzidos na V5 (Ribbon / Sidebar de Módulos).
@@ -117,6 +124,8 @@ export type RibbonIconName =
   | 'vendas'
   | 'clientes'
   | 'saida'
+  | 'fat'
+  | 'terc'
   | 'entrada'
   | 'retirada'
   | 'novo'
@@ -272,8 +281,8 @@ export function obterModuloDeTela(
   moduloAtual?: ModuloCorporativo | null
 ): ModuloCorporativo {
   if (view === 'inicio') return 'inicio';
-  if (view === 'mp' || view === 'imp' || view === 'motos') return 'estoque';
-  if (view === 'vendas') return 'vendas';
+  if (view === 'mp' || view === 'imp' || view === 'motos' || view === 'terc') return 'estoque';
+  if (view === 'vendas' || view === 'fat') return 'vendas';
   if (view === 'saida') return moduloAtual === 'compras' ? 'compras' : 'estoque';
   if (view === 'clientes') return moduloAtual === 'compras' ? 'compras' : 'vendas';
   return 'estoque';
@@ -350,9 +359,10 @@ export const PEDIDOS_INICIAIS: Pedido[] = [
     prazoEntrega: '2026-10-08',
     status: 'PENDENTE',
     itens: [
-      { itemId: 'item-1', quantidade: 10 },
-      { itemId: 'item-3', quantidade: 20 },
+      { itemId: 'item-1', quantidade: 10, precoUnitario: 450 },
+      { itemId: 'item-3', quantidade: 20, precoUnitario: 95 },
     ],
+    valorTotal: 6400,
   },
   {
     id: 'ped-102',
@@ -361,9 +371,10 @@ export const PEDIDOS_INICIAIS: Pedido[] = [
     prazoEntrega: '2026-10-05',
     status: 'SEPARADO',
     itens: [
-      { itemId: 'item-13', quantidade: 6 },
-      { itemId: 'item-15', quantidade: 10 },
+      { itemId: 'item-13', quantidade: 6, precoUnitario: 89.9 },
+      { itemId: 'item-15', quantidade: 10, precoUnitario: 24.5 },
     ],
+    valorTotal: 784.4,
   },
   {
     id: 'ped-103',
@@ -371,7 +382,8 @@ export const PEDIDOS_INICIAIS: Pedido[] = [
     clienteId: 'cli-3',
     prazoEntrega: '2026-10-12',
     status: 'PENDENTE',
-    itens: [{ itemId: 'item-2', quantidade: 20 }],
+    itens: [{ itemId: 'item-2', quantidade: 20, precoUnitario: 310 }],
+    valorTotal: 6200,
   },
   {
     id: 'ped-104',
@@ -379,6 +391,42 @@ export const PEDIDOS_INICIAIS: Pedido[] = [
     clienteId: 'cli-1',
     prazoEntrega: '2026-10-02',
     status: 'ENTREGUE',
-    itens: [{ itemId: 'item-6', quantidade: 10 }],
+    itens: [{ itemId: 'item-6', quantidade: 10, precoUnitario: 28 }],
+    valorTotal: 280,
+    faturamento: {
+      numeroNFe: '1520',
+      serie: '1',
+      dataEmissao: '2026-10-03',
+      dataVencimento: '2026-11-02',
+      valorTotal: 280,
+    },
+  },
+];
+
+export interface NotaFiscalMock {
+  id: string;
+  numeroNF: string;
+  serie: string;
+  dataEmissao: string;
+  dataVencimento?: string;
+  tipo: 'VENDA' | 'RETORNO_INDUSTRIALIZACAO';
+  clienteId: string;
+  valorTotal: number;
+  referencia: string;
+  pedidoId?: string;
+}
+
+export const NOTAS_INICIAIS: NotaFiscalMock[] = [
+  {
+    id: 'nf-1520',
+    numeroNF: '1520',
+    serie: '1',
+    dataEmissao: '2026-10-03',
+    dataVencimento: '2026-11-02',
+    tipo: 'VENDA',
+    clienteId: 'cli-1',
+    valorTotal: 280,
+    referencia: 'Pedido #104',
+    pedidoId: 'ped-104',
   },
 ];
