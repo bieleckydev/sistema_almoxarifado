@@ -2,6 +2,7 @@ import type { Item } from '@/core/domain/item.schema';
 import type { TipoItem } from '@/core/domain/types';
 import type { Cliente } from '@/core/domain/cliente.schema';
 import type { Pedido } from '@/core/domain/pedido.schema';
+import type { MaterialTerceiro, MovimentacaoTerceiro } from '@/core/domain/material-terceiro.schema';
 
 export type AbaEstoque = 'mp' | 'imp' | 'motos';
 export type StatusCriticidade = 'ok' | 'low' | 'crit';
@@ -428,5 +429,104 @@ export const NOTAS_INICIAIS: NotaFiscalMock[] = [
     valorTotal: 280,
     referencia: 'Pedido #104',
     pedidoId: 'ped-104',
+  },
+];
+
+export const MATERIAIS_TERCEIROS_INICIAIS: MaterialTerceiro[] = [
+  {
+    id: 'terc-1',
+    clienteId: 'cli-1',
+    descricao: 'Chapa Aço 1020 3mm x 1200 x 2000mm (Cliente)',
+    codigoSku: 'TERC-CHP-01',
+    unidade: 'chapa',
+    saldoAtual: 25,
+    numeroNFRemessa: '44812',
+    createdAt: '2026-10-01T08:00:00.000Z',
+    updatedAt: '2026-10-05T14:30:00.000Z',
+  },
+  {
+    id: 'terc-2',
+    clienteId: 'cli-1',
+    descricao: 'Perfil U Dobrado 100x50x3mm (Cliente)',
+    codigoSku: 'TERC-PRF-02',
+    unidade: 'barra',
+    saldoAtual: 60,
+    numeroNFRemessa: '44930',
+    createdAt: '2026-10-04T09:15:00.000Z',
+    updatedAt: '2026-10-04T09:15:00.000Z',
+  },
+  {
+    id: 'terc-3',
+    clienteId: 'cli-2',
+    descricao: 'Tubo Redondo Inox 304 2" x 1.5mm (Cliente)',
+    codigoSku: 'TERC-TB-03',
+    unidade: 'barra',
+    saldoAtual: 14,
+    numeroNFRemessa: '88210',
+    createdAt: '2026-10-02T10:00:00.000Z',
+    updatedAt: '2026-10-08T16:00:00.000Z',
+  },
+];
+
+export const MOVIMENTACOES_TERCEIROS_INICIAIS: MovimentacaoTerceiro[] = [
+  {
+    id: 'mov-terc-1',
+    materialTerceiroId: 'terc-1',
+    tipo: 'ENTRADA_REMESSA',
+    quantidade: 40,
+    saldoAnterior: 0,
+    saldoResultante: 40,
+    documento: 'NF-e 44812',
+    dataMovimentacao: '2026-10-01',
+    responsavel: 'Recebimento Almoxarifado',
+    observacao: 'Remessa para corte a laser e dobra',
+  },
+  {
+    id: 'mov-terc-2',
+    materialTerceiroId: 'terc-1',
+    tipo: 'CONSUMO_PRODUCAO',
+    quantidade: 15,
+    saldoAnterior: 40,
+    saldoResultante: 25,
+    documento: 'OP-2026-88',
+    dataMovimentacao: '2026-10-05',
+    responsavel: 'Corte Laser / Usinagem',
+    observacao: 'Corte de 15 chapas conforme projeto P-44',
+  },
+  {
+    id: 'mov-terc-3',
+    materialTerceiroId: 'terc-2',
+    tipo: 'ENTRADA_REMESSA',
+    quantidade: 60,
+    saldoAnterior: 0,
+    saldoResultante: 60,
+    documento: 'NF-e 44930',
+    dataMovimentacao: '2026-10-04',
+    responsavel: 'Recebimento Almoxarifado',
+    observacao: 'Remessa para furação e solda',
+  },
+  {
+    id: 'mov-terc-4',
+    materialTerceiroId: 'terc-3',
+    tipo: 'ENTRADA_REMESSA',
+    quantidade: 20,
+    saldoAnterior: 0,
+    saldoResultante: 20,
+    documento: 'NF-e 88210',
+    dataMovimentacao: '2026-10-02',
+    responsavel: 'Recebimento Almoxarifado',
+    observacao: 'Remessa para polimento sanitário',
+  },
+  {
+    id: 'mov-terc-5',
+    materialTerceiroId: 'terc-3',
+    tipo: 'CONSUMO_PRODUCAO',
+    quantidade: 6,
+    saldoAnterior: 20,
+    saldoResultante: 14,
+    documento: 'OP-2026-92',
+    dataMovimentacao: '2026-10-08',
+    responsavel: 'Polimento',
+    observacao: 'Polimento sanitário lote 1',
   },
 ];
