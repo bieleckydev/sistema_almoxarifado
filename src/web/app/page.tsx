@@ -32,6 +32,7 @@ import { ClientCreateDrawer } from '@/web/components/gestao/clientes/ClientCreat
 import { SaidaManualView } from '@/web/components/gestao/saida/SaidaManualView';
 import { FaturamentoView } from '@/web/components/gestao/faturamento/FaturamentoView';
 import { FaturarPedidoDrawer } from '@/web/components/gestao/faturamento/FaturarPedidoDrawer';
+import { TerceirosView } from '@/web/components/gestao/terceiros/TerceirosView';
 import { useFaturamento } from '@/web/hooks/useFaturamento';
 import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
@@ -499,6 +500,9 @@ export default function AlmoxarifadoDashboardPage() {
             ) : telaAtiva === 'fat' ? (
               /* 4. Módulo de Faturamento e Notas Fiscais */
               <FaturamentoView onNavegarPedidos={() => handleSelectTela('vendas')} />
+            ) : telaAtiva === 'terc' ? (
+              /* 5. Módulo de Material de Terceiros (Industrialização por Encomenda) */
+              <TerceirosView onNavegarFaturamento={() => handleSelectTela('fat')} />
             ) : telaAtiva === 'clientes' ? (
               /* 5. Módulo de Clientes, Fornecedores e Parceiros */
               <ClientesView

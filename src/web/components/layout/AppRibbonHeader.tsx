@@ -14,6 +14,8 @@ import {
   Users,
   ArrowLeftRight,
   Home,
+  Receipt,
+  PackageCheck,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -51,6 +53,8 @@ const ICONES_MAP: Record<RibbonIconName, LucideIcon> = {
   novo: Plus,
   rel: BarChart3,
   cal: Calendar,
+  fat: Receipt,
+  terc: PackageCheck,
 };
 
 export function AppRibbonHeader({
