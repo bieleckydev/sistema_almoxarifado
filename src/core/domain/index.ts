@@ -9,5 +9,5 @@ export * from './inventario.schema';
 export * from './nfe.schema';
 export * from './cliente.schema';
 export * from './pedido.schema';
-
-
+export * from './material-terceiro.schema';
+export * from './nota-fiscal-emitida.schema';

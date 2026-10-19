@@ -54,18 +54,36 @@ export const StatusPedidoFlexivelSchema = z.preprocess(
  */
 export const DATA_ISO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-/**
- * Schema de um item individual requisitado no pedido.
- */
 export const ItemPedidoSchema = z.object({
   itemId: z.string().min(1, 'ID do item é obrigatório'),
   quantidade: z
     .number()
     .positive('A quantidade do item deve ser maior que zero'),
+  precoUnitario: z
+    .number()
+    .nonnegative('O preço unitário não pode ser negativo')
+    .optional()
+    .default(0),
   observacao: z.string().trim().optional(),
 });
 
 export type ItemPedido = z.infer<typeof ItemPedidoSchema>;
+
+/**
+ * Metadados de faturamento vinculado ao pedido de venda.
+ */
+export const FaturamentoPedidoSchema = z.object({
+  numeroNFe: z.string().trim().min(1, 'Número da NF-e é obrigatório'),
+  serie: z.string().trim().default('1'),
+  dataEmissao: z.string().regex(DATA_ISO_REGEX, 'Data de emissão inválida (AAAA-MM-DD)'),
+  dataVencimento: z
+    .string()
+    .regex(DATA_ISO_REGEX, 'Data de vencimento inválida (AAAA-MM-DD)')
+    .optional(),
+  valorTotal: z.number().nonnegative().optional(),
+});
+
+export type FaturamentoPedido = z.infer<typeof FaturamentoPedidoSchema>;
 
 /**
  * Schema principal da entidade Pedido de Venda / Expedição.
@@ -84,6 +102,8 @@ export const PedidoSchema = z.object({
   itens: z
     .array(ItemPedidoSchema)
     .min(1, 'O pedido deve conter pelo menos um item'),
+  valorTotal: z.number().nonnegative().optional(),
+  faturamento: FaturamentoPedidoSchema.optional(),
   observacoes: z.string().trim().optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
@@ -109,6 +129,8 @@ export const CreatePedidoSchema = z.object({
   itens: z
     .array(ItemPedidoSchema)
     .min(1, 'Adicione pelo menos um item ao pedido'),
+  valorTotal: z.number().nonnegative().optional(),
+  faturamento: FaturamentoPedidoSchema.optional(),
   observacoes: z
     .string()
     .trim()
@@ -228,3 +250,37 @@ export function obterProximoStatus(statusAtual: StatusPedido): StatusPedido | nu
       return null;
   }
 }
+
+/**
+ * Calcula o valor total financeiro do pedido somando (quantidade * precoUnitario) de cada item.
+ */
+export function calcularTotalPedido(
+  itens: Array<{ quantidade: number; precoUnitario?: number }>
+): number {
+  return itens.reduce(
+    (total, item) => total + item.quantidade * (item.precoUnitario || 0),
+    0
+  );
+}
+
+/**
+ * Informa se o pedido já foi faturado (possui registro de NF-e).
+ */
+export function isPedidoFaturado(
+  pedido: { faturamento?: unknown }
+): boolean {
+  return Boolean(pedido.faturamento);
+}
+
+/**
+ * Informa se o pedido é elegível para faturamento (separado ou entregue e ainda não faturado).
+ */
+export function isPedidoElegivelFaturamento(
+  pedido: { status: StatusPedido; faturamento?: unknown }
+): boolean {
+  return (
+    (pedido.status === 'SEPARADO' || pedido.status === 'ENTREGUE') &&
+    !pedido.faturamento
+  );
+}
+
