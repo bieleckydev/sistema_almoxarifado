@@ -177,6 +177,7 @@ export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConf
               { action: 'v:mp', label: 'Matéria-prima', icon: 'mp' },
               { action: 'v:imp', label: 'Materiais improdutivos', icon: 'imp' },
               { action: 'v:motos', label: 'Peças de motos', icon: 'motos' },
+              { action: 'v:terc', label: 'Material de terceiros', icon: 'terc' },
             ],
           },
           {
@@ -185,6 +186,7 @@ export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConf
               { action: 'novoitem:mp', label: 'Nova matéria-prima', icon: 'novo' },
               { action: 'novoitem:imp', label: 'Novo improdutivo', icon: 'novo' },
               { action: 'novoitem:motos', label: 'Nova peça de moto', icon: 'novo' },
+              { action: 'receberterceiro', label: 'Receber de terceiro', icon: 'novo' },
             ],
           },
         ],
@@ -197,6 +199,7 @@ export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConf
             buttons: [
               { action: 'pick:Entrada', label: 'Adicionar entrada', icon: 'entrada' },
               { action: 'pick:Saída', label: 'Retirar para produção', icon: 'retirada' },
+              { action: 'receberterceiro', label: 'Receber de terceiro', icon: 'novo' },
               { action: 'v:saida', label: 'Saída manual', icon: 'saida' },
             ],
           },
@@ -204,6 +207,7 @@ export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConf
             title: 'Relatórios',
             buttons: [
               { action: 'v:saida', label: 'Entradas e saídas', icon: 'rel' },
+              { action: 'v:terc', label: 'Custódia de terceiros', icon: 'terc' },
               { action: 'csv', label: 'Baixar CSV', icon: 'rel' },
             ],
           },
@@ -224,6 +228,7 @@ export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConf
             title: 'Entregas',
             buttons: [
               { action: 'pick:Entrada', label: 'Receber material', icon: 'entrada' },
+              { action: 'receberterceiro', label: 'Receber de terceiro', icon: 'novo' },
               { action: 'fc:FORNECEDOR', label: 'Fornecedores', icon: 'clientes' },
               { action: 'novocad:FORNECEDOR', label: 'Novo fornecedor', icon: 'novo' },
             ],
@@ -248,9 +253,10 @@ export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConf
         name: 'Pedidos',
         groups: [
           {
-            title: 'Pedidos',
+            title: 'Pedidos & Notas',
             buttons: [
               { action: 'v:vendas', label: 'Pedidos a entregar', icon: 'vendas' },
+              { action: 'v:fat', label: 'Faturamento e Notas', icon: 'fat' },
               { action: 'novopedido', label: 'Novo pedido', icon: 'novo' },
             ],
           },

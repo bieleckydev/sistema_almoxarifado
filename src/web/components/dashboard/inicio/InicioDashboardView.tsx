@@ -14,6 +14,7 @@ export interface InicioDashboardViewProps {
   onNavegar: (destino: TelaOuAba) => void;
   onRegistrarEntrada?: () => void;
   onRegistrarSaida?: () => void;
+  onReceberTerceiro?: () => void;
   onNovoPedido?: () => void;
   onNovoCadastro?: () => void;
   onSelectItem?: (item: ItemAtencaoResumo) => void;
@@ -24,6 +25,7 @@ export function InicioDashboardView({
   onNavegar,
   onRegistrarEntrada,
   onRegistrarSaida,
+  onReceberTerceiro,
   onNovoPedido,
   onNovoCadastro,
   onSelectItem,
@@ -117,13 +119,16 @@ export function InicioDashboardView({
         </div>
       </div>
 
-      {/* 2. Faixa de Ações Rápidas (4 Cards Expressos) */}
+      {/* 2. Faixa de Ações Rápidas (Cards Expressos de Chão de Fábrica) */}
       <QuickActionsBar
         onRegistrarEntrada={() =>
           onRegistrarEntrada ? onRegistrarEntrada() : onNavegar('mp')
         }
         onRegistrarSaida={() =>
           onRegistrarSaida ? onRegistrarSaida() : onNavegar('saida')
+        }
+        onReceberTerceiro={() =>
+          onReceberTerceiro ? onReceberTerceiro() : onNavegar('terc')
         }
         onNovoPedido={() =>
           onNovoPedido ? onNovoPedido() : onNavegar('vendas')

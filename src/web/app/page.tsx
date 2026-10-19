@@ -33,7 +33,9 @@ import { SaidaManualView } from '@/web/components/gestao/saida/SaidaManualView';
 import { FaturamentoView } from '@/web/components/gestao/faturamento/FaturamentoView';
 import { FaturarPedidoDrawer } from '@/web/components/gestao/faturamento/FaturarPedidoDrawer';
 import { TerceirosView } from '@/web/components/gestao/terceiros/TerceirosView';
+import { ReceberTerceiroDrawer } from '@/web/components/gestao/terceiros/ReceberTerceiroDrawer';
 import { useFaturamento } from '@/web/hooks/useFaturamento';
+import { useMaterialTerceiros } from '@/web/hooks/useMaterialTerceiros';
 import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
@@ -83,8 +85,10 @@ export default function AlmoxarifadoDashboardPage() {
     isOpen: false,
     pedido: null,
   });
+  const [isReceberTerceiroOpen, setIsReceberTerceiroOpen] = useState(false);
 
-  const { faturarPedido } = useFaturamento();
+  const { faturarPedido, kpis: faturamentoKpis } = useFaturamento();
+  const { receberMaterial, isRecebendo: isRecebendoTerceiro } = useMaterialTerceiros();
 
   // Otimização de busca com debounce de 300ms
   const buscaDebounced = useDebounce(termoBusca, 300);
@@ -163,11 +167,16 @@ export default function AlmoxarifadoDashboardPage() {
       } else if (param === 'fat') {
         setModuloAtivo('vendas');
         handleSelectTela('fat');
+      } else if (param === 'terc') {
+        setModuloAtivo('estoque');
+        handleSelectTela('terc');
       } else if (param === 'saida') {
         handleSelectTela('saida');
       } else if (param === 'clientes') {
         handleSelectTela('clientes');
       }
+    } else if (tipo === 'receberterceiro') {
+      setIsReceberTerceiroOpen(true);
     } else if (tipo === 'novoitem') {
       const aba = (param || 'mp') as AbaEstoque;
       setModuloAtivo('estoque');
@@ -332,6 +341,7 @@ export default function AlmoxarifadoDashboardPage() {
           totalCriticos={totalCriticosGerais}
           contagemCriticos={contagemCriticosPorAba}
           pedidosAtrasadosCount={resumoGeral?.vendas.atrasados ?? 0}
+          pedidosAFaturarCount={faturamentoKpis?.totalPedidosAFaturar ?? 0}
         />
 
         {/* Coluna Central com Header e Conteúdo */}
@@ -352,6 +362,7 @@ export default function AlmoxarifadoDashboardPage() {
                 onNavegar={handleSelectTela}
                 onRegistrarEntrada={() => setPickerDrawerState({ isOpen: true, tipo: 'Entrada' })}
                 onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
+                onReceberTerceiro={() => setIsReceberTerceiroOpen(true)}
                 onNovoPedido={() => setIsOrderCreateOpen(true)}
                 onNovoCadastro={() => handleOpenClientCreate()}
                 onSelectItem={async (itemAtencao) => {
@@ -629,6 +640,17 @@ export default function AlmoxarifadoDashboardPage() {
           onFaturar={async (dados) => {
             await faturarPedido(dados);
           }}
+        />
+
+        {/* Gaveta de Recebimento de Material de Terceiro */}
+        <ReceberTerceiroDrawer
+          isOpen={isReceberTerceiroOpen}
+          onClose={() => setIsReceberTerceiroOpen(false)}
+          onSalvar={async (dados) => {
+            await receberMaterial(dados);
+            setIsReceberTerceiroOpen(false);
+          }}
+          isSalvando={isRecebendoTerceiro}
         />
 
         {/* Notificações Toast Operacionais Flutuantes */}
