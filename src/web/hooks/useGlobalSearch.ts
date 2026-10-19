@@ -3,9 +3,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/core/services/firebase';
 import { collection, getDocs, limit, query, orderBy } from 'firebase/firestore';
-import { type AbaEstoque, METADADOS_ABAS, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
+import {
+  type AbaEstoque,
+  METADADOS_ABAS,
+  UNIDADE_LABELS,
+  NOTAS_INICIAIS,
+  MATERIAIS_TERCEIROS_INICIAIS,
+  CLIENTES_INICIAIS,
+} from '@/web/data/mock-almoxarifado';
 
-export type SearchResultType = 'item' | 'nfe' | 'cliente' | 'pedido';
+export type SearchResultType =
+  | 'item'
+  | 'nfe'
+  | 'cliente'
+  | 'pedido'
+  | 'faturamento'
+  | 'terceiro';
 
 export interface GlobalSearchResult {
   id: string;
@@ -15,7 +28,7 @@ export interface GlobalSearchResult {
   badge?: string;
   targetAba?: AbaEstoque;
   targetItemId?: string;
-  targetScreen?: 'inicio' | AbaEstoque | 'vendas' | 'clientes' | 'saida';
+  targetScreen?: 'inicio' | AbaEstoque | 'vendas' | 'clientes' | 'saida' | 'fat' | 'terc';
 }
 
 interface RawDataCache {
@@ -54,6 +67,24 @@ interface RawDataCache {
     prazoEntrega: string;
     status: string;
   }>;
+  notasFaturamento: Array<{
+    id: string;
+    numeroNF: string;
+    serie: string;
+    clienteNome: string;
+    tipo: string;
+    valorTotal: number;
+    dataEmissao: string;
+  }>;
+  terceiros: Array<{
+    id: string;
+    descricao: string;
+    codigoSku?: string;
+    clienteNome: string;
+    saldoAtual: number;
+    unidade: string;
+    numeroNFRemessa?: string;
+  }>;
 }
 
 /**
@@ -65,6 +96,8 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
     nfes: [],
     clientes: [],
     pedidos: [],
+    notasFaturamento: [],
+    terceiros: [],
   };
 
   // 1. Itens de estoque
@@ -137,14 +170,22 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
       });
     });
   } catch (err) {
-    console.warn('Erro ao carregar clientes para busca global:', err);
+    CLIENTES_INICIAIS.forEach((c) => {
+      result.clientes.push({
+        id: c.id,
+        nome: c.nome,
+        tipo: c.tipo,
+        documento: c.documento,
+        contato: c.contato,
+      });
+    });
   }
+
+  const clientMap = new Map(result.clientes.map((c) => [c.id, c.nome]));
 
   // 4. Pedidos de Venda
   try {
     const ordersSnap = await getDocs(collection(db, 'orders'));
-    const clientMap = new Map(result.clientes.map((c) => [c.id, c.nome]));
-
     ordersSnap.forEach((doc) => {
       const d = doc.data();
       const clienteId = String(d.clienteId || '');
@@ -153,7 +194,7 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
 
       result.pedidos.push({
         id: doc.id,
-        codigo: String(d.codigo || d.numero || doc.id.slice(0, 6)),
+        codigo: String(d.codigo || d.numeroSequencial || doc.id.slice(0, 6)),
         clienteNome,
         prazoEntrega: prazo,
         status: String(d.status || 'PENDENTE'),
@@ -161,6 +202,64 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
     });
   } catch (err) {
     console.warn('Erro ao carregar pedidos para busca global:', err);
+  }
+
+  // 5. Notas Fiscais Emitidas (Faturamento)
+  try {
+    const invoicesSnap = await getDocs(collection(db, 'invoices'));
+    invoicesSnap.forEach((doc) => {
+      const d = doc.data();
+      result.notasFaturamento.push({
+        id: doc.id,
+        numeroNF: String(d.numeroNF || ''),
+        serie: String(d.serie || '1'),
+        clienteNome: clientMap.get(String(d.clienteId || '')) || 'Cliente',
+        tipo: d.tipo === 'RETORNO_INDUSTRIALIZACAO' ? 'Retorno' : 'Venda',
+        valorTotal: Number(d.valorTotal) || 0,
+        dataEmissao: String(d.dataEmissao || ''),
+      });
+    });
+  } catch (err) {
+    NOTAS_INICIAIS.forEach((n) => {
+      result.notasFaturamento.push({
+        id: n.id,
+        numeroNF: n.numeroNF,
+        serie: n.serie,
+        clienteNome: clientMap.get(n.clienteId) || 'Cliente',
+        tipo: n.tipo === 'RETORNO_INDUSTRIALIZACAO' ? 'Retorno' : 'Venda',
+        valorTotal: n.valorTotal,
+        dataEmissao: n.dataEmissao,
+      });
+    });
+  }
+
+  // 6. Materiais de Terceiros (Custódia)
+  try {
+    const thirdsSnap = await getDocs(collection(db, 'third_party_materials'));
+    thirdsSnap.forEach((doc) => {
+      const d = doc.data();
+      result.terceiros.push({
+        id: doc.id,
+        descricao: String(d.descricao || ''),
+        codigoSku: d.codigoSku ? String(d.codigoSku) : undefined,
+        clienteNome: clientMap.get(String(d.clienteId || '')) || 'Cliente',
+        saldoAtual: Number(d.saldoAtual) || 0,
+        unidade: String(d.unidade || 'un'),
+        numeroNFRemessa: d.numeroNFRemessa ? String(d.numeroNFRemessa) : undefined,
+      });
+    });
+  } catch (err) {
+    MATERIAIS_TERCEIROS_INICIAIS.forEach((t) => {
+      result.terceiros.push({
+        id: t.id,
+        descricao: t.descricao,
+        codigoSku: t.codigoSku,
+        clienteNome: clientMap.get(t.clienteId) || 'Cliente',
+        saldoAtual: t.saldoAtual,
+        unidade: t.unidade,
+        numeroNFRemessa: t.numeroNFRemessa,
+      });
+    });
   }
 
   return result;
@@ -207,7 +306,7 @@ export function useGlobalSearch(termoBusca: string) {
       targetItemId: item.id,
     }));
 
-  // 2. Filtrar NF-e (máximo 3)
+  // 2. Filtrar NF-e de entrada (máximo 3)
   const nfeResultados: GlobalSearchResult[] = index.nfes
     .filter((nfe) => has(nfe.nfe, nfe.fornecedor))
     .slice(0, 3)
@@ -247,9 +346,37 @@ export function useGlobalSearch(termoBusca: string) {
       targetScreen: 'vendas',
     }));
 
+  // 5. Filtrar Notas Fiscais Emitidas / Faturamento (máximo 3)
+  const faturamentoResultados: GlobalSearchResult[] = index.notasFaturamento
+    .filter((nf) => has(nf.numeroNF, `nf-${nf.numeroNF}`, `nf ${nf.numeroNF}`, nf.clienteNome, nf.tipo))
+    .slice(0, 3)
+    .map((nf) => ({
+      id: `fat-${nf.id}`,
+      type: 'faturamento',
+      title: `NF-e ${nf.numeroNF} (${nf.tipo})`,
+      subtitle: `${nf.clienteNome} · R$ ${nf.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      badge: nf.tipo === 'Retorno' ? 'Retorno Ind.' : 'Venda',
+      targetScreen: 'fat',
+    }));
+
+  // 6. Filtrar Materiais de Terceiros sob Custódia (máximo 3)
+  const terceirosResultados: GlobalSearchResult[] = index.terceiros
+    .filter((t) => has(t.descricao, t.codigoSku, t.clienteNome, t.numeroNFRemessa))
+    .slice(0, 3)
+    .map((t) => ({
+      id: `terc-${t.id}`,
+      type: 'terceiro',
+      title: t.descricao,
+      subtitle: `${t.clienteNome}${t.numeroNFRemessa ? ' · NF-e Remessa ' + t.numeroNFRemessa : ''}`,
+      badge: `${t.saldoAtual} ${t.unidade}`,
+      targetScreen: 'terc',
+    }));
+
   const resultados = [
     ...itensResultados,
     ...nfeResultados,
+    ...faturamentoResultados,
+    ...terceirosResultados,
     ...clientesResultados,
     ...pedidosResultados,
   ];

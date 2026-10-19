@@ -152,8 +152,10 @@ export function MovementFormDrawer({
       onSuccess?.();
       onClose();
     } catch (err: unknown) {
+      const responseData = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data;
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        responseData?.error ||
+        responseData?.message ||
         (err as Error)?.message ||
         'Erro ao processar movimentação.';
       setErro(msg);
