@@ -21,11 +21,16 @@ import type { IEstoqueRepository } from '@/core/storage/estoque.repository.inter
 // ==========================================
 
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number = 400
-  ) {
-    super(message);
+  readonly status: number;
+
+  constructor(messageOrStatus: string | number, statusOrMessage: number | string = 400) {
+    if (typeof messageOrStatus === 'number') {
+      super(String(statusOrMessage));
+      this.status = messageOrStatus;
+    } else {
+      super(messageOrStatus);
+      this.status = typeof statusOrMessage === 'number' ? statusOrMessage : 400;
+    }
     this.name = 'ApiError';
   }
 }
@@ -113,7 +118,10 @@ export function parseQueryParams(request: Request): Record<string, string> {
 export function toErrorResponse(error: unknown): NextResponse {
   // Erro customizado da API
   if (error instanceof ApiError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json(
+      { error: error.message, message: error.message },
+      { status: error.status }
+    );
   }
 
   // Falha de validação Zod (400 Bad Request)

@@ -5,6 +5,7 @@ import {
   type Pedido,
   isPedidoAtrasado,
   hasPedidoFaltaEstoque,
+  calcularTotalPedido,
 } from '@/core/domain/pedido.schema';
 import {
   ApiError,
@@ -21,6 +22,8 @@ import { CLIENTES_INICIAIS, PEDIDOS_INICIAIS } from '@/web/data/mock-almoxarifad
 export interface PedidoEnriquecidoItem {
   itemId: string;
   quantidade: number;
+  precoUnitario: number;
+  subtotal: number;
   observacao?: string;
   nome: string;
   codigo: string;
@@ -110,13 +113,27 @@ export async function GET(request: Request) {
       const ordersSnap = await getDocs(collection(db, 'orders'));
       ordersSnap.forEach((d) => {
         const data = d.data();
+        const itens = Array.isArray(data.itens)
+          ? data.itens.map((i) => ({
+              itemId: String(i.itemId || ''),
+              quantidade: Number(i.quantidade) || 0,
+              precoUnitario: Number(i.precoUnitario) || 0,
+              observacao: i.observacao ? String(i.observacao) : undefined,
+            }))
+          : [];
+
+        const valorTotal =
+          Number(data.valorTotal) || calcularTotalPedido(itens);
+
         const pedidoRaw: Pedido = {
           id: d.id,
           numeroSequencial: Number(data.numeroSequencial) || 1,
           clienteId: String(data.clienteId || ''),
           prazoEntrega: String(data.prazoEntrega || ''),
           status: data.status || 'PENDENTE',
-          itens: Array.isArray(data.itens) ? data.itens : [],
+          itens,
+          valorTotal,
+          faturamento: data.faturamento || undefined,
           observacoes: data.observacoes || undefined,
           createdAt: data.createdAt || new Date().toISOString(),
           updatedAt: data.updatedAt || new Date().toISOString(),
@@ -126,9 +143,12 @@ export async function GET(request: Request) {
 
         const itensDetalhes: PedidoEnriquecidoItem[] = pedidoRaw.itens.map((it) => {
           const itemInfo = itensMap.get(it.itemId);
+          const precoUnitario = it.precoUnitario || 0;
           return {
             itemId: it.itemId,
             quantidade: it.quantidade,
+            precoUnitario,
+            subtotal: it.quantidade * precoUnitario,
             observacao: it.observacao,
             nome: itemInfo?.nome || it.observacao || 'Item ' + it.itemId,
             codigo: itemInfo?.codigo || '',
@@ -155,11 +175,15 @@ export async function GET(request: Request) {
     if (pedidos.length === 0) {
       for (const ped of PEDIDOS_INICIAIS) {
         const clienteNome = clientesMap.get(ped.clienteId) || 'Cliente não identificado';
+        const valorTotal = ped.valorTotal || calcularTotalPedido(ped.itens);
         const itensDetalhes: PedidoEnriquecidoItem[] = ped.itens.map((it) => {
           const itemInfo = itensMap.get(it.itemId);
+          const precoUnitario = it.precoUnitario || 0;
           return {
             itemId: it.itemId,
             quantidade: it.quantidade,
+            precoUnitario,
+            subtotal: it.quantidade * precoUnitario,
             observacao: it.observacao,
             nome: itemInfo?.nome || 'Item ' + it.itemId,
             codigo: itemInfo?.codigo || '',
@@ -170,6 +194,7 @@ export async function GET(request: Request) {
 
         pedidos.push({
           ...ped,
+          valorTotal,
           clienteNome,
           itensDetalhes,
           atrasado: isPedidoAtrasado(ped),
@@ -235,17 +260,27 @@ export async function POST(request: Request) {
 
     // Calcula o próximo numeroSequencial
     let maxSeq = 100;
-    const ordersSnap = await getDocs(collection(db, 'orders'));
-    ordersSnap.forEach((d) => {
-      const seq = Number(d.data().numeroSequencial);
-      if (!isNaN(seq) && seq > maxSeq) {
-        maxSeq = seq;
-      }
-    });
+    try {
+      const ordersSnap = await getDocs(collection(db, 'orders'));
+      ordersSnap.forEach((d) => {
+        const seq = Number(d.data().numeroSequencial);
+        if (!isNaN(seq) && seq > maxSeq) {
+          maxSeq = seq;
+        }
+      });
+    } catch {
+      PEDIDOS_INICIAIS.forEach((d) => {
+        if (d.numeroSequencial > maxSeq) {
+          maxSeq = d.numeroSequencial;
+        }
+      });
+    }
+
     const numeroSequencial = input.numeroSequencial || maxSeq + 1;
     const id = input.id || `order-${numeroSequencial}`;
 
     const now = new Date().toISOString();
+    const valorTotal = input.valorTotal || calcularTotalPedido(input.itens);
     const novoPedido: Pedido = {
       id,
       numeroSequencial,
@@ -253,12 +288,24 @@ export async function POST(request: Request) {
       prazoEntrega: input.prazoEntrega,
       status: input.status || 'PENDENTE',
       itens: input.itens,
+      valorTotal,
+      faturamento: input.faturamento,
       observacoes: input.observacoes || undefined,
       createdAt: now,
       updatedAt: now,
     };
 
-    await setDoc(doc(db, 'orders', id), novoPedido);
+    try {
+      await setDoc(doc(db, 'orders', id), novoPedido);
+    } catch {
+      // Fallback em memória quando Firestore emulador/conexão estiver offline
+      const jaExiste = PEDIDOS_INICIAIS.findIndex((p) => p.id === id);
+      if (jaExiste >= 0) {
+        PEDIDOS_INICIAIS[jaExiste] = novoPedido;
+      } else {
+        PEDIDOS_INICIAIS.push(novoPedido);
+      }
+    }
 
     return NextResponse.json(novoPedido, { status: 201 });
   } catch (error) {

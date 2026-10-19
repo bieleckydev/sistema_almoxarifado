@@ -17,6 +17,7 @@ import {
   PackageX,
   Calendar,
   Clock,
+  Receipt,
 } from 'lucide-react';
 import { usePedidos, useAtualizarStatusPedido } from '@/web/hooks/usePedidos';
 import { OrderStatusBadge } from './OrderStatusBadge';
@@ -26,11 +27,12 @@ import type { PedidoEnriquecido } from '@/web/app/api/pedidos/route';
 
 export interface VendasViewProps {
   onNovoPedido: () => void;
+  onFaturarPedido?: (pedido: PedidoEnriquecido) => void;
 }
 
 type FiltroStatusVendas = 'todos' | 'pendente' | 'separado' | 'entregue' | 'atrasado' | 'deficit';
 
-export function VendasView({ onNovoPedido }: VendasViewProps) {
+export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
   const { toast } = useToast();
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatusVendas>('todos');
@@ -435,6 +437,7 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
                 <th className="py-3 px-4">Itens Solicitados (Almoxarifado)</th>
                 <th className="py-3 px-4 whitespace-nowrap">Situação do Estoque</th>
                 <th className="py-3 px-4 whitespace-nowrap">Prazo SLA</th>
+                <th className="py-3 px-4 whitespace-nowrap">Valor Total</th>
                 <th className="py-3 px-4 whitespace-nowrap">Status Geral</th>
                 <th className="py-3 px-4 text-right whitespace-nowrap">Ações Operacionais</th>
               </tr>
@@ -442,14 +445,14 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
             <tbody className="divide-y divide-outline-variant/15 text-xs">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-secondary">
+                  <td colSpan={8} className="py-12 text-center text-secondary">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-primary" />
                     <span>Carregando pedidos de venda...</span>
                   </td>
                 </tr>
               ) : pedidosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-secondary">
+                  <td colSpan={8} className="py-12 text-center text-secondary">
                     Nenhum pedido encontrado para o critério de busca ou filtro selecionado.
                   </td>
                 </tr>
@@ -588,48 +591,85 @@ export function VendasView({ onNovoPedido }: VendasViewProps) {
                         </div>
                       </td>
 
-                      {/* Status Geral com Badges */}
+                      {/* Valor Total da Venda em R$ */}
+                      <td className="py-3.5 px-4 align-top whitespace-nowrap font-mono font-bold text-on-surface text-xs">
+                        {(pedido.valorTotal || 0).toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </td>
+
+                      {/* Status Geral com Badges e Informação de Faturamento */}
                       <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                        <OrderStatusBadge
-                          status={pedido.status}
-                          atrasado={pedido.atrasado}
-                          faltaEstoque={pedido.faltaEstoque}
-                        />
+                        <div className="flex flex-col gap-1 items-start">
+                          <OrderStatusBadge
+                            status={pedido.status}
+                            atrasado={pedido.atrasado}
+                            faltaEstoque={pedido.faltaEstoque}
+                          />
+                          {pedido.faturamento ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-tertiary/15 text-tertiary">
+                              <Receipt className="w-3 h-3" />
+                              Faturado · NF {pedido.faturamento.numeroNFe}
+                            </span>
+                          ) : (isSeparado || isEntregue) ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/15 text-primary">
+                              A faturar
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
 
                       {/* Ações Operacionais de Linha */}
                       <td className="py-3.5 px-4 align-top text-right whitespace-nowrap">
-                        {!isEntregue ? (
-                          <button
-                            type="button"
-                            onClick={() => handleAvancarStatus(pedido)}
-                            disabled={isMutating}
-                            className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 shadow-2xs ${
-                              isPendente
-                                ? 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'
-                                : 'bg-primary text-on-primary hover:bg-primary/90'
-                            }`}
-                            title={
-                              isPendente
-                                ? 'Avançar status para Separado'
-                                : 'Entregar pedido e realizar baixa automática de materiais'
-                            }
-                          >
-                            {isMutating ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : isPendente ? (
-                              <PackageCheck className="w-3.5 h-3.5 text-secondary" />
-                            ) : (
-                              <Truck className="w-3.5 h-3.5" />
-                            )}
-                            <span>{isPendente ? 'Marcar Separado' : 'Entregar & Baixar'}</span>
-                          </button>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-tertiary font-semibold px-2 py-1 rounded-md bg-tertiary/10">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Entregue</span>
-                          </span>
-                        )}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {!isEntregue && (
+                            <button
+                              type="button"
+                              onClick={() => handleAvancarStatus(pedido)}
+                              disabled={isMutating}
+                              className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 shadow-2xs ${
+                                isPendente
+                                  ? 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'
+                                  : 'bg-primary text-on-primary hover:bg-primary/90'
+                              }`}
+                              title={
+                                isPendente
+                                  ? 'Avançar status para Separado'
+                                  : 'Entregar pedido e realizar baixa automática de materiais'
+                              }
+                            >
+                              {isMutating ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                              ) : isPendente ? (
+                                <PackageCheck className="w-3.5 h-3.5 text-secondary" />
+                              ) : (
+                                <Truck className="w-3.5 h-3.5" />
+                              )}
+                              <span>{isPendente ? 'Marcar Separado' : 'Entregar & Baixar'}</span>
+                            </button>
+                          )}
+
+                          {/* Ação de Faturamento quando apto */}
+                          {(isSeparado || isEntregue) && !pedido.faturamento && onFaturarPedido && (
+                            <button
+                              type="button"
+                              onClick={() => onFaturarPedido(pedido)}
+                              className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 transition-colors cursor-pointer"
+                              title="Emitir Nota Fiscal para este pedido"
+                            >
+                              <Receipt className="w-3.5 h-3.5" />
+                              <span>Faturar</span>
+                            </button>
+                          )}
+
+                          {isEntregue && pedido.faturamento && (
+                            <span className="inline-flex items-center gap-1 text-xs text-tertiary font-semibold px-2 py-1 rounded-md bg-tertiary/10">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Concluído</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

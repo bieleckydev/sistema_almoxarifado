@@ -1,6 +1,5 @@
 import { z } from 'zod';
-
-export const DATA_ISO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+import { DATA_ISO_REGEX } from './pedido.schema';
 
 /**
  * Tipo da nota fiscal emitida pela empresa:

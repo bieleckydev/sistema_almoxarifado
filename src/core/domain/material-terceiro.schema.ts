@@ -1,9 +1,5 @@
 import { z } from 'zod';
-
-/**
- * Regex para validação de datas no padrão ISO YYYY-MM-DD.
- */
-export const DATA_ISO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+import { DATA_ISO_REGEX } from './pedido.schema';
 
 /**
  * Tipo de movimentação de material de terceiros:

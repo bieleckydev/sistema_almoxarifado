@@ -36,6 +36,7 @@ export interface OrderCreateDrawerProps {
 interface ItemLinha {
   itemId: string;
   quantidade: number;
+  precoUnitario: number;
 }
 
 interface CatalogoItemOption {
@@ -69,6 +70,7 @@ export function OrderCreateDrawer({
   // Estado do adicionador dinâmico de produto (Live Lookup)
   const [itemSelecionadoId, setItemSelecionadoId] = useState('');
   const [quantidadeAdicionar, setQuantidadeAdicionar] = useState<number>(1);
+  const [precoUnitarioAdicionar, setPrecoUnitarioAdicionar] = useState<number>(0);
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -102,7 +104,7 @@ export function OrderCreateDrawer({
           if (list.length > 0) {
             setItemSelecionadoId(list[0].id);
             // Se não houver itens ainda, inicializa com o primeiro
-            setItens([{ itemId: list[0].id, quantidade: 1 }]);
+            setItens([{ itemId: list[0].id, quantidade: 1, precoUnitario: 0 }]);
           }
         })
         .catch((err) => console.warn('Erro ao carregar itens para pedido:', err))
@@ -179,17 +181,19 @@ export function OrderCreateDrawer({
   const totalizadores = useMemo(() => {
     const totalLinhas = itens.length;
     let totalUnidades = 0;
+    let valorTotal = 0;
     let temDeficit = false;
 
     for (const linha of itens) {
       totalUnidades += linha.quantidade;
+      valorTotal += linha.quantidade * (linha.precoUnitario || 0);
       const it = catalogoItens.find((c) => c.id === linha.itemId);
       if (it && it.estoqueAtual < linha.quantidade) {
         temDeficit = true;
       }
     }
 
-    return { totalLinhas, totalUnidades, temDeficit };
+    return { totalLinhas, totalUnidades, valorTotal, temDeficit };
   }, [itens, catalogoItens]);
 
   // Adicionar item via painel rápido
@@ -197,23 +201,34 @@ export function OrderCreateDrawer({
     if (!itemConsulta) return;
 
     const qtd = Math.max(1, quantidadeAdicionar || 1);
+    const preco = Math.max(0, Number(precoUnitarioAdicionar) || 0);
     const indexExistente = itens.findIndex((i) => i.itemId === itemConsulta.id);
 
     if (indexExistente >= 0) {
-      // Já existe na lista, incrementa a quantidade
+      // Já existe na lista, incrementa a quantidade e atualiza preço se informado
       setItens((prev) =>
         prev.map((linha, idx) =>
-          idx === indexExistente ? { ...linha, quantidade: linha.quantidade + qtd } : linha
+          idx === indexExistente
+            ? {
+                ...linha,
+                quantidade: linha.quantidade + qtd,
+                precoUnitario: preco > 0 ? preco : linha.precoUnitario,
+              }
+            : linha
         )
       );
       toast(`Quantidade atualizada: +${qtd} de ${itemConsulta.nome}`, { type: 'success' });
     } else {
       // Adiciona novo item na lista
-      setItens((prev) => [...prev, { itemId: itemConsulta.id, quantidade: qtd }]);
+      setItens((prev) => [
+        ...prev,
+        { itemId: itemConsulta.id, quantidade: qtd, precoUnitario: preco },
+      ]);
       toast(`Item adicionado ao pedido: ${itemConsulta.nome}`, { type: 'success' });
     }
 
     setQuantidadeAdicionar(1);
+    setPrecoUnitarioAdicionar(0);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -224,6 +239,13 @@ export function OrderCreateDrawer({
     const qtdValida = Math.max(1, novaQtd);
     setItens((prev) =>
       prev.map((item, i) => (i === index ? { ...item, quantidade: qtdValida } : item))
+    );
+  };
+
+  const handleAtualizarPreco = (index: number, novoPreco: number) => {
+    const precoValido = Math.max(0, novoPreco);
+    setItens((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, precoUnitario: precoValido } : item))
     );
   };
 
@@ -259,8 +281,10 @@ export function OrderCreateDrawer({
         itens: itens.map((i) => ({
           itemId: i.itemId,
           quantidade: i.quantidade,
+          precoUnitario: i.precoUnitario || 0,
           observacao: undefined,
         })),
+        valorTotal: totalizadores.valorTotal,
         observacoes: observacoes.trim() || undefined,
       });
 
@@ -435,7 +459,7 @@ export function OrderCreateDrawer({
 
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
               {/* Seletor de Produto */}
-              <div className="sm:col-span-6 flex flex-col gap-1.5">
+              <div className="sm:col-span-5 flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-on-surface-variant">
                   Buscar Produto do Catálogo
                 </label>
@@ -467,7 +491,7 @@ export function OrderCreateDrawer({
               </div>
 
               {/* Quantidade */}
-              <div className="sm:col-span-3 flex flex-col gap-1.5">
+              <div className="sm:col-span-2 flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-on-surface-variant">
                   Qtd ({itemConsulta ? UNIDADE_LABELS[itemConsulta.unidade as keyof typeof UNIDADE_LABELS] || itemConsulta.unidade : 'un'})
                 </label>
@@ -481,8 +505,24 @@ export function OrderCreateDrawer({
                 />
               </div>
 
+              {/* Preço Unitário R$ */}
+              <div className="sm:col-span-3 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-on-surface-variant">
+                  Preço Unitário (R$)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={precoUnitarioAdicionar}
+                  onChange={(e) => setPrecoUnitarioAdicionar(Math.max(0, parseFloat(e.target.value) || 0))}
+                  placeholder="0,00"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+                />
+              </div>
+
               {/* Botão Adicionar */}
-              <div className="sm:col-span-3">
+              <div className="sm:col-span-2">
                 <button
                   type="button"
                   onClick={handleAdicionarItemRapido}
@@ -602,9 +642,9 @@ export function OrderCreateDrawer({
                       </div>
 
                       {/* Grade de Parâmetros e Quantidade da Linha */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-outline-variant/15 text-xs bg-surface-container-low/40 p-2.5 rounded-xl">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2 border-t border-outline-variant/15 text-xs bg-surface-container-low/40 p-2.5 rounded-xl">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[11px] text-on-surface-variant font-medium">Quantidade Solicitada</span>
+                          <span className="text-[11px] text-on-surface-variant font-medium">Qtd Solicitada</span>
                           <div className="flex items-center gap-1.5">
                             <input
                               type="number"
@@ -612,23 +652,38 @@ export function OrderCreateDrawer({
                               step="1"
                               value={linha.quantidade}
                               onChange={(e) => handleAtualizarQuantidade(index, parseInt(e.target.value, 10) || 1)}
-                              className="w-24 px-2 py-1 text-xs rounded-lg border border-outline-variant/30 bg-surface-container-lowest text-on-surface font-mono font-bold"
+                              className="w-20 px-2 py-1 text-xs rounded-lg border border-outline-variant/30 bg-surface-container-lowest text-on-surface font-mono font-bold"
                             />
                             <span className="text-xs text-outline">{unidadeFmt}</span>
                           </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[11px] text-on-surface-variant font-medium">Preço Unit. (R$)</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={linha.precoUnitario || 0}
+                            onChange={(e) => handleAtualizarPreco(index, parseFloat(e.target.value) || 0)}
+                            className="w-24 px-2 py-1 text-xs rounded-lg border border-outline-variant/30 bg-surface-container-lowest text-on-surface font-mono"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] text-on-surface-variant font-medium">Subtotal</span>
+                          <span className="font-mono font-bold text-on-surface">
+                            {((linha.quantidade || 0) * (linha.precoUnitario || 0)).toLocaleString('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                            })}
+                          </span>
                         </div>
 
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[11px] text-on-surface-variant font-medium">Saldo no Galpão</span>
                           <span className="font-mono font-semibold text-on-surface">
                             {it?.estoqueAtual.toLocaleString('pt-BR') || 0} {unidadeFmt}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[11px] text-on-surface-variant font-medium">Posição Física</span>
-                          <span className="text-on-surface font-medium truncate">
-                            {it?.localizacao || 'Almoxarifado Geral'}
                           </span>
                         </div>
                       </div>
@@ -642,12 +697,12 @@ export function OrderCreateDrawer({
           {/* 3. Rodapé & Ações */}
           <div className="mt-auto pt-4 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-on-surface">
-                  Total: {totalizadores.totalLinhas} {totalizadores.totalLinhas === 1 ? 'item' : 'itens'}
+                  Total: {totalizadores.totalLinhas} {totalizadores.totalLinhas === 1 ? 'item' : 'itens'} ({totalizadores.totalUnidades} un)
                 </span>
-                <span className="text-xs text-outline font-mono">
-                  ({totalizadores.totalUnidades} un)
+                <span className="text-xs font-mono font-extrabold text-primary px-2 py-0.5 rounded-md bg-primary/10">
+                  {totalizadores.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
               </div>
               {totalizadores.temDeficit && (

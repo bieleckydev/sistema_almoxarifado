@@ -30,6 +30,10 @@ import { OrderCreateDrawer } from '@/web/components/gestao/vendas/OrderCreateDra
 import { ClientesView } from '@/web/components/gestao/clientes/ClientesView';
 import { ClientCreateDrawer } from '@/web/components/gestao/clientes/ClientCreateDrawer';
 import { SaidaManualView } from '@/web/components/gestao/saida/SaidaManualView';
+import { FaturamentoView } from '@/web/components/gestao/faturamento/FaturamentoView';
+import { FaturarPedidoDrawer } from '@/web/components/gestao/faturamento/FaturarPedidoDrawer';
+import { useFaturamento } from '@/web/hooks/useFaturamento';
+import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
@@ -71,6 +75,15 @@ export default function AlmoxarifadoDashboardPage() {
     isOpen: false,
     tipo: 'Entrada',
   });
+  const [pedidoFaturarState, setPedidoFaturarState] = useState<{
+    isOpen: boolean;
+    pedido: PedidoAFaturarItem | null;
+  }>({
+    isOpen: false,
+    pedido: null,
+  });
+
+  const { faturarPedido } = useFaturamento();
 
   // Otimização de busca com debounce de 300ms
   const buscaDebounced = useDebounce(termoBusca, 300);
@@ -146,6 +159,9 @@ export default function AlmoxarifadoDashboardPage() {
       } else if (param === 'vendas') {
         setModuloAtivo('vendas');
         handleSelectTela('vendas');
+      } else if (param === 'fat') {
+        setModuloAtivo('vendas');
+        handleSelectTela('fat');
       } else if (param === 'saida') {
         handleSelectTela('saida');
       } else if (param === 'clientes') {
@@ -460,9 +476,31 @@ export default function AlmoxarifadoDashboardPage() {
               </div>
             ) : telaAtiva === 'vendas' ? (
               /* 3. Módulo de Vendas e Pedidos */
-              <VendasView onNovoPedido={() => setIsOrderCreateOpen(true)} />
+              <VendasView
+                onNovoPedido={() => setIsOrderCreateOpen(true)}
+                onFaturarPedido={(p) => {
+                  setPedidoFaturarState({
+                    isOpen: true,
+                    pedido: {
+                      id: p.id,
+                      numeroSequencial: p.numeroSequencial,
+                      clienteId: p.clienteId,
+                      clienteNome: p.clienteNome,
+                      prazoEntrega: p.prazoEntrega,
+                      status: p.status,
+                      valorTotal: p.valorTotal || 0,
+                      itensResumo: p.itensDetalhes
+                        .map((i) => `${i.quantidade}x ${i.nome}`)
+                        .join(', '),
+                    },
+                  });
+                }}
+              />
+            ) : telaAtiva === 'fat' ? (
+              /* 4. Módulo de Faturamento e Notas Fiscais */
+              <FaturamentoView onNavegarPedidos={() => handleSelectTela('vendas')} />
             ) : telaAtiva === 'clientes' ? (
-              /* 4. Módulo de Clientes, Fornecedores e Parceiros */
+              /* 5. Módulo de Clientes, Fornecedores e Parceiros */
               <ClientesView
                 onNovoCadastro={handleOpenClientCreate}
                 filtroInicial={filtroClientesInicial}
@@ -572,6 +610,16 @@ export default function AlmoxarifadoDashboardPage() {
               item,
               tipo: pickerDrawerState.tipo,
             });
+          }}
+        />
+
+        {/* Gaveta de Faturamento de Pedido */}
+        <FaturarPedidoDrawer
+          isOpen={pedidoFaturarState.isOpen}
+          pedido={pedidoFaturarState.pedido}
+          onClose={() => setPedidoFaturarState({ isOpen: false, pedido: null })}
+          onFaturar={async (dados) => {
+            await faturarPedido(dados);
           }}
         />
 
