@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Package, FileText, Users, ShoppingCart, Loader2 } from 'lucide-react';
+import {
+  Search,
+  X,
+  Package,
+  FileText,
+  Users,
+  ShoppingCart,
+  Loader2,
+  Receipt,
+  Layers,
+} from 'lucide-react';
 import { useGlobalSearch, type GlobalSearchResult } from '@/web/hooks/useGlobalSearch';
 
 export interface GlobalSearchInputProps {
@@ -14,6 +24,8 @@ const RESULT_ICONS: Record<GlobalSearchResult['type'], React.ComponentType<{ cla
   nfe: FileText,
   cliente: Users,
   pedido: ShoppingCart,
+  faturamento: Receipt,
+  terceiro: Layers,
 };
 
 export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSearchInputProps) {

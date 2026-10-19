@@ -82,6 +82,22 @@ export class LoteEstoqueInsuficienteError extends Error {
   }
 }
 
+export class NotaFiscalDuplicadaError extends Error {
+  constructor(
+    public readonly numeroNF: string,
+    public readonly itemId: string,
+    public readonly dataMovimentacaoExistente?: string
+  ) {
+    const dataMsg = dataMovimentacaoExistente
+      ? ` em ${dataMovimentacaoExistente.slice(0, 10)}`
+      : '';
+    super(
+      `A Nota Fiscal nº ${numeroNF} já foi lançada para este item${dataMsg}. Verifique antes de continuar.`
+    );
+    this.name = 'NotaFiscalDuplicadaError';
+  }
+}
+
 /**
  * Serviço responsável por coordenar e orquestrar todas as operações de movimentação física de estoque,
  * assegurando integridade referencial, validação de regras de negócio e trilha de auditoria.
@@ -134,6 +150,26 @@ export class MovimentacaoService {
   async executarEntrada(dados: RegistrarEntradaInput): Promise<Movimentacao> {
     const validado = RegistrarEntradaSchema.parse(dados);
     const item = await this.validarItemAtivo(validado.itemId);
+
+    // Validação Anti-duplicidade de NF-e para o mesmo item
+    if (validado.numeroNF && validado.numeroNF.trim().length > 0) {
+      const nfLimpa = validado.numeroNF.trim().toLowerCase();
+      const extrato = await this.repository.consultarExtratoItem(validado.itemId);
+      const entradaExistente = extrato.find(
+        (m) =>
+          m.tipo === 'ENTRADA_COMPRA' &&
+          m.numeroNF &&
+          m.numeroNF.trim().toLowerCase() === nfLimpa
+      );
+
+      if (entradaExistente) {
+        throw new NotaFiscalDuplicadaError(
+          validado.numeroNF.trim(),
+          validado.itemId,
+          entradaExistente.dataMovimentacao
+        );
+      }
+    }
 
     const saldoAnterior = item.estoqueAtual;
     const saldoResultante = calcularNovoSaldo(

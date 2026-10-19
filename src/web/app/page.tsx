@@ -310,6 +310,10 @@ export default function AlmoxarifadoDashboardPage() {
       setTelaAtiva('clientes');
     } else if (result.type === 'pedido') {
       setTelaAtiva('vendas');
+    } else if (result.type === 'faturamento') {
+      setTelaAtiva('fat');
+    } else if (result.type === 'terceiro') {
+      setTelaAtiva('terc');
     }
   };
 

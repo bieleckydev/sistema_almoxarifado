@@ -11,6 +11,7 @@ import {
   ColaboradorNaoEncontradoError,
   ColaboradorInativoError,
   LoteEstoqueInsuficienteError,
+  NotaFiscalDuplicadaError,
   MovimentacaoService,
 } from '@/core/services/movimentacao.service';
 import { SaldoInsuficienteError } from '@/core/services/estoque-calculator';
@@ -135,6 +136,18 @@ export function toErrorResponse(error: unknown): NextResponse {
         })),
       },
       { status: 400 }
+    );
+  }
+
+  // Duplicidade de Nota Fiscal na Entrada (409 Conflict)
+  if (error instanceof NotaFiscalDuplicadaError) {
+    return NextResponse.json(
+      {
+        error: error.message,
+        message: error.message,
+        numeroNF: error.numeroNF,
+      },
+      { status: 409 }
     );
   }
 
