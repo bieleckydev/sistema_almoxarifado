@@ -12,6 +12,7 @@ import {
   readJson,
   requireIdentity,
   requirePermission,
+  getAuditoriaService,
   toErrorResponse,
 } from '../../api-helpers';
 import { db } from '@/core/services/firebase';
@@ -24,7 +25,7 @@ import {
 
 /**
  * POST /api/terceiros/movimentacoes
- * Registra movimentação de CONSUMO NA PRODUÇÃO ou DEVOLUÇÃO AO CLIENTE em material de terceiros.
+ * Registra movimentação de CONSUMO NA PRODUÇÃO, DEVOLUÇÃO AO CLIENTE ou SUCATA/PERDA em material de terceiros.
  * No caso de devolução, gera automaticamente a nota fiscal de Retorno de Industrialização caso aplicável.
  */
 export async function POST(request: Request) {
@@ -37,15 +38,17 @@ export async function POST(request: Request) {
       throw new ApiError(400, 'Corpo da requisição inválido.');
     }
 
-    const tipo = (body as any).tipo;
-    if (tipo !== 'CONSUMO' && tipo !== 'CONSUMO_PRODUCAO' && tipo !== 'DEVOLUCAO' && tipo !== 'DEVOLUCAO_RETORNO') {
+    const rawTipo = String((body as any).tipo || '').trim().toUpperCase();
+    const isConsumo = rawTipo === 'CONSUMO' || rawTipo === 'CONSUMO_PRODUCAO';
+    const isDevolucao = rawTipo === 'DEVOLUCAO' || rawTipo === 'DEVOLUCAO_RETORNO';
+    const isSucata = rawTipo === 'SUCATA' || rawTipo === 'SUCATA_PERDA' || rawTipo === 'PERDA' || rawTipo === 'REFUGO';
+
+    if (!isConsumo && !isDevolucao && !isSucata) {
       throw new ApiError(
         400,
-        "Tipo de movimentação inválido. Deve ser 'CONSUMO_PRODUCAO' ou 'DEVOLUCAO_RETORNO'."
+        "Tipo de movimentação inválido. Deve ser 'CONSUMO_PRODUCAO', 'DEVOLUCAO_RETORNO' ou 'SUCATA_PERDA'."
       );
     }
-
-    const isConsumo = tipo === 'CONSUMO' || tipo === 'CONSUMO_PRODUCAO';
     const materialId = String((body as any).materialTerceiroId || '');
     if (!materialId) {
       throw new ApiError(400, 'ID do material de terceiro é obrigatório.');
@@ -102,6 +105,36 @@ export async function POST(request: Request) {
         dataMovimentacao: input.dataMovimentacao,
         responsavel: input.responsavel || identity.user.name || 'Produção',
         observacao: input.observacao,
+        createdAt: now,
+      };
+    } else if (isSucata) {
+      // Fluxo 3: SUCATA OU PERDA DE MATERIAL
+      const qtd = Number((body as any).quantidade);
+      if (!qtd || qtd <= 0) {
+        throw new ApiError(400, 'A quantidade de sucata/perda deve ser maior que zero.');
+      }
+      if (!validarSaldoSuficienteTerceiro(material.saldoAtual, qtd)) {
+        throw new ApiError(
+          422,
+          `Saldo insuficiente para baixa de sucata. Saldo atual: ${material.saldoAtual} ${material.unidade}, quantidade informada: ${qtd} ${material.unidade}.`
+        );
+      }
+
+      novoSaldo = material.saldoAtual - qtd;
+      const movId = `mov-suc-${Date.now()}`;
+      const motivo = String((body as any).motivo || (body as any).observacao || 'Refugo/Sucata de produção').trim();
+
+      novaMovimentacao = {
+        id: movId,
+        materialTerceiroId: material.id,
+        tipo: 'SUCATA_PERDA',
+        quantidade: qtd,
+        saldoAnterior: material.saldoAtual,
+        saldoResultante: novoSaldo,
+        documento: motivo.slice(0, 30),
+        dataMovimentacao: String((body as any).dataMovimentacao || now.slice(0, 10)),
+        responsavel: (body as any).responsavel || identity.user.name || 'Produção',
+        observacao: motivo,
         createdAt: now,
       };
     } else {
@@ -183,9 +216,27 @@ export async function POST(request: Request) {
       NOTAS_INICIAIS.unshift(notaFiscalRetorno as any);
     }
 
+    // Auditoria Operacional (3.0)
+    try {
+      await getAuditoriaService().registrar({
+        quando: now,
+        usuarioId: identity.user.id,
+        usuarioNome: identity.user.name || 'Almoxarife',
+        papel: identity.user.role || 'operador',
+        acao: isSucata ? 'SUCATA_TERCEIRO' : isConsumo ? 'CONSUMO_TERCEIRO' : 'DEVOLUCAO_TERCEIRO',
+        detalhe: `${isSucata ? 'Sucata/Refugo' : isConsumo ? 'Consumo' : 'Devolução'} de ${novaMovimentacao.quantidade} ${material.unidade} de ${material.descricao}. Saldo restante: ${novoSaldo}.`,
+        entidade: 'MaterialTerceiro',
+        entidadeId: material.id,
+      });
+    } catch (auditErr) {
+      console.warn('Falha ao registrar auditoria em terceiros:', auditErr);
+    }
+
     return NextResponse.json(
       {
-        mensagem: isConsumo
+        mensagem: isSucata
+          ? `Sucata/perda de ${novaMovimentacao.quantidade} ${material.unidade} registrada com sucesso.`
+          : isConsumo
           ? `Consumo de ${novaMovimentacao.quantidade} ${material.unidade} registrado na OP '${novaMovimentacao.documento}'.`
           : `Devolução de ${novaMovimentacao.quantidade} ${material.unidade} registrada. NF-e de Retorno emitida sob o nº ${novaMovimentacao.documento}.`,
         material: {
