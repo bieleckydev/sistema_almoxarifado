@@ -15,6 +15,7 @@ import {
   User,
   PlusCircle,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import type { MaterialTerceiroEnriquecido } from '@/web/app/api/terceiros/route';
 import type { MovimentacaoTerceiro } from '@/core/domain/material-terceiro.schema';
@@ -142,7 +143,7 @@ export function DetalhesTerceiroDrawer({
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
               Extrato Consolidado de Unidades ({material.unidade})
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40">
                 <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 block">
                   Total Recebido
@@ -163,10 +164,19 @@ export function DetalhesTerceiroDrawer({
 
               <div className="p-3.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/40">
                 <span className="text-[10px] font-semibold text-orange-700 dark:text-orange-400 block">
-                  Devolvido ao Cliente
+                  Devolvido
                 </span>
                 <span className="text-lg font-extrabold text-orange-800 dark:text-orange-300">
                   -{totais.devolvido}
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40">
+                <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 block">
+                  Sucata / Perda
+                </span>
+                <span className="text-lg font-extrabold text-rose-800 dark:text-rose-300">
+                  -{totais.sucata}
                 </span>
               </div>
 
@@ -207,6 +217,7 @@ export function DetalhesTerceiroDrawer({
                   const isEntrada = mov.tipo === 'ENTRADA_REMESSA';
                   const isConsumo = mov.tipo === 'CONSUMO_PRODUCAO';
                   const isDevolucao = mov.tipo === 'DEVOLUCAO_RETORNO';
+                  const isSucata = mov.tipo === 'SUCATA_PERDA';
 
                   return (
                     <div
@@ -220,15 +231,19 @@ export function DetalhesTerceiroDrawer({
                               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
                               : isConsumo
                               ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                              : 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+                              : isDevolucao
+                              ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+                              : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
                           }`}
                         >
                           {isEntrada ? (
                             <ArrowDownToLine className="w-4 h-4" />
                           ) : isConsumo ? (
                             <Factory className="w-4 h-4" />
-                          ) : (
+                          ) : isDevolucao ? (
                             <RotateCcw className="w-4 h-4" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
                           )}
                         </div>
 
@@ -239,7 +254,9 @@ export function DetalhesTerceiroDrawer({
                                 ? 'Entrada (Remessa)'
                                 : isConsumo
                                 ? 'Consumo na Produção'
-                                : 'Devolução ao Cliente'}
+                                : isDevolucao
+                                ? 'Devolução ao Cliente'
+                                : 'Sucata / Perda'}
                             </span>
                             <span className="px-2 py-0.2 rounded-md font-mono text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                               {mov.documento}

@@ -13,16 +13,22 @@ import {
   Calendar,
   Receipt,
   ArrowRight,
+  Ban,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { useFaturamento } from '@/web/hooks/useFaturamento';
 import { FaturarPedidoDrawer } from './FaturarPedidoDrawer';
-import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
+import type { PedidoAFaturarItem, NotaFiscalEmitidaEnriquecida } from '@/web/app/api/faturamento/route';
+import { api } from '@/core/api/client';
+import { useToast } from '@/web/hooks/useToast';
 
 export interface FaturamentoViewProps {
   onNavegarPedidos?: () => void;
 }
 
 export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
+  const { toast } = useToast();
   const {
     pedidosAFaturar,
     notasEmitidas,
@@ -66,6 +72,42 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
     observacoes?: string;
   }) => {
     await faturarPedido(dados);
+  };
+
+  const [notaParaCancelar, setNotaParaCancelar] =
+    useState<NotaFiscalEmitidaEnriquecida | null>(null);
+  const [motivoCancelamento, setMotivoCancelamento] = useState('');
+  const [isCancelandoNota, setIsCancelandoNota] = useState(false);
+
+  const handleConfirmarCancelamento = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notaParaCancelar) return;
+
+    if (!motivoCancelamento.trim()) {
+      toast('Informe o motivo do cancelamento da nota fiscal.', { type: 'error' });
+      return;
+    }
+
+    try {
+      setIsCancelandoNota(true);
+      await api.post(`/api/faturamento/notas/${notaParaCancelar.id}/cancelar`, {
+        motivo: motivoCancelamento.trim(),
+      });
+      toast(`NF-e nº ${notaParaCancelar.numeroNF} cancelada com sucesso! Pedido liberado.`, { type: 'success' });
+      setNotaParaCancelar(null);
+      setMotivoCancelamento('');
+      refetch();
+    } catch (err: unknown) {
+      const responseData = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data;
+      const msg =
+        responseData?.error ||
+        responseData?.message ||
+        (err as Error)?.message ||
+        'Erro ao cancelar nota fiscal.';
+      toast(msg, { type: 'error' });
+    } finally {
+      setIsCancelandoNota(false);
+    }
   };
 
   // Filtragem de notas fiscais emitidas
@@ -320,29 +362,34 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
                   <th className="py-3 px-4">Cliente / Destinatário</th>
                   <th className="py-3 px-4">Referência</th>
                   <th className="py-3 px-4 text-right whitespace-nowrap">Valor Faturado</th>
+                  <th className="py-3 px-4 text-right whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/15 text-xs">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center text-secondary">
+                    <td colSpan={7} className="py-10 text-center text-secondary">
                       <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-primary" />
                       <span>Carregando notas fiscais...</span>
                     </td>
                   </tr>
                 ) : notasFiltradas.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-secondary">
+                    <td colSpan={7} className="py-8 text-center text-secondary">
                       Nenhuma nota fiscal emitida encontrada.
                     </td>
                   </tr>
                 ) : (
                   notasFiltradas.map((nota) => {
                     const isVenda = nota.tipo === 'VENDA';
+                    const isCancelada = (nota as any).status === 'CANCELADA';
+
                     return (
                       <tr
                         key={nota.id}
-                        className="hover:bg-surface-container-low/60 transition-colors group"
+                        className={`transition-colors group ${
+                          isCancelada ? 'bg-surface-container-low/40 opacity-70' : 'hover:bg-surface-container-low/60'
+                        }`}
                       >
                         <td className="py-3.5 px-4 font-mono font-bold text-on-surface">
                           NF {nota.numeroNF} / {nota.serie || '1'}
@@ -351,20 +398,27 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
                           {formatarDataBR(nota.dataEmissao)}
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                              isVenda
-                                ? 'bg-tertiary/15 text-tertiary'
-                                : 'bg-primary/15 text-primary'
-                            }`}
-                          >
+                          {isCancelada ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-error-container text-on-error-container">
+                              <Ban className="w-3 h-3" />
+                              CANCELADA
+                            </span>
+                          ) : (
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                isVenda ? 'bg-tertiary' : 'bg-primary'
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                                isVenda
+                                  ? 'bg-tertiary/15 text-tertiary'
+                                  : 'bg-primary/15 text-primary'
                               }`}
-                            />
-                            {isVenda ? 'Venda de Mercadoria' : 'Retorno de Industrialização'}
-                          </span>
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  isVenda ? 'bg-tertiary' : 'bg-primary'
+                                }`}
+                              />
+                              {isVenda ? 'Venda de Mercadoria' : 'Retorno de Industrialização'}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3.5 px-4 font-medium text-on-surface">
                           {nota.clienteNome}
@@ -374,6 +428,19 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
                         </td>
                         <td className="py-3.5 px-4 text-right font-mono font-bold text-on-surface whitespace-nowrap">
                           {formatarBRL(nota.valorTotal)}
+                        </td>
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          {!isCancelada && (
+                            <button
+                              type="button"
+                              onClick={() => setNotaParaCancelar(nota)}
+                              title="Cancelar esta nota fiscal"
+                              className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-medium text-error hover:bg-error-container/40 transition-colors cursor-pointer"
+                            >
+                              <Ban className="w-3 h-3" />
+                              <span>Cancelar</span>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -395,6 +462,69 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
         }}
         onFaturar={handleConfirmarFaturamento}
       />
+
+      {/* 6. Modal de Cancelamento de NF-e (3.0) */}
+      {notaParaCancelar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs"
+            onClick={() => setNotaParaCancelar(null)}
+          />
+          <div className="relative w-full max-w-sm bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-2xl z-10 animate-fade-in">
+            <div className="flex items-center gap-2.5 text-error mb-3">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <h4 className="font-bold text-sm text-on-surface">Cancelar Nota Fiscal</h4>
+            </div>
+            <p className="text-xs text-secondary mb-4 leading-relaxed">
+              Deseja cancelar a <strong>NF-e nº {notaParaCancelar.numeroNF}</strong> ({notaParaCancelar.clienteNome}) no valor de {formatarBRL(notaParaCancelar.valorTotal)}? O pedido retornará automaticamente para a fila de faturamento.
+            </p>
+
+            <form onSubmit={handleConfirmarCancelamento} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-secondary mb-1">
+                  Justificativa do Cancelamento <span className="text-error">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={motivoCancelamento}
+                  onChange={(e) => setMotivoCancelamento(e.target.value)}
+                  placeholder="Ex: Erro nos dados cadastrais, pedido cancelado pelo cliente..."
+                  className="w-full p-2.5 rounded-lg border border-outline-variant/40 bg-surface-container-lowest text-xs text-on-surface focus:border-error focus:ring-1 focus:ring-error"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setNotaParaCancelar(null)}
+                  disabled={isCancelandoNota}
+                  className="px-3 py-1.5 text-xs font-semibold text-secondary hover:bg-surface-container rounded-lg cursor-pointer"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCancelandoNota || !motivoCancelamento.trim()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-on-primary bg-error hover:bg-error/90 rounded-lg disabled:opacity-50 cursor-pointer shadow-xs"
+                >
+                  {isCancelandoNota ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Cancelando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Ban className="w-3.5 h-3.5" />
+                      <span>Confirmar Cancelamento</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

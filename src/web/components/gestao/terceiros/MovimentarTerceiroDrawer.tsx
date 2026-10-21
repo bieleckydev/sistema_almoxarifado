@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Layers,
   Building2,
+  Trash2,
 } from 'lucide-react';
 import type { MaterialTerceiroEnriquecido } from '@/web/app/api/terceiros/route';
 import type {
@@ -27,10 +28,18 @@ export interface MovimentarTerceiroDrawerProps {
   onClose: () => void;
   onConsumir: (dados: ConsumirMaterialTerceiroInput) => Promise<void>;
   onDevolver: (dados: DevolverMaterialTerceiroInput) => Promise<void>;
+  onSucata?: (dados: {
+    materialTerceiroId: string;
+    quantidade: number;
+    dataMovimentacao?: string;
+    motivo: string;
+    responsavel?: string;
+    observacao?: string;
+  }) => Promise<void>;
   isSalvando?: boolean;
 }
 
-type TipoOperacao = 'CONSUMO' | 'DEVOLUCAO';
+type TipoOperacao = 'CONSUMO' | 'DEVOLUCAO' | 'SUCATA';
 
 export function MovimentarTerceiroDrawer({
   isOpen,
@@ -38,6 +47,7 @@ export function MovimentarTerceiroDrawer({
   onClose,
   onConsumir,
   onDevolver,
+  onSucata,
   isSalvando = false,
 }: MovimentarTerceiroDrawerProps) {
   const inputQtdRef = useRef<HTMLInputElement | null>(null);
@@ -49,6 +59,7 @@ export function MovimentarTerceiroDrawer({
   const [ordemProducao, setOrdemProducao] = useState('');
   const [numeroNFRetorno, setNumeroNFRetorno] = useState('');
   const [valorServico, setValorServico] = useState<number | ''>(0);
+  const [motivoSucata, setMotivoSucata] = useState('Refugo de Usinagem');
   const [responsavel, setResponsavel] = useState('Produção');
   const [observacao, setObservacao] = useState('');
   const [erro, setErro] = useState<string | null>(null);
@@ -61,6 +72,7 @@ export function MovimentarTerceiroDrawer({
       setOrdemProducao('');
       setNumeroNFRetorno('');
       setValorServico(0);
+      setMotivoSucata('Refugo de Usinagem');
       setResponsavel('Produção');
       setObservacao('');
       setErro(null);
@@ -70,7 +82,7 @@ export function MovimentarTerceiroDrawer({
   }, [isOpen, material]);
 
   useEffect(() => {
-    if (tipoOperacao === 'CONSUMO') {
+    if (tipoOperacao === 'CONSUMO' || tipoOperacao === 'SUCATA') {
       setResponsavel('Produção');
     } else {
       setResponsavel('Expedição');
@@ -124,7 +136,7 @@ export function MovimentarTerceiroDrawer({
           responsavel: responsavel.trim() || undefined,
           observacao: observacao.trim() || undefined,
         });
-      } else {
+      } else if (tipoOperacao === 'DEVOLUCAO') {
         if (!numeroNFRetorno.trim()) {
           setErro('Informe o número da NF-e de Retorno emitida.');
           return;
@@ -139,6 +151,22 @@ export function MovimentarTerceiroDrawer({
           responsavel: responsavel.trim() || undefined,
           observacao: observacao.trim() || undefined,
         });
+      } else {
+        if (!motivoSucata.trim()) {
+          setErro('Informe o motivo do refugo ou perda de material.');
+          return;
+        }
+
+        if (onSucata) {
+          await onSucata({
+            materialTerceiroId: material.id,
+            quantidade: Number(quantidade),
+            dataMovimentacao,
+            motivo: motivoSucata.trim(),
+            responsavel: responsavel.trim() || undefined,
+            observacao: observacao.trim() || undefined,
+          });
+        }
       }
       onClose();
     } catch (err: any) {
@@ -203,30 +231,42 @@ export function MovimentarTerceiroDrawer({
 
         {/* Seletor de Tipo de Operação (Tabs) */}
         <div className="px-6 pt-4">
-          <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <div className="grid grid-cols-3 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 gap-1">
             <button
               type="button"
               onClick={() => setTipoOperacao('CONSUMO')}
-              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 tipoOperacao === 'CONSUMO'
                   ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Factory className="w-4 h-4" />
-              <span>Consumo na Produção</span>
+              <Factory className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Consumo O.P.</span>
             </button>
             <button
               type="button"
               onClick={() => setTipoOperacao('DEVOLUCAO')}
-              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 tipoOperacao === 'DEVOLUCAO'
                   ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <RotateCcw className="w-4 h-4" />
-              <span>Devolução ao Cliente</span>
+              <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Devolução</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTipoOperacao('SUCATA')}
+              className={`flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                tipoOperacao === 'SUCATA'
+                  ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Trash2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Sucata/Perda</span>
             </button>
           </div>
         </div>
@@ -244,7 +284,7 @@ export function MovimentarTerceiroDrawer({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Quantidade a {tipoOperacao === 'CONSUMO' ? 'Consumir' : 'Devolver'} *
+                Quantidade a {tipoOperacao === 'CONSUMO' ? 'Consumir' : tipoOperacao === 'DEVOLUCAO' ? 'Devolver' : 'Descartar'} *
               </label>
               <input
                 ref={inputQtdRef}
@@ -291,7 +331,7 @@ export function MovimentarTerceiroDrawer({
                 />
               </div>
             </div>
-          ) : (
+          ) : tipoOperacao === 'DEVOLUCAO' ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -339,6 +379,33 @@ export function MovimentarTerceiroDrawer({
                   <strong>Automação Fiscal:</strong> Ao registrar esta devolução, a NF-e de retorno{' '}
                   {numeroNFRetorno ? `nº ${numeroNFRetorno}` : ''} será integrada automaticamente ao{' '}
                   <strong>Módulo de Faturamento</strong> com tipo <em>Retorno de Industrialização</em>.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Motivo da Sucata / Perda *
+                </label>
+                <div className="relative">
+                  <Trash2 className="w-4 h-4 absolute left-3 top-2.5 text-rose-500" />
+                  <input
+                    type="text"
+                    value={motivoSucata}
+                    onChange={(e) => setMotivoSucata(e.target.value)}
+                    placeholder="Ex: Refugo na usinagem, Peça avariada, Aparas"
+                    disabled={isSalvando}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-surface-container-low dark:bg-slate-800 border border-outline-variant/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 text-[11px] text-rose-800 dark:text-rose-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Baixa Operacional:</strong> A sucata ou refugo reduz imediatamente o saldo sob custódia do cliente e fica registrada para prestação de contas no relatório de terceiros e auditoria.
                 </span>
               </div>
             </div>
@@ -409,7 +476,9 @@ export function MovimentarTerceiroDrawer({
             className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 ${
               tipoOperacao === 'CONSUMO'
                 ? 'bg-blue-600 hover:bg-blue-700'
-                : 'bg-amber-600 hover:bg-amber-700'
+                : tipoOperacao === 'DEVOLUCAO'
+                ? 'bg-amber-600 hover:bg-amber-700'
+                : 'bg-rose-600 hover:bg-rose-700'
             }`}
           >
             {isSalvando ? (
@@ -419,9 +488,13 @@ export function MovimentarTerceiroDrawer({
               </>
             ) : (
               <>
-                <CheckCircle2 className="w-4 h-4" />
+                {tipoOperacao === 'SUCATA' ? (
+                  <Trash2 className="w-4 h-4" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4" />
+                )}
                 <span>
-                  Confirmar {tipoOperacao === 'CONSUMO' ? 'Consumo' : 'Devolução'}
+                  Confirmar {tipoOperacao === 'CONSUMO' ? 'Consumo' : tipoOperacao === 'DEVOLUCAO' ? 'Devolução' : 'Sucata / Perda'}
                 </span>
               </>
             )}

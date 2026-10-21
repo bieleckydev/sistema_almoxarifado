@@ -129,6 +129,41 @@ export function useMaterialTerceiros(filtros?: UseMaterialTerceirosFiltros) {
     },
   });
 
+  // Mutação para registrar sucata ou perda de material de terceiro
+  const registrarSucataMutation = useMutation({
+    mutationFn: async (dados: {
+      materialTerceiroId: string;
+      quantidade: number;
+      dataMovimentacao?: string;
+      motivo: string;
+      responsavel?: string;
+      observacao?: string;
+    }) => {
+      const res = await fetch('/api/terceiros/movimentacoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...dados,
+          tipo: 'SUCATA_PERDA',
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || 'Erro ao registrar refugo/sucata de terceiro.');
+      }
+
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['terceiros'] });
+      toast(data.mensagem || 'Sucata/perda registrada com sucesso!', { type: 'success' });
+    },
+    onError: (err: Error) => {
+      toast(err.message || 'Falha ao registrar sucata de terceiro.', { type: 'error' });
+    },
+  });
+
   return {
     ...query,
     materiais: query.data?.materiais ?? [],
@@ -145,5 +180,7 @@ export function useMaterialTerceiros(filtros?: UseMaterialTerceirosFiltros) {
     isConsumindo: consumirMaterialMutation.isPending,
     devolverMaterial: devolverMaterialMutation.mutateAsync,
     isDevolvendo: devolverMaterialMutation.isPending,
+    registrarSucata: registrarSucataMutation.mutateAsync,
+    isRegistrandoSucata: registrarSucataMutation.isPending,
   };
 }

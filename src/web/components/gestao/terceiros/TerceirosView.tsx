@@ -19,6 +19,7 @@ import {
   ArrowDownToLine,
   ShieldCheck,
   AlertCircle,
+  Trash2,
 } from 'lucide-react';
 import { useMaterialTerceiros } from '@/web/hooks/useMaterialTerceiros';
 import { useClientes } from '@/web/hooks/useClientes';
@@ -58,8 +59,10 @@ export function TerceirosView({ onNavegarFaturamento }: TerceirosViewProps) {
     isRecebendo,
     consumirMaterial,
     devolverMaterial,
+    registrarSucata,
     isConsumindo,
     isDevolvendo,
+    isRegistrandoSucata,
   } = useMaterialTerceiros({
     clienteId: clienteIdFiltro,
     busca: busca.trim(),
@@ -358,6 +361,8 @@ export function TerceirosView({ onNavegarFaturamento }: TerceirosViewProps) {
             movimentacoesRecentes.slice(0, 8).map((mov) => {
               const isEntrada = mov.tipo === 'ENTRADA_REMESSA';
               const isConsumo = mov.tipo === 'CONSUMO_PRODUCAO';
+              const isDevolucao = mov.tipo === 'DEVOLUCAO_RETORNO';
+              const isSucata = mov.tipo === 'SUCATA_PERDA';
 
               return (
                 <div
@@ -371,15 +376,19 @@ export function TerceirosView({ onNavegarFaturamento }: TerceirosViewProps) {
                           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
                           : isConsumo
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                          : 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+                          : isDevolucao
+                          ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+                          : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
                       }`}
                     >
                       {isEntrada ? (
                         <ArrowDownToLine className="w-3.5 h-3.5" />
                       ) : isConsumo ? (
                         <Factory className="w-3.5 h-3.5" />
-                      ) : (
+                      ) : isDevolucao ? (
                         <RotateCcw className="w-3.5 h-3.5" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
                       )}
                     </div>
                     <div>
@@ -439,7 +448,8 @@ export function TerceirosView({ onNavegarFaturamento }: TerceirosViewProps) {
         onClose={() => setMaterialParaMovimentar(null)}
         onConsumir={consumirMaterial}
         onDevolver={devolverMaterial}
-        isSalvando={isConsumindo || isDevolvendo}
+        onSucata={registrarSucata}
+        isSalvando={isConsumindo || isDevolvendo || isRegistrandoSucata}
       />
 
       <DetalhesTerceiroDrawer
