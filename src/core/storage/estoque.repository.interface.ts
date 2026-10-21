@@ -58,6 +58,11 @@ export interface IEstoqueRepository {
   consultarExtratoItem(itemId: string, filtros?: MovimentacaoFiltros): Promise<Movimentacao[]>;
 
   /**
+   * Busca uma movimentação específica por seu identificador único.
+   */
+  buscarMovimentacaoPorId?(id: string): Promise<Movimentacao | null>;
+
+  /**
    * Lista todas as movimentações recentes com suporte a paginação e filtros.
    */
   listarMovimentacoes(filtros?: MovimentacaoFiltros): Promise<{ movimentacoes: Movimentacao[]; total: number }>;

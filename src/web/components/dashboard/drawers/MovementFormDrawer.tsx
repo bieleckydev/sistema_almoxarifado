@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, AlertCircle, Loader2 } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, AlertCircle, Loader2, FileText, Upload, Calendar } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { api } from '@/core/api/client';
 import { useToast } from '@/web/hooks/useToast';
@@ -25,10 +25,13 @@ export function MovementFormDrawer({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hoje = new Date().toISOString().slice(0, 10);
   const [dataMov, setDataMov] = useState(hoje);
   const [quantidade, setQuantidade] = useState<number>(1);
+  const [lote, setLote] = useState('');
+  const [valorUnitario, setValorUnitario] = useState<number>(0);
   const [quem, setQuem] = useState('Produção');
   const [observacao, setObservacao] = useState('');
   const [camposInfo, setCamposInfo] = useState<Record<string, string>>({});
@@ -41,6 +44,8 @@ export function MovementFormDrawer({
     if (isOpen && item) {
       setDataMov(new Date().toISOString().slice(0, 10));
       setQuantidade(1);
+      setLote('');
+      setValorUnitario(item.custoUnitario || 0);
       setQuem('Produção');
       setObservacao('');
       setErro(null);
@@ -80,6 +85,53 @@ export function MovementFormDrawer({
         ? ['NF-e', 'Fornecedor', 'Lote', 'Certificado de aprovação (CA)']
         : ['NF-e', 'Fornecedor', 'Lote', 'Certificado'];
 
+  const handleImportarXml = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'application/xml');
+
+        const parserError = xml.querySelector('parsererror');
+        if (parserError) {
+          throw new Error('Arquivo XML corrompido ou inválido.');
+        }
+
+        const nNF = xml.querySelector('ide > nNF')?.textContent || xml.querySelector('nNF')?.textContent || '';
+        const xNome = xml.querySelector('emit > xNome')?.textContent || '';
+        const qComStr = xml.querySelector('det > prod > qCom')?.textContent || xml.querySelector('qCom')?.textContent;
+        const vUnComStr = xml.querySelector('det > prod > vUnCom')?.textContent || xml.querySelector('vUnCom')?.textContent;
+        const nLote = xml.querySelector('rastro > nLote')?.textContent || xml.querySelector('nLote')?.textContent || '';
+
+        if (nNF) {
+          setCamposInfo((prev) => ({ ...prev, 'NF-e': nNF, ...(xNome ? { Fornecedor: xNome } : {}) }));
+        }
+        if (nLote) {
+          setLote(nLote);
+          setCamposInfo((prev) => ({ ...prev, Lote: nLote }));
+        }
+        if (qComStr) {
+          const parsedQtd = Math.round(parseFloat(qComStr));
+          if (parsedQtd > 0) setQuantidade(parsedQtd);
+        }
+        if (vUnComStr) {
+          const parsedVal = parseFloat(vUnComStr);
+          if (parsedVal > 0) setValorUnitario(parsedVal);
+        }
+
+        toast(`NF-e ${nNF || 'importada'}${xNome ? ` de ${xNome}` : ''} lida com sucesso!`, { type: 'success' });
+      } catch {
+        toast('Erro ao processar o arquivo XML da NF-e.', { type: 'error' });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro(null);
@@ -109,6 +161,8 @@ export function MovementFormDrawer({
     setIsSubmitting(true);
 
     try {
+      const loteFinal = lote.trim() || camposInfo['Lote']?.trim() || undefined;
+
       if (isEntrada) {
         const numeroNF = camposInfo['NF-e']?.trim() || undefined;
         const fornecedor = camposInfo['Fornecedor']?.trim() || undefined;
@@ -119,6 +173,8 @@ export function MovementFormDrawer({
           quantidade,
           numeroNF,
           fornecedor,
+          lote: loteFinal,
+          valorUnitario: valorUnitario > 0 ? valorUnitario : undefined,
           observacoes: observacao.trim() || undefined,
           dataMovimentacao: new Date(dataMov + 'T12:00:00Z').toISOString(),
         });
@@ -133,6 +189,7 @@ export function MovementFormDrawer({
           itemId: item.id,
           quantidade,
           colaboradorId: quem.trim() || 'PRODUCAO',
+          lote: loteFinal,
           observacao: observacao.trim() || undefined,
           dataMovimentacao: new Date(dataMov + 'T12:00:00Z').toISOString(),
         });
@@ -225,6 +282,34 @@ export function MovementFormDrawer({
             </div>
           )}
 
+          {/* Importador Rápido de XML NF-e (3.0) */}
+          {isEntrada && (
+            <div className="p-3 bg-surface-container-low border border-primary/20 rounded-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary shrink-0" />
+                <div>
+                  <span className="font-bold text-on-surface block text-[11px]">Importar XML da NF-e</span>
+                  <span className="text-[10px] text-secondary">Preenche número, fornecedor, quantidade e lote</span>
+                </div>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xml"
+                onChange={handleImportarXml}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary hover:text-on-primary transition-colors cursor-pointer shrink-0"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Carregar XML</span>
+              </button>
+            </div>
+          )}
+
           {/* Data e Quantidade */}
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
@@ -252,10 +337,51 @@ export function MovementFormDrawer({
             </label>
           </div>
 
+          {/* Lote e Custo Médio Unitário */}
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
+              <span>{isEntrada ? 'Número do Lote' : 'Lote (FIFO Sugerido)'}</span>
+              <input
+                type="text"
+                value={lote}
+                onChange={(e) => setLote(e.target.value)}
+                placeholder={isEntrada ? 'Ex: LOTE-2026-A' : 'Padrão: Mais antigo'}
+                className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+              />
+            </label>
+
+            {isEntrada ? (
+              <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
+                <span>Custo Unitário (R$)</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={valorUnitario}
+                  onChange={(e) => setValorUnitario(parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
+                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+                />
+              </label>
+            ) : (
+              <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
+                <span>Retirado por / Setor *</span>
+                <input
+                  type="text"
+                  required
+                  value={quem}
+                  onChange={(e) => setQuem(e.target.value)}
+                  placeholder="Ex: Produção, Serralheria"
+                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </label>
+            )}
+          </div>
+
           {/* Campos específicos da Entrada */}
           {isEntrada && (
             <div className="space-y-3 pt-1">
-              {camposEntrada.map((campo) => (
+              {camposEntrada.filter((c) => c !== 'Lote').map((campo) => (
                 <label key={campo} className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
                   <span>{campo}</span>
                   <input

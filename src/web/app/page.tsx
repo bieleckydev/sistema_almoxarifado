@@ -616,6 +616,9 @@ export default function AlmoxarifadoDashboardPage() {
           onImprimirEtiqueta={(item) => {
             setItemParaEtiqueta(item);
           }}
+          onMovimentacaoEstornada={() => {
+            refetch();
+          }}
         />
 
         {/* Gaveta de Edição de Cadastro de Material (3.0) */}

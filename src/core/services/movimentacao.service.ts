@@ -11,6 +11,7 @@ import {
   RegistrarAjusteInventarioInput,
   Movimentacao,
 } from '../domain/movimentacao.schema';
+import { TipoMovimentacao } from '../domain/types';
 import { Item } from '../domain/item.schema';
 import { Colaborador } from '../domain/colaborador.schema';
 import {
@@ -446,5 +447,101 @@ export class MovimentacaoService {
    */
   async executarBaixaEmLote(dados: RegistrarBaixaLoteInput): Promise<Movimentacao[]> {
     return this.executarBaixaLote(dados);
+  }
+
+  /**
+   * Executa o estorno de uma movimentação anterior com auditoria completa.
+   * Inverte os efeitos da movimentação no saldo físico e vincula ambas as movimentações.
+   */
+  async executarEstorno(
+    movimentacaoId: string,
+    motivo: string,
+    usuarioResponsavel?: { id: string; nome: string; papel: string }
+  ): Promise<Movimentacao> {
+    if (!motivo || !motivo.trim()) {
+      throw new Error('O motivo do estorno é obrigatório.');
+    }
+
+    const movOriginal = await this.repository.buscarMovimentacaoPorId?.(movimentacaoId);
+    if (!movOriginal) {
+      throw new Error(`Movimentação com ID "${movimentacaoId}" não foi encontrada para estorno.`);
+    }
+
+    if (movOriginal.estornado) {
+      throw new Error('Esta movimentação já foi estornada anteriormente.');
+    }
+
+    if (movOriginal.estorno) {
+      throw new Error('Não é permitido estornar uma movimentação que já é um estorno.');
+    }
+
+    const item = await this.validarItemAtivo(movOriginal.itemId);
+    const saldoAnterior = item.estoqueAtual;
+
+    const ehEntradaOriginal =
+      movOriginal.tipo === 'ENTRADA_COMPRA' ||
+      movOriginal.tipo === 'ENTRADA_PRODUCAO' ||
+      movOriginal.tipo === 'AJUSTE_INVENTARIO_POSITIVO';
+
+    let saldoResultante: number;
+    let tipoEstorno: TipoMovimentacao;
+
+    if (ehEntradaOriginal) {
+      if (saldoAnterior < movOriginal.quantidade) {
+        throw new SaldoInsuficienteError(
+          saldoAnterior,
+          movOriginal.quantidade,
+          item.codigo
+        );
+      }
+      saldoResultante = saldoAnterior - movOriginal.quantidade;
+      tipoEstorno = 'AJUSTE_INVENTARIO_NEGATIVO';
+    } else {
+      saldoResultante = saldoAnterior + movOriginal.quantidade;
+      tipoEstorno = 'AJUSTE_INVENTARIO_POSITIVO';
+    }
+
+    const agora = new Date().toISOString();
+    const idEstorno = this.gerarIdMovimentacao();
+
+    const movimentacaoEstorno: Movimentacao = {
+      id: idEstorno,
+      itemId: item.id,
+      tipo: tipoEstorno,
+      quantidade: movOriginal.quantidade,
+      saldoAnterior,
+      saldoResultante,
+      dataMovimentacao: agora,
+      estorno: true,
+      estornoDe: movOriginal.id,
+      motivo: motivo.trim(),
+      colaboradorId: usuarioResponsavel?.id,
+      colaboradorNome: usuarioResponsavel?.nome,
+      observacao: `[ESTORNO de ${movOriginal.id}] ${motivo.trim()}`,
+      createdAt: agora,
+    };
+
+    const movOriginalAtualizada: Movimentacao = {
+      ...movOriginal,
+      estornado: true,
+      estornadoPor: idEstorno,
+    };
+
+    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
+      await this.repository.registrarMovimentacao(movOriginalAtualizada);
+      return this.repository.registrarMovimentacaoComSaldo(
+        item.id,
+        saldoResultante,
+        movimentacaoEstorno
+      );
+    }
+
+    await this.repository.salvarItem({
+      ...item,
+      estoqueAtual: saldoResultante,
+      updatedAt: agora,
+    });
+    await this.repository.registrarMovimentacao(movOriginalAtualizada);
+    return this.repository.registrarMovimentacao(movimentacaoEstorno);
   }
 }

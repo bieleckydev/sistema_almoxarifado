@@ -1,12 +1,14 @@
 'use client';
-
-import React, { useEffect, useRef } from 'react';
-import { X, ArrowDownRight, ArrowUpRight, Clock, MapPin, ShieldAlert, Cpu, Edit3, Printer } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, ArrowDownRight, ArrowUpRight, Clock, MapPin, ShieldAlert, Cpu, Edit3, Printer, RotateCcw, AlertTriangle, Loader2 } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { formatarTextoFalta } from '@/web/utils/pluralization';
 import { useExtratoItem } from '@/web/hooks/useExtratoItem';
 import { StockGauge } from './StockGauge';
 import { StockStatusBadge } from './StockStatusBadge';
+import { api } from '@/core/api/client';
+import { useToast } from '@/web/hooks/useToast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface ItemDetailsDrawerProps {
   item: DashboardItem | null;
@@ -16,6 +18,7 @@ export interface ItemDetailsDrawerProps {
   onRegistrarSaida?: (item: DashboardItem) => void;
   onEditarItem?: (item: DashboardItem) => void;
   onImprimirEtiqueta?: (item: DashboardItem) => void;
+  onMovimentacaoEstornada?: () => void;
 }
 
 export function ItemDetailsDrawer({
@@ -26,11 +29,23 @@ export function ItemDetailsDrawer({
   onRegistrarSaida,
   onEditarItem,
   onImprimirEtiqueta,
+  onMovimentacaoEstornada,
 }: ItemDetailsDrawerProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  const [estornoModal, setEstornoModal] = useState<{
+    isOpen: boolean;
+    movId: string;
+    tipo: string;
+    quantidade: number;
+  } | null>(null);
+  const [motivoEstorno, setMotivoEstorno] = useState('');
+  const [isEstornando, setIsEstornando] = useState(false);
+
   // Hook de extrato de movimentações (executado sob demanda quando o Drawer estiver aberto)
-  const { movimentacoes, isLoading: isLoadingExtrato } = useExtratoItem({
+  const { movimentacoes, isLoading: isLoadingExtrato, refetch: refetchExtrato } = useExtratoItem({
     itemId: item?.id,
     enabled: isOpen && Boolean(item),
   });
@@ -55,6 +70,41 @@ export function ItemDetailsDrawer({
       document.body.style.overflow = '';
     };
   }, [isOpen, onClose]);
+
+  const handleConfirmarEstorno = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!estornoModal) return;
+
+    if (!motivoEstorno.trim()) {
+      toast('Informe o motivo do estorno.', { type: 'error' });
+      return;
+    }
+
+    try {
+      setIsEstornando(true);
+      await api.post(`/api/movimentacoes/${estornoModal.movId}/estorno`, {
+        motivo: motivoEstorno.trim(),
+      });
+
+      toast('Movimentação estornada com sucesso!', { type: 'success' });
+      setEstornoModal(null);
+      setMotivoEstorno('');
+      refetchExtrato();
+      queryClient.invalidateQueries({ queryKey: ['itens-estoque'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-resumo-geral'] });
+      onMovimentacaoEstornada?.();
+    } catch (err: unknown) {
+      const responseData = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data;
+      const msg =
+        responseData?.error ||
+        responseData?.message ||
+        (err as Error)?.message ||
+        'Erro ao estornar movimentação.';
+      toast(msg, { type: 'error' });
+    } finally {
+      setIsEstornando(false);
+    }
+  };
 
   if (!isOpen || !item) {
     return null;
@@ -299,16 +349,32 @@ export function ItemDetailsDrawer({
                         </div>
                       </div>
 
-                      <b
-                        className={`text-sm tabular-nums font-semibold ${
-                          isEntrada
-                            ? 'text-tertiary'
-                            : 'text-error'
-                        }`}
-                      >
-                        {isEntrada ? '+' : '−'}
-                        {mov.quantidade.toLocaleString('pt-BR')} {unidadeFormatada}
-                      </b>
+                      <div className="flex items-center gap-2">
+                        <b
+                          className={`text-sm tabular-nums font-semibold ${
+                            isEntrada
+                              ? 'text-tertiary'
+                              : 'text-error'
+                          }`}
+                        >
+                          {isEntrada ? '+' : '−'}
+                          {mov.quantidade.toLocaleString('pt-BR')} {unidadeFormatada}
+                        </b>
+
+                        <button
+                          type="button"
+                          onClick={() => setEstornoModal({
+                            isOpen: true,
+                            movId: mov.id,
+                            tipo: mov.tipo,
+                            quantidade: mov.quantidade,
+                          })}
+                          title="Estornar movimentação"
+                          className="p-1 rounded text-secondary hover:text-error hover:bg-surface-container transition-colors cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -317,6 +383,69 @@ export function ItemDetailsDrawer({
           </div>
         </div>
       </aside>
+
+      {/* Modal de Confirmação de Estorno */}
+      {estornoModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs"
+            onClick={() => setEstornoModal(null)}
+          />
+          <div className="relative w-full max-w-sm bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-2xl z-10">
+            <div className="flex items-center gap-2.5 text-error mb-3">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <h4 className="font-bold text-sm text-on-surface">Confirmar Estorno</h4>
+            </div>
+            <p className="text-xs text-secondary mb-4 leading-relaxed">
+              Você está prestes a estornar a movimentação de <strong>{estornoModal.tipo}</strong> ({estornoModal.quantidade} {unidadeFormatada}). O saldo físico será revertido automaticamente.
+            </p>
+
+            <form onSubmit={handleConfirmarEstorno} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-secondary mb-1">
+                  Motivo ou Justificativa do Estorno <span className="text-error">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={motivoEstorno}
+                  onChange={(e) => setMotivoEstorno(e.target.value)}
+                  placeholder="Ex: Lançamento em duplicidade, quantidade incorreta..."
+                  className="w-full p-2.5 rounded-lg border border-outline-variant/40 bg-surface-container-lowest text-xs text-on-surface focus:border-error focus:ring-1 focus:ring-error"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEstornoModal(null)}
+                  disabled={isEstornando}
+                  className="px-3 py-1.5 text-xs font-semibold text-secondary hover:bg-surface-container rounded-lg cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isEstornando || !motivoEstorno.trim()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-on-primary bg-error hover:bg-error/90 rounded-lg disabled:opacity-50 cursor-pointer shadow-xs"
+                >
+                  {isEstornando ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Estornando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Confirmar Estorno</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
