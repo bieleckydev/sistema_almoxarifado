@@ -1,14 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Package, AlertTriangle, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Package, AlertTriangle, AlertCircle, CheckCircle2, TrendingUp, DollarSign } from 'lucide-react';
 import type { StatusCriticidade } from '@/web/data/mock-almoxarifado';
+import { formatarMoedaBrl } from '@/core/services/custo-medio';
 
 export interface StockMetricsCardsProps {
   totalItens: number;
   totalAbaixoMinimo: number;
   totalCriticos: number;
   totalComSaldo?: number;
+  valorTotalEstoque?: number;
   filtroAtivo?: 'todos' | StatusCriticidade;
   onFiltrarPorStatus?: (status: 'todos' | StatusCriticidade) => void;
   isLoading?: boolean;
@@ -20,6 +22,7 @@ export function StockMetricsCards({
   totalAbaixoMinimo,
   totalCriticos,
   totalComSaldo,
+  valorTotalEstoque,
   filtroAtivo = 'todos',
   onFiltrarPorStatus,
   isLoading = false,
@@ -215,7 +218,7 @@ export function StockMetricsCards({
         </div>
       </button>
 
-      {/* Card 4: Cobertura Operacional / Itens com Saldo */}
+      {/* Card 4: Valor Total em Estoque (R$) & Cobertura (3.0) */}
       <div
         className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between"
       >
@@ -223,27 +226,30 @@ export function StockMetricsCards({
         <div className="flex items-start justify-between">
           <div>
             <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">
-              Disponibilidade
+              Valor em Estoque
             </span>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="font-kpi-value text-3xl font-extrabold text-on-surface tabular-nums">
-                {itensComSaldoCalculado.toLocaleString('pt-BR')}
-              </span>
-              <span className="font-label-md text-label-md text-secondary">
-                com saldo
+              <span className="font-kpi-value text-2xl sm:text-3xl font-extrabold text-on-surface tabular-nums">
+                {valorTotalEstoque !== undefined
+                  ? formatarMoedaBrl(valorTotalEstoque)
+                  : itensComSaldoCalculado.toLocaleString('pt-BR')}
               </span>
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary shrink-0">
-            <TrendingUp className="w-5 h-5" />
+            {valorTotalEstoque !== undefined ? (
+              <DollarSign className="w-5 h-5" />
+            ) : (
+              <TrendingUp className="w-5 h-5" />
+            )}
           </div>
         </div>
         <div className="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between font-body-sm text-body-sm">
           <span className="text-tertiary font-semibold flex items-center gap-1 text-xs">
-            <CheckCircle2 className="w-3.5 h-3.5" /> {percentualComSaldo}% operacional
+            <CheckCircle2 className="w-3.5 h-3.5" /> {itensComSaldoCalculado} com saldo ({percentualComSaldo}%)
           </span>
           <span className="text-secondary text-xs">
-            {totalItens - itensComSaldoCalculado} em falta
+            {totalItens - itensComSaldoCalculado} zerados
           </span>
         </div>
       </div>

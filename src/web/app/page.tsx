@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { calcularValorTotalItem } from '@/core/services/custo-medio';
 import { RefreshCw, Plus, Layers, Package, Wrench } from 'lucide-react';
 import {
   type AbaEstoque,
@@ -127,6 +128,14 @@ export default function AlmoxarifadoDashboardPage() {
     (acc, curr) => acc + curr,
     0
   );
+
+  // Valor total consolidado em estoque para a aba ativa (3.0)
+  const valorTotalEstoque = useMemo(() => {
+    return itens.reduce(
+      (acc, item) => acc + calcularValorTotalItem(item.estoqueAtual, item.custoUnitario),
+      0
+    );
+  }, [itens]);
 
   // Hook para monitorar requisições pendentes para a badge da sidebar
   const { data: requisicoesData } = useRequisicoes();
@@ -472,6 +481,7 @@ export default function AlmoxarifadoDashboardPage() {
                   totalItens={totalAba}
                   totalAbaixoMinimo={totalAbaixoMinimo}
                   totalCriticos={totalCriticos}
+                  valorTotalEstoque={valorTotalEstoque}
                   filtroAtivo={filtroSituacao}
                   onFiltrarPorStatus={setFiltroSituacao}
                   isLoading={isLoading}
