@@ -7,10 +7,12 @@ import type { MaterialTerceiro, MovimentacaoTerceiro } from '@/core/domain/mater
 export type AbaEstoque = 'mp' | 'imp' | 'motos';
 export type StatusCriticidade = 'ok' | 'low' | 'crit';
 
-export interface DashboardItem extends Omit<Item, 'embalagem'> {
+export interface DashboardItem extends Omit<Item, 'embalagem' | 'especificacoes'> {
   aba: AbaEstoque;
   categoria: string;
   capacidadeMaxima: number;
+  custoUnitario?: number;
+  loteBase?: string;
   especificacoes?: Record<string, string>;
   embalagem?: Item['embalagem'];
 }
@@ -110,7 +112,10 @@ export type TelaOuAba =
   | 'clientes'
   | 'saida'
   | 'fat'
-  | 'terc';
+  | 'terc'
+  | 'req'
+  | 'inv'
+  | 'aud';
 
 /**
  * Módulos corporativos introduzidos na V5 (Ribbon / Sidebar de Módulos).
