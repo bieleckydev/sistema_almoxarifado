@@ -18,9 +18,11 @@ import {
   Calendar,
   Clock,
   Receipt,
+  Ban,
 } from 'lucide-react';
 import { usePedidos, useAtualizarStatusPedido } from '@/web/hooks/usePedidos';
 import { OrderStatusBadge } from './OrderStatusBadge';
+import { CancelarPedidoModal } from './CancelarPedidoModal';
 import { useToast } from '@/web/hooks/useToast';
 import { UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import type { PedidoEnriquecido } from '@/web/app/api/pedidos/route';
@@ -37,6 +39,7 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatusVendas>('todos');
   const [alertaEstoque, setAlertaEstoque] = useState<string | null>(null);
+  const [pedidoParaCancelar, setPedidoParaCancelar] = useState<PedidoEnriquecido | null>(null);
 
   const {
     pedidos,
@@ -663,6 +666,20 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
                             </button>
                           )}
 
+                          {/* Ação de Cancelamento de Pedido (3.0) */}
+                          {pedido.status !== 'CANCELADO' && !pedido.faturamento && (
+                            <button
+                              type="button"
+                              onClick={() => setPedidoParaCancelar(pedido)}
+                              disabled={isMutating}
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-outline hover:text-error hover:bg-error-container/20 transition-colors cursor-pointer"
+                              title="Cancelar este pedido de venda"
+                              aria-label="Cancelar pedido"
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
                           {isEntregue && pedido.faturamento && (
                             <span className="inline-flex items-center gap-1 text-xs text-tertiary font-semibold px-2 py-1 rounded-md bg-tertiary/10">
                               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -679,6 +696,24 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
           </table>
         </div>
       </section>
+
+      {/* Modal de Cancelamento com Justificativa Obrigatória (3.0) */}
+      <CancelarPedidoModal
+        pedido={pedidoParaCancelar}
+        isOpen={Boolean(pedidoParaCancelar)}
+        onClose={() => setPedidoParaCancelar(null)}
+        onConfirmar={async (pedidoId, motivo) => {
+          await atualizarStatusMutation.mutateAsync({
+            id: pedidoId,
+            status: 'CANCELADO',
+            motivoCancelamento: motivo,
+          });
+          toast(`Pedido #${pedidoParaCancelar?.numeroSequencial || pedidoId} cancelado com sucesso.`, {
+            type: 'info',
+          });
+          setPedidoParaCancelar(null);
+        }}
+      />
     </div>
   );
 }
