@@ -26,6 +26,8 @@ import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolba
 import { StockTable } from '@/web/components/dashboard/StockTable';
 import { ItemDetailsDrawer } from '@/web/components/dashboard/ItemDetailsDrawer';
 import { ItemCreateDrawer } from '@/web/components/dashboard/drawers/ItemCreateDrawer';
+import { ItemEditDrawer } from '@/web/components/dashboard/drawers/ItemEditDrawer';
+import { EtiquetaItemModal } from '@/web/components/dashboard/modals/EtiquetaItemModal';
 import { MovementFormDrawer } from '@/web/components/dashboard/drawers/MovementFormDrawer';
 import { QuickItemPickerDrawer } from '@/web/components/dashboard/drawers/QuickItemPickerDrawer';
 import { VendasView } from '@/web/components/gestao/vendas/VendasView';
@@ -65,6 +67,8 @@ export default function AlmoxarifadoDashboardPage() {
 
   // Estados dos Drawers e Modais Operacionais
   const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
+  const [itemParaEditar, setItemParaEditar] = useState<DashboardItem | null>(null);
+  const [itemParaEtiqueta, setItemParaEtiqueta] = useState<DashboardItem | null>(null);
   const [isOrderCreateOpen, setIsOrderCreateOpen] = useState(false);
   const [isClientCreateOpen, setIsClientCreateOpen] = useState(false);
   const [clientCreateTipoInicial, setClientCreateTipoInicial] = useState<TipoParceiro | undefined>(undefined);
@@ -509,6 +513,7 @@ export default function AlmoxarifadoDashboardPage() {
                   onRegistrarEntrada={(item) => handleOpenMovement(item, 'Entrada')}
                   onRegistrarSaida={(item) => handleOpenMovement(item, 'Saída')}
                   onRegistrarBaixaRapida={(item) => handleOpenMovement(item, 'Saída')}
+                  onImprimirEtiqueta={(item) => setItemParaEtiqueta(item)}
                   selectedItemId={itemSelecionado?.id}
                   isLoading={isLoading}
                   onClearFilters={handleClearFilters}
@@ -604,6 +609,31 @@ export default function AlmoxarifadoDashboardPage() {
             handleCloseDrawer();
             handleOpenMovement(item, 'Saída');
           }}
+          onEditarItem={(item) => {
+            handleCloseDrawer();
+            setItemParaEditar(item);
+          }}
+          onImprimirEtiqueta={(item) => {
+            setItemParaEtiqueta(item);
+          }}
+        />
+
+        {/* Gaveta de Edição de Cadastro de Material (3.0) */}
+        <ItemEditDrawer
+          isOpen={Boolean(itemParaEditar)}
+          item={itemParaEditar}
+          onClose={() => setItemParaEditar(null)}
+          onItemUpdated={(itemAtualizado) => {
+            refetch();
+            setItemSelecionado(itemAtualizado);
+          }}
+        />
+
+        {/* Modal de Impressão de Etiqueta Térmica (3.0) */}
+        <EtiquetaItemModal
+          isOpen={Boolean(itemParaEtiqueta)}
+          item={itemParaEtiqueta}
+          onClose={() => setItemParaEtiqueta(null)}
         />
 
         {/* Gaveta de Criação de Pedido de Venda */}

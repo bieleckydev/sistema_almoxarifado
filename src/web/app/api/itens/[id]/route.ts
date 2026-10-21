@@ -8,6 +8,7 @@ import { ItemNaoEncontradoError } from '@/core/services/movimentacao.service';
 import {
   ApiError,
   getEstoqueRepository,
+  getAuditoriaService,
   readJson,
   requireIdentity,
   requirePermission,
@@ -85,8 +86,27 @@ export async function PATCH(request: Request, context: ItemRouteContext) {
     });
 
     const itemSalvo = await repo.salvarItem(itemAtualizado);
+
+    // Registro na Auditoria Operacional (3.0)
+    try {
+      await getAuditoriaService().registrar({
+        quando: new Date().toISOString(),
+        usuarioId: identity.user.id,
+        usuarioNome: identity.user.name || 'Almoxarife',
+        papel: identity.user.role || 'operador',
+        acao: 'EDITAR_ITEM',
+        detalhe: `Item "${itemSalvo.codigo} - ${itemSalvo.descricao}" atualizado no catálogo`,
+        entidade: 'Item',
+        entidadeId: itemSalvo.id,
+      });
+    } catch (auditErr) {
+      console.warn('Falha ao auditar edição de item:', auditErr);
+    }
+
     return NextResponse.json(itemSalvo, { status: 200 });
   } catch (error) {
     return toErrorResponse(error);
   }
 }
+
+export const PUT = PATCH;
