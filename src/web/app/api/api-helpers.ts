@@ -6,6 +6,11 @@ import {
   type UserPermission,
 } from '@/core/domain/user-authorization';
 import {
+  podeExecutar,
+  ROTULO_PAPEL,
+  type AcaoPermissao,
+} from '@/core/domain/permissions';
+import {
   ItemNaoEncontradoError,
   ItemInativoError,
   ColaboradorNaoEncontradoError,
@@ -83,6 +88,32 @@ export function requirePermission(
   if (!hasUserPermission(identity.user, permission)) {
     throw new AuthorizationError(`Permissão insuficiente para: ${permission}.`);
   }
+}
+
+/**
+ * Valida se o usuário autenticado possui a permissão operacional fina requerida (Protótipo 3.0).
+ * Lança AuthorizationError (403) com mensagem semântica se não possuir.
+ */
+export function requireAcaoPermissao(
+  identity: AuthenticatedIdentity,
+  acao: AcaoPermissao
+): void {
+  if (!podeExecutar(identity.user.role, acao)) {
+    const papel = ROTULO_PAPEL[identity.user.role] || identity.user.role;
+    throw new AuthorizationError(`O perfil ${papel} não permite esta ação.`);
+  }
+}
+
+/**
+ * Helper unificado que valida identidade e permissão de ação na requisição.
+ */
+export async function exigirPermissao(
+  request: Request,
+  acao: AcaoPermissao
+): Promise<AuthenticatedIdentity> {
+  const identity = await requireIdentity(request);
+  requireAcaoPermissao(identity, acao);
+  return identity;
 }
 
 // ==========================================
@@ -234,4 +265,33 @@ export function getMovimentacaoService(
   repo: IEstoqueRepository = getEstoqueRepository()
 ): MovimentacaoService {
   return new MovimentacaoService(repo);
+}
+
+// ------------------------------------------
+// AUDITORIA OPERACIONAL
+// ------------------------------------------
+
+let globalAuditoriaRepo: import('@/core/storage/auditoria.repository.interface').IAuditoriaRepository | null = null;
+
+export function getAuditoriaRepository(): import('@/core/storage/auditoria.repository.interface').IAuditoriaRepository {
+  if (!globalAuditoriaRepo) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { FirestoreAuditoriaRepository } = require('@/server/storage/firestore-auditoria.repository');
+    globalAuditoriaRepo = new FirestoreAuditoriaRepository();
+  }
+  return globalAuditoriaRepo!;
+}
+
+export function setAuditoriaRepository(
+  repo: import('@/core/storage/auditoria.repository.interface').IAuditoriaRepository | null
+): void {
+  globalAuditoriaRepo = repo;
+}
+
+export function getAuditoriaService(
+  repo = getAuditoriaRepository()
+): import('@/core/services/auditoria.service').AuditoriaService {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { AuditoriaService } = require('@/core/services/auditoria.service');
+  return new AuditoriaService(repo);
 }
