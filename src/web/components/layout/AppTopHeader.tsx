@@ -7,6 +7,8 @@ import {
   Calendar,
   Bell,
   ChevronRight,
+  ArrowDownToLine,
+  ArrowUpFromLine,
 } from 'lucide-react';
 import { type TelaOuAba, METADADOS_ABAS } from '@/web/data/mock-almoxarifado';
 import { GlobalSearchInput } from './GlobalSearchInput';
@@ -14,11 +16,14 @@ import { ThemeToggle } from './ThemeToggle';
 import type { GlobalSearchResult } from '@/web/hooks/useGlobalSearch';
 import { useAuthStore } from '@/core/store/useAuthStore';
 import { usePeriodoGlobal } from '@/web/hooks/usePeriodoGlobal';
+import { podeExecutar, ROTULO_PAPEL } from '@/core/domain/permissions';
 
 export interface AppTopHeaderProps {
   telaAtiva: TelaOuAba;
   onSelectTela: (tela: TelaOuAba) => void;
   onSelectSearchResult: (result: GlobalSearchResult) => void;
+  onRegistrarEntrada?: () => void;
+  onRegistrarSaida?: () => void;
   totalAlertas?: number;
   className?: string;
 }
@@ -33,12 +38,15 @@ export function AppTopHeader({
   telaAtiva,
   onSelectTela,
   onSelectSearchResult,
+  onRegistrarEntrada,
+  onRegistrarSaida,
   totalAlertas = 0,
   className = '',
 }: AppTopHeaderProps) {
   const { user } = useAuthStore();
   const { periodo, textoIntervalo } = usePeriodoGlobal();
 
+  const podeMover = podeExecutar(user?.role, 'mover');
   const isAbaEstoque = telaAtiva === 'mp' || telaAtiva === 'imp' || telaAtiva === 'motos';
   const isGestao = telaAtiva === 'vendas' || telaAtiva === 'clientes' || telaAtiva === 'saida';
 
@@ -99,18 +107,46 @@ export function AppTopHeader({
         </div>
       </div>
 
-      {/* 2. Lado Direito: Data Operacional, Alertas, Tema e Perfil */}
-      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+      {/* 2. Lado Direito: Ações Rápidas (3.0), Data Operacional, Alertas, Tema e Perfil */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Botões de Ação Rápida no Topo (3.0) */}
+        {podeMover && (
+          <div className="hidden sm:flex items-center gap-1.5">
+            {onRegistrarEntrada && (
+              <button
+                type="button"
+                onClick={onRegistrarEntrada}
+                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200/50 dark:border-emerald-800/40 transition-colors cursor-pointer shadow-2xs"
+                title="Registrar entrada rápida de material (+ Entrada)"
+              >
+                <ArrowDownToLine className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">+ Entrada</span>
+              </button>
+            )}
+            {onRegistrarSaida && (
+              <button
+                type="button"
+                onClick={onRegistrarSaida}
+                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 border border-rose-200/50 dark:border-rose-800/40 transition-colors cursor-pointer shadow-2xs"
+                title="Registrar saída rápida de material (- Saída)"
+              >
+                <ArrowUpFromLine className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">- Saída</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Data Operacional */}
-        <div className="hidden lg:flex items-center gap-2 text-on-surface-variant font-body-sm text-xs">
+        <div className="hidden xl:flex items-center gap-2 text-on-surface-variant font-body-sm text-xs">
           <Calendar className="w-4 h-4 text-secondary" />
-          <span className="font-medium text-outline">Data Operacional:</span>
+          <span className="font-medium text-outline">Data:</span>
           <span className="font-data-tabular font-semibold text-on-surface">
             {periodo === 'Hoje' ? 'Hoje' : textoIntervalo || '14/10/2026'}
           </span>
         </div>
 
-        <div className="hidden lg:block h-6 w-px bg-outline-variant/30" />
+        <div className="hidden sm:block h-5 w-px bg-outline-variant/30" />
 
         {/* Notificações com badge */}
         <button
@@ -132,9 +168,9 @@ export function AppTopHeader({
         {/* Alternador de Tema Claro / Escuro */}
         <ThemeToggle />
 
-        <div className="hidden sm:block h-6 w-px bg-outline-variant/30" />
+        <div className="hidden sm:block h-5 w-px bg-outline-variant/30" />
 
-        {/* Perfil do Usuário com Indicador de Presença */}
+        {/* Perfil do Usuário com Indicador de Presença e Papel (3.0) */}
         {user ? (
           <div className="flex items-center gap-2.5 pl-1">
             <div className="relative">
@@ -147,11 +183,11 @@ export function AppTopHeader({
               />
             </div>
             <div className="hidden md:flex flex-col text-left leading-tight">
-              <span className="font-headline-sm text-xs font-bold text-on-surface truncate max-w-[120px]">
+              <span className="font-headline-sm text-xs font-bold text-on-surface truncate max-w-[130px]">
                 {user.name}
               </span>
-              <span className="font-label-sm text-[10px] text-on-surface-variant truncate max-w-[120px] mt-0.5">
-                {user.role === 'mestre' ? 'Gestor de Estoque' : 'Almoxarife'}
+              <span className="font-label-sm text-[10px] text-primary dark:text-primary-fixed uppercase font-semibold tracking-wider truncate max-w-[130px] mt-0.5">
+                {user.role ? (ROTULO_PAPEL[user.role] || user.role) : 'Almoxarife'}
               </span>
             </div>
           </div>

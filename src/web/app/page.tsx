@@ -15,9 +15,11 @@ import type { TipoParceiro } from '@/core/domain/cliente.schema';
 import { useItensEstoque } from '@/web/hooks/useItensEstoque';
 import { useDebounce } from '@/web/hooks/useDebounce';
 import { useDashboardResumo } from '@/web/hooks/useDashboardResumo';
+import { useRequisicoes } from '@/web/hooks/useRequisicoes';
+import { useAuthStore } from '@/core/store/useAuthStore';
+import { usePermissao } from '@/web/hooks/usePermissao';
 import { AppSidebar } from '@/web/components/layout/AppSidebar';
 import { AppTopHeader } from '@/web/components/layout/AppTopHeader';
-import { AppRibbonHeader } from '@/web/components/layout/AppRibbonHeader';
 import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards';
 import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
 import { StockTable } from '@/web/components/dashboard/StockTable';
@@ -34,6 +36,9 @@ import { FaturamentoView } from '@/web/components/gestao/faturamento/Faturamento
 import { FaturarPedidoDrawer } from '@/web/components/gestao/faturamento/FaturarPedidoDrawer';
 import { TerceirosView } from '@/web/components/gestao/terceiros/TerceirosView';
 import { ReceberTerceiroDrawer } from '@/web/components/gestao/terceiros/ReceberTerceiroDrawer';
+import { InventarioView } from '@/web/components/gestao/inventario/InventarioView';
+import { RequisicoesView } from '@/web/components/gestao/requisicoes/RequisicoesView';
+import { AuditoriaView } from '@/web/components/gestao/auditoria/AuditoriaView';
 import { useFaturamento } from '@/web/hooks/useFaturamento';
 import { useMaterialTerceiros } from '@/web/hooks/useMaterialTerceiros';
 import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
@@ -45,10 +50,11 @@ import type { GlobalSearchResult } from '@/web/hooks/useGlobalSearch';
 
 export default function AlmoxarifadoDashboardPage() {
   const { toast } = useToast();
+  const { user } = useAuthStore();
+  const { podeVer, gerarAvisoTelaBloqueada } = usePermissao();
 
-  // Navegação corporativa V5: Módulo e tela ativos
+  // Navegação 3.0: Módulo contextual e tela ativa
   const [moduloAtivo, setModuloAtivo] = useState<ModuloCorporativo>('inicio');
-  const [abaRibbonAtiva, setAbaRibbonAtiva] = useState<string>('Período de Análise');
   const [telaAtiva, setTelaAtiva] = useState<TelaOuAba>('inicio');
   const [termoBusca, setTermoBusca] = useState('');
   const [filtroSituacao, setFiltroSituacao] = useState<'todos' | StatusCriticidade>('todos');
@@ -122,7 +128,16 @@ export default function AlmoxarifadoDashboardPage() {
     0
   );
 
+  // Hook para monitorar requisições pendentes para a badge da sidebar
+  const { data: requisicoesData } = useRequisicoes();
+
   const handleSelectTela = (novaTela: TelaOuAba) => {
+    // Verificação de permissão baseada no perfil de acesso (RBAC 3.0)
+    if (!podeVer(novaTela)) {
+      toast(gerarAvisoTelaBloqueada(novaTela), { type: 'error' });
+      return;
+    }
+
     setTelaAtiva(novaTela);
     setTermoBusca('');
     setFiltroSituacao('todos');
@@ -137,16 +152,12 @@ export default function AlmoxarifadoDashboardPage() {
     setModuloAtivo(novoModulo);
     if (novoModulo === 'inicio') {
       handleSelectTela('inicio');
-      setAbaRibbonAtiva('Período de Análise');
     } else if (novoModulo === 'estoque') {
       handleSelectTela('mp');
-      setAbaRibbonAtiva('Materiais');
     } else if (novoModulo === 'compras') {
       handleSelectTela('saida');
-      setAbaRibbonAtiva('Recebimentos');
     } else if (novoModulo === 'vendas') {
       handleSelectTela('vendas');
-      setAbaRibbonAtiva('Pedidos');
     }
   };
 
@@ -342,6 +353,7 @@ export default function AlmoxarifadoDashboardPage() {
           contagemCriticos={contagemCriticosPorAba}
           pedidosAtrasadosCount={resumoGeral?.vendas.atrasados ?? 0}
           pedidosAFaturarCount={faturamentoKpis?.totalPedidosAFaturar ?? 0}
+          requisicoesPendentesCount={requisicoesData?.pendentes ?? 0}
         />
 
         {/* Coluna Central com Header e Conteúdo */}
@@ -351,6 +363,8 @@ export default function AlmoxarifadoDashboardPage() {
             telaAtiva={telaAtiva}
             onSelectTela={handleSelectTela}
             onSelectSearchResult={handleSelectSearchResult}
+            onRegistrarEntrada={() => setPickerDrawerState({ isOpen: true, tipo: 'Entrada' })}
+            onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
             totalAlertas={totalCriticosGerais}
           />
 
@@ -534,8 +548,17 @@ export default function AlmoxarifadoDashboardPage() {
                   setIsDrawerOpen(true);
                 }}
               />
+            ) : telaAtiva === 'req' ? (
+              /* 6. Módulo de Requisições de Material (3.0) */
+              <RequisicoesView />
+            ) : telaAtiva === 'inv' ? (
+              /* 7. Módulo de Inventário Físico & Contagem Direta (3.0) */
+              <InventarioView />
+            ) : telaAtiva === 'aud' ? (
+              /* 8. Módulo de Auditoria Operacional & Compliance (3.0) */
+              <AuditoriaView />
             ) : (
-              /* 6. Fallback / Telas Desconhecidas */
+              /* 9. Fallback / Telas Desconhecidas */
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-fade-in">
                 <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mb-4">
                   <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />

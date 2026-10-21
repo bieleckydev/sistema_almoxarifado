@@ -9,9 +9,12 @@ import {
   Bike,
   PackageCheck,
   ArrowLeftRight,
+  ClipboardList,
+  CheckSquare,
   ShoppingCart,
   Receipt,
   Users,
+  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -24,6 +27,7 @@ import {
   type ModuloCorporativo,
   obterModuloDeTela,
 } from '../../data/mock-almoxarifado';
+import { podeAcessarTela, podeExecutar, ROTULO_PAPEL } from '@/core/domain/permissions';
 import { useAuthStore } from '@/core/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 
@@ -60,6 +64,10 @@ export interface AppSidebarProps {
    */
   pedidosAFaturarCount?: number;
   /**
+   * Contagem de requisições pendentes de aprovação (somente perfil que pode aprovar).
+   */
+  requisicoesPendentesCount?: number;
+  /**
    * Estado colapsado / mini controlado externamente (opcional)
    */
   isMini?: boolean;
@@ -77,6 +85,8 @@ interface ItemNavegacao {
     contagemCriticos: Record<AbaEstoque, number>;
     pedidosAtrasadosCount: number;
     pedidosAFaturarCount: number;
+    requisicoesPendentesCount: number;
+    role?: import('@/core/domain/user.schema').UserRole;
   }) => number;
   getBadgeTitle?: (count: number) => string;
   badgeVariant?: 'error' | 'secondary' | 'primary';
@@ -93,7 +103,7 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
     itens: [
       {
         tela: 'inicio',
-        nome: 'Início / Visão Geral',
+        nome: 'Início',
         icon: LayoutDashboard,
         moduloPai: 'inicio',
       },
@@ -113,7 +123,7 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
       },
       {
         tela: 'imp',
-        nome: 'Materiais Improdutivos',
+        nome: 'Materiais improdutivos',
         icon: Wrench,
         moduloPai: 'estoque',
         getBadgeCount: ({ contagemCriticos }) => contagemCriticos.imp || 0,
@@ -122,7 +132,7 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
       },
       {
         tela: 'motos',
-        nome: 'Peças & Componentes',
+        nome: 'Peças de motos',
         icon: Bike,
         moduloPai: 'estoque',
         getBadgeCount: ({ contagemCriticos }) => contagemCriticos.motos || 0,
@@ -131,7 +141,7 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
       },
       {
         tela: 'terc',
-        nome: 'Material de Terceiros',
+        nome: 'Material de terceiros',
         icon: PackageCheck,
         moduloPai: 'estoque',
       },
@@ -142,9 +152,27 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
     itens: [
       {
         tela: 'saida',
-        nome: 'Entradas e Saídas',
+        nome: 'Entradas e saídas',
         icon: ArrowLeftRight,
         moduloPai: 'compras',
+      },
+      {
+        tela: 'req',
+        nome: 'Requisições',
+        icon: ClipboardList,
+        moduloPai: 'estoque',
+        getBadgeCount: ({ requisicoesPendentesCount, role }) => {
+          if (!podeExecutar(role, 'aprovar')) return 0;
+          return requisicoesPendentesCount || 0;
+        },
+        getBadgeTitle: (count) => `${count} requisição(ões) pendente(s)`,
+        badgeVariant: 'error',
+      },
+      {
+        tela: 'inv',
+        nome: 'Inventário (contagem)',
+        icon: CheckSquare,
+        moduloPai: 'estoque',
       },
     ],
   },
@@ -153,7 +181,7 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
     itens: [
       {
         tela: 'vendas',
-        nome: 'Pedidos de Venda',
+        nome: 'Pedidos de venda',
         icon: ShoppingCart,
         moduloPai: 'vendas',
         getBadgeCount: ({ pedidosAtrasadosCount }) => pedidosAtrasadosCount,
@@ -171,9 +199,20 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
       },
       {
         tela: 'clientes',
-        nome: 'Clientes & Parceiros',
+        nome: 'Clientes e fornecedores',
         icon: Users,
         moduloPai: 'vendas',
+      },
+    ],
+  },
+  {
+    titulo: 'Controle',
+    itens: [
+      {
+        tela: 'aud',
+        nome: 'Auditoria',
+        icon: ShieldCheck,
+        moduloPai: 'inicio',
       },
     ],
   },
@@ -190,6 +229,7 @@ export function AppSidebar({
   contagemCriticos = { mp: 0, imp: 0, motos: 0 },
   pedidosAtrasadosCount = 0,
   pedidosAFaturarCount = 0,
+  requisicoesPendentesCount = 0,
   isMini: isMiniProp,
   onToggleMini: onToggleMiniProp,
   className = '',
@@ -252,6 +292,12 @@ export function AppSidebar({
     router.replace('/login');
   };
 
+  // Filtrar os grupos e itens com base no perfil de acesso do usuário (3.0 RBAC)
+  const gruposVisiveis = GRUPOS_MENU.map((grupo) => ({
+    ...grupo,
+    itens: grupo.itens.filter((item) => podeAcessarTela(user?.role, item.tela)),
+  })).filter((grupo) => grupo.itens.length > 0);
+
   return (
     <aside
       className={`bg-inverse-surface text-inverse-on-surface flex flex-col justify-between shrink-0 transition-all duration-200 border-r border-white/5 md:min-h-screen z-30 shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${isMini ? 'w-full md:w-[68px] p-2' : 'w-full md:w-64 p-3.5'
@@ -307,7 +353,7 @@ export function AppSidebar({
 
         {/* Lista de Navegação Principal */}
         <nav className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-210px)] pr-0.5" aria-label="Menu WMS Operacional">
-          {GRUPOS_MENU.map((grupo, gIndex) => (
+          {gruposVisiveis.map((grupo, gIndex) => (
             <div key={grupo.titulo || `g-${gIndex}`} className="flex flex-col gap-1">
               {!isMini && grupo.titulo && (
                 <div className="px-2 pt-2.5 pb-0.5 font-label-sm text-[10px] uppercase tracking-wider text-outline-variant font-bold select-none">
@@ -326,6 +372,8 @@ export function AppSidebar({
                     contagemCriticos,
                     pedidosAtrasadosCount,
                     pedidosAFaturarCount,
+                    requisicoesPendentesCount: requisicoesPendentesCount || 0,
+                    role: user?.role,
                   })
                   : 0;
                 const badgeTitle = item.getBadgeTitle
@@ -447,7 +495,7 @@ export function AppSidebar({
                       {user.name}
                     </p>
                     <span className="text-[10px] text-outline-variant uppercase font-medium">
-                      {user.role === 'mestre' ? 'Gestor de Estoque' : 'Almoxarife'}
+                      {user.role ? (ROTULO_PAPEL[user.role] || user.role) : 'Almoxarife'}
                     </span>
                   </div>
                 </div>
