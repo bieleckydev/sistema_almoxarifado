@@ -81,8 +81,16 @@ export function useAtualizarStatusPedido() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: StatusPedido }) => {
-      const res = await api.patch(`/pedidos/${id}`, { status });
+    mutationFn: async ({
+      id,
+      status,
+      motivoCancelamento,
+    }: {
+      id: string;
+      status: StatusPedido;
+      motivoCancelamento?: string;
+    }) => {
+      const res = await api.patch(`/pedidos/${id}`, { status, motivoCancelamento });
       return res.data;
     },
     onSuccess: () => {

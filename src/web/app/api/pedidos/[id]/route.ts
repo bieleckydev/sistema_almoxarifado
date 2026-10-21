@@ -140,6 +140,59 @@ export async function PATCH(request: Request, context: RouteContext) {
       });
       pedidoData.status = 'ENTREGUE';
       pedidoData.updatedAt = now;
+    } else if (novoStatus === 'CANCELADO') {
+      // Regra 3.0: Pedido faturado não pode ser cancelado diretamente
+      if ((pedidoData as any).faturamento || (pedidoData.status as string) === 'FATURADO') {
+        throw new ApiError(
+          422,
+          'Pedido faturado não pode ser cancelado diretamente. Cancele a nota fiscal primeiro.'
+        );
+      }
+
+      const motivo = typeof body.motivoCancelamento === 'string' ? body.motivoCancelamento.trim() : '';
+      if (!motivo || motivo.length < 5) {
+        throw new ApiError(
+          400,
+          'Motivo do cancelamento é obrigatório e deve conter no mínimo 5 caracteres.'
+        );
+      }
+
+      const updatePayload: Record<string, unknown> = {
+        status: 'CANCELADO',
+        motivoCancelamento: motivo,
+        canceladoPor: identity.user.name || identity.user.id,
+        canceladoEm: now,
+        updatedAt: now,
+      };
+
+      if (pedidoRef) {
+        try {
+          await updateDoc(pedidoRef, updatePayload);
+        } catch {
+          // Fallback memória
+        }
+      }
+
+      pedidoData.status = 'CANCELADO';
+      pedidoData.motivoCancelamento = motivo;
+      pedidoData.updatedAt = now;
+
+      // Registro de Auditoria Operacional (3.0)
+      try {
+        const { getAuditoriaService } = await import('../../api-helpers');
+        await getAuditoriaService().registrar({
+          quando: now,
+          usuarioId: identity.user.id,
+          usuarioNome: identity.user.name || 'Operador',
+          papel: identity.user.role || 'operador',
+          acao: 'CANCELAMENTO_PEDIDO',
+          detalhe: `Cancelamento do pedido #${pedidoData.numeroSequencial || id}: ${motivo}`,
+          entidade: 'Pedido',
+          entidadeId: id,
+        });
+      } catch (auditErr) {
+        console.warn('Falha ao registrar auditoria de cancelamento de pedido:', auditErr);
+      }
     } else {
       // Atualização simples de status (ex: PENDENTE -> SEPARADO)
       if (pedidoRef) {
