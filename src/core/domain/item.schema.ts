@@ -65,6 +65,22 @@ export const ItemSchema = z.object({
     .number()
     .min(0, 'O estoque atual não pode ser negativo')
     .default(0),
+  custoUnitario: z
+    .number()
+    .min(0, 'O custo unitário não pode ser negativo')
+    .optional(),
+  capacidadeMaxima: z
+    .number()
+    .min(0.001, 'A capacidade máxima deve ser maior que zero')
+    .optional(),
+  loteBase: z
+    .string()
+    .trim()
+    .optional(),
+  especificacoes: z
+    .record(z.string(), z.string())
+    .optional(),
+  categoria: z.string().trim().optional(),
   embalagem: EmbalagemDetalheSchema.default({
     possuiEmbalagem: false,
     fatorConversao: 1,

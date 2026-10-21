@@ -64,6 +64,7 @@ export const ItemPedidoSchema = z.object({
     .nonnegative('O preço unitário não pode ser negativo')
     .optional()
     .default(0),
+  lote: z.string().trim().optional(),
   observacao: z.string().trim().optional(),
 });
 
@@ -104,6 +105,7 @@ export const PedidoSchema = z.object({
     .min(1, 'O pedido deve conter pelo menos um item'),
   valorTotal: z.number().nonnegative().optional(),
   faturamento: FaturamentoPedidoSchema.optional(),
+  motivoCancelamento: z.string().trim().optional(),
   observacoes: z.string().trim().optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
