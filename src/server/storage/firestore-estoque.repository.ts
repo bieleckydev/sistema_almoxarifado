@@ -261,6 +261,18 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     return movimentacao;
   }
 
+  async buscarMovimentacaoPorId(id: string): Promise<Movimentacao | null> {
+    try {
+      if (!this.db || typeof this.db.collection !== 'function') return null;
+      const docSnap = await this.db.collection('movements').doc(id).get();
+      const data = docSnap.data();
+      if (!docSnap.exists || !data) return null;
+      return movimentacaoFromFirestore(docSnap.id, data);
+    } catch {
+      return null;
+    }
+  }
+
   async consultarExtratoItem(
     itemId: string,
     filtros?: MovimentacaoFiltros
