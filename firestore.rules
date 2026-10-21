@@ -194,6 +194,11 @@ service cloud.firestore {
       allow delete: if isMestre();
     }
 
+    match /auditoria_operacional/{auditId} {
+      allow read: if isMestre() || hasRole('admin');
+      allow write: if false;
+    }
+
     // Deny any collection that has not received an explicit policy.
     match /{document=**} {
       allow read, write: if false;
