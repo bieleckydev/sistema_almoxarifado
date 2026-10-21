@@ -61,6 +61,8 @@ export const NotaFiscalEmitidaSchema = z.object({
   referencia: z.string().trim().min(1, 'Referência do documento é obrigatória'),
   pedidoId: z.string().optional(),
   materialTerceiroId: z.string().optional(),
+  cancelada: z.boolean().optional(),
+  motivoCancelamento: z.string().trim().optional(),
   observacoes: z.string().trim().optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),

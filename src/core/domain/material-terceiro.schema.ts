@@ -11,6 +11,7 @@ export const TipoMovimentacaoTerceiroSchema = z.enum([
   'ENTRADA_REMESSA',
   'CONSUMO_PRODUCAO',
   'DEVOLUCAO_RETORNO',
+  'SUCATA_PERDA',
 ]);
 
 export type TipoMovimentacaoTerceiro = z.infer<typeof TipoMovimentacaoTerceiroSchema>;
@@ -19,6 +20,7 @@ export const TIPO_MOV_TERCEIRO_LABELS: Record<TipoMovimentacaoTerceiro, string> 
   ENTRADA_REMESSA: 'Entrada (Remessa)',
   CONSUMO_PRODUCAO: 'Consumo na Produção',
   DEVOLUCAO_RETORNO: 'Devolução ao Cliente',
+  SUCATA_PERDA: 'Sucata ou Perda',
 };
 
 /**
@@ -36,6 +38,9 @@ export function normalizarTipoMovTerceiro(valor: unknown): TipoMovimentacaoTerce
   }
   if (normalizado === 'DEVOLUCAO' || normalizado === 'DEVOLUCAO_RETORNO' || normalizado === 'DEVOLUÇÃO') {
     return 'DEVOLUCAO_RETORNO';
+  }
+  if (normalizado === 'SUCATA' || normalizado === 'SUCATA_PERDA' || normalizado === 'PERDA' || normalizado === 'REFUGO') {
+    return 'SUCATA_PERDA';
   }
   return 'ENTRADA_REMESSA';
 }
@@ -128,13 +133,27 @@ export const DevolverMaterialTerceiroSchema = z.object({
 
 export type DevolverMaterialTerceiroInput = z.input<typeof DevolverMaterialTerceiroSchema>;
 
+/**
+ * Schema para registro de sucata ou refugo de material de terceiros (Protótipo 3.0).
+ */
+export const RegistrarSucataTerceiroSchema = z.object({
+  materialTerceiroId: z.string().min(1, 'ID do material é obrigatório'),
+  quantidade: z.number().positive('Quantidade de sucata/perda deve ser maior que zero'),
+  dataMovimentacao: z.string().regex(DATA_ISO_REGEX, 'Data inválida (AAAA-MM-DD)'),
+  motivo: z.string().trim().min(1, 'Informe o motivo da sucata ou perda (ex: refugo, corte errado)'),
+  responsavel: z.string().trim().optional().default('Produção'),
+  observacao: z.string().trim().optional(),
+});
+
+export type RegistrarSucataTerceiroInput = z.input<typeof RegistrarSucataTerceiroSchema>;
+
 /* =========================================================================
    Funções utilitárias puras de cálculo de estoque de terceiros
    ========================================================================= */
 
 /**
  * Calcula o saldo atual a partir do histórico de movimentações de terceiros:
- * Entradas somam; Consumos e Devoluções subtraem.
+ * Entradas somam; Consumos, Devoluções e Sucata subtraem.
  */
 export function calcularSaldoTerceiro(
   historico: Array<{ tipo: TipoMovimentacaoTerceiro; quantidade: number }>
@@ -156,11 +175,13 @@ export function calcularTotaisTerceiro(
   recebido: number;
   consumido: number;
   devolvido: number;
+  sucata: number;
   saldo: number;
 } {
   let recebido = 0;
   let consumido = 0;
   let devolvido = 0;
+  let sucata = 0;
 
   for (const mov of historico) {
     if (mov.tipo === 'ENTRADA_REMESSA') {
@@ -169,6 +190,8 @@ export function calcularTotaisTerceiro(
       consumido += mov.quantidade;
     } else if (mov.tipo === 'DEVOLUCAO_RETORNO') {
       devolvido += mov.quantidade;
+    } else if (mov.tipo === 'SUCATA_PERDA') {
+      sucata += mov.quantidade;
     }
   }
 
@@ -176,7 +199,8 @@ export function calcularTotaisTerceiro(
     recebido,
     consumido,
     devolvido,
-    saldo: recebido - consumido - devolvido,
+    sucata,
+    saldo: recebido - consumido - devolvido - sucata,
   };
 }
 

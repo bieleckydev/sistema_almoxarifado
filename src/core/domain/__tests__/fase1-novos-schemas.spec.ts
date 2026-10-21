@@ -213,7 +213,22 @@ describe('Fase 1 — Domínio: Material de Terceiros (Industrialização por Enc
       recebido: 100,
       consumido: 30,
       devolvido: 20,
+      sucata: 0,
       saldo: 50,
+    });
+
+    // Teste com evento de sucata / perda (requisito 3.0)
+    const historicoComSucata = [
+      ...historico,
+      { tipo: 'SUCATA_PERDA' as const, quantidade: 5 },
+    ];
+    assert.equal(calcularSaldoTerceiro(historicoComSucata), 45);
+    assert.deepEqual(calcularTotaisTerceiro(historicoComSucata), {
+      recebido: 100,
+      consumido: 30,
+      devolvido: 20,
+      sucata: 5,
+      saldo: 45,
     });
 
     assert.equal(validarSaldoSuficienteTerceiro(50, 40), true);
