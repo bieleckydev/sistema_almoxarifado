@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { X, ArrowDownRight, ArrowUpRight, Clock, MapPin, ShieldAlert, Cpu } from 'lucide-react';
+import { X, ArrowDownRight, ArrowUpRight, Clock, MapPin, ShieldAlert, Cpu, Edit3, Printer } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { formatarTextoFalta } from '@/web/utils/pluralization';
 import { useExtratoItem } from '@/web/hooks/useExtratoItem';
@@ -14,6 +14,8 @@ export interface ItemDetailsDrawerProps {
   onClose: () => void;
   onRegistrarEntrada?: (item: DashboardItem) => void;
   onRegistrarSaida?: (item: DashboardItem) => void;
+  onEditarItem?: (item: DashboardItem) => void;
+  onImprimirEtiqueta?: (item: DashboardItem) => void;
 }
 
 export function ItemDetailsDrawer({
@@ -22,6 +24,8 @@ export function ItemDetailsDrawer({
   onClose,
   onRegistrarEntrada,
   onRegistrarSaida,
+  onEditarItem,
+  onImprimirEtiqueta,
 }: ItemDetailsDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -150,6 +154,31 @@ export function ItemDetailsDrawer({
               <ArrowDownRight className="w-4 h-4 text-outline" />
               <span>Retirar p/ Produção</span>
             </button>
+          </div>
+
+          {/* Ações Cadastrais e Rótulos (3.0) */}
+          <div className="flex items-center gap-2.5">
+            {onEditarItem && (
+              <button
+                type="button"
+                onClick={() => onEditarItem(item)}
+                className="flex-1 h-8 px-3 rounded-xl text-xs font-medium border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-primary" />
+                <span>Editar Cadastro</span>
+              </button>
+            )}
+
+            {onImprimirEtiqueta && (
+              <button
+                type="button"
+                onClick={() => onImprimirEtiqueta(item)}
+                className="flex-1 h-8 px-3 rounded-xl text-xs font-medium border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5 text-secondary" />
+                <span>Imprimir Etiqueta</span>
+              </button>
+            )}
           </div>
 
           {/* Grid de Informações de Armazenamento */}
