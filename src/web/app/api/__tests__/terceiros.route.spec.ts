@@ -2,6 +2,7 @@ import { describe, it, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { setIdentityAuthenticator } from '../api-helpers';
 import type { AuthenticatedIdentity } from '@/server/auth/identity';
+import { instalarFirestoreDeTeste, desinstalarFirestoreDeTeste } from './firestore-fixture';
 import { GET as getTerceiros, POST as postReceberTerceiro } from '../terceiros/route';
 import { POST as postMovimentarTerceiro } from '../terceiros/movimentacoes/route';
 
@@ -24,11 +25,12 @@ const HEADERS_JSON = {
 describe('Fase 3 — API: Módulo de Material de Terceiros e Automação de Retorno', () => {
   beforeEach(() => {
     setIdentityAuthenticator(async () => mockAdminIdentity);
+    instalarFirestoreDeTeste();
   });
 
   after(() => {
     setIdentityAuthenticator(null);
-    setTimeout(() => process.exit(0), 100);
+    desinstalarFirestoreDeTeste();
   });
 
   it('GET /api/terceiros deve retornar materiais enriquecidos, extrato e KPIs', async () => {

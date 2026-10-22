@@ -17,9 +17,11 @@ import {
   ColaboradorInativoError,
   LoteEstoqueInsuficienteError,
   NotaFiscalDuplicadaError,
+  MovimentacaoJaEstornadaError,
   MovimentacaoService,
 } from '@/core/services/movimentacao.service';
 import { SaldoInsuficienteError } from '@/core/services/estoque-calculator';
+import { AuditoriaService } from '@/core/services/auditoria.service';
 import type { IEstoqueRepository } from '@/core/storage/estoque.repository.interface';
 
 // ==========================================
@@ -170,6 +172,10 @@ export function toErrorResponse(error: unknown): NextResponse {
     );
   }
 
+  if (error instanceof MovimentacaoJaEstornadaError) {
+    return NextResponse.json({ error: error.message }, { status: 409 });
+  }
+
   // Duplicidade de Nota Fiscal na Entrada (409 Conflict)
   if (error instanceof NotaFiscalDuplicadaError) {
     return NextResponse.json(
@@ -221,13 +227,10 @@ export function toErrorResponse(error: unknown): NextResponse {
   }
 
   // Erro interno não tratado (500 Internal Server Error)
+  // Detalhes ficam só no log do servidor; nunca expor mensagens internas ao cliente.
   console.error('Erro interno na API:', error);
-  const errorMessage = error instanceof Error ? error.message : 'Erro interno ao processar a solicitação.';
   return NextResponse.json(
-    {
-      error: 'Erro interno ao processar a solicitação.',
-      mensagemInterna: errorMessage,
-    },
+    { error: 'Erro interno ao processar a solicitação.' },
     { status: 500 }
   );
 }
@@ -268,6 +271,40 @@ export function getMovimentacaoService(
 }
 
 // ------------------------------------------
+// FIRESTORE DO SERVIDOR (Admin SDK)
+// ------------------------------------------
+
+let globalServerDb: import('firebase-admin/firestore').Firestore | null = null;
+
+/**
+ * Firestore do servidor (firebase-admin). As rotas de API devem usar esta instância,
+ * nunca o SDK de navegador: no servidor não há usuário autenticado no SDK cliente
+ * e as regras do Firestore negariam o acesso.
+ */
+export function getServerDb(): import('firebase-admin/firestore').Firestore {
+  if (!globalServerDb) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { adminDb } = require('@/server/firebase-admin');
+    globalServerDb = adminDb;
+  }
+  return globalServerDb!;
+}
+
+/**
+ * Substitui o Firestore do servidor (testes usam um Firestore em memória).
+ */
+export function setServerDb(db: unknown): void {
+  globalServerDb = db as import('firebase-admin/firestore').Firestore | null;
+}
+
+/**
+ * Remove campos `undefined` (o Admin SDK recusa esses valores).
+ */
+export function semUndefined<T>(valor: T): T {
+  return JSON.parse(JSON.stringify(valor)) as T;
+}
+
+// ------------------------------------------
 // AUDITORIA OPERACIONAL
 // ------------------------------------------
 
@@ -288,10 +325,6 @@ export function setAuditoriaRepository(
   globalAuditoriaRepo = repo;
 }
 
-export function getAuditoriaService(
-  repo = getAuditoriaRepository()
-): import('@/core/services/auditoria.service').AuditoriaService {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { AuditoriaService } = require('@/core/services/auditoria.service');
+export function getAuditoriaService(repo = getAuditoriaRepository()): AuditoriaService {
   return new AuditoriaService(repo);
 }

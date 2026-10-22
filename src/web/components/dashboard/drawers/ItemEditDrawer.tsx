@@ -101,10 +101,10 @@ export function ItemEditDrawer({
           especificacoes,
         };
 
-        const response = await api.patch<DashboardItem>(`/api/itens/${item.id}`, payload);
+        const response = await api.patch<Partial<DashboardItem>>(`/itens/${item.id}`, payload);
         const itemAtualizado = {
           ...item,
-          ...response,
+          ...response.data,
         };
 
         toast('Cadastro do material atualizado com sucesso!', { type: 'success' });

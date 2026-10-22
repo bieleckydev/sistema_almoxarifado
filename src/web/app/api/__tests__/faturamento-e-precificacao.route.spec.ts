@@ -2,6 +2,7 @@ import { describe, it, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { setIdentityAuthenticator } from '../api-helpers';
 import type { AuthenticatedIdentity } from '@/server/auth/identity';
+import { instalarFirestoreDeTeste, desinstalarFirestoreDeTeste } from './firestore-fixture';
 import { GET as getFaturamento, POST as postFaturamento } from '../faturamento/route';
 import { GET as getPedidos, POST as postPedidos } from '../pedidos/route';
 import { PATCH as patchPedido } from '../pedidos/[id]/route';
@@ -25,11 +26,12 @@ const HEADERS_MESTRE = {
 describe('Fase 2 — API: Precificação de Pedidos e Módulo de Faturamento', () => {
   beforeEach(() => {
     setIdentityAuthenticator(async () => mockAdminIdentity);
+    instalarFirestoreDeTeste();
   });
 
   after(() => {
     setIdentityAuthenticator(null);
-    setTimeout(() => process.exit(0), 100);
+    desinstalarFirestoreDeTeste();
   });
 
   it('GET /api/faturamento deve retornar KPIs consolidados e pedidos elegíveis para faturamento', async () => {

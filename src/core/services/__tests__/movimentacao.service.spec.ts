@@ -352,4 +352,50 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       assert.equal(lote[0].saldoResultante, 25);
     });
   });
+
+  describe('Regressões de integridade de saldo', () => {
+    it('baixa em lote com o mesmo item repetido debita a soma das quantidades', async () => {
+      const resultado = await service.executarBaixaLote({
+        colaboradorId: 'colab-1',
+        itens: [
+          { itemId: 'item-1', quantidade: 3 },
+          { itemId: 'item-1', quantidade: 4 },
+        ],
+      });
+      assert.equal(resultado.length, 2);
+      assert.equal(resultado[0].saldoResultante, 47);
+      assert.equal(resultado[1].saldoAnterior, 47);
+      assert.equal(resultado[1].saldoResultante, 43);
+      const item = await repo.buscarItemPorId('item-1');
+      assert.equal(item?.estoqueAtual, 43);
+    });
+
+    it('baixa em lote com item repetido recusa quando a soma excede o saldo', async () => {
+      await assert.rejects(
+        () =>
+          service.executarBaixaLote({
+            colaboradorId: 'colab-1',
+            itens: [
+              { itemId: 'item-2', quantidade: 2 },
+              { itemId: 'item-2', quantidade: 2 },
+            ],
+          }),
+        LoteEstoqueInsuficienteError
+      );
+      const item = await repo.buscarItemPorId('item-2');
+      assert.equal(item?.estoqueAtual, 3);
+    });
+
+    it('não permite estornar a mesma movimentação duas vezes', async () => {
+      const mov = await service.executarBaixaInterna({
+        itemId: 'item-1',
+        quantidade: 5,
+        colaboradorId: 'colab-1',
+      });
+      await service.executarEstorno(mov.id, 'Lançado errado');
+      await assert.rejects(() => service.executarEstorno(mov.id, 'De novo'));
+      const item = await repo.buscarItemPorId('item-1');
+      assert.equal(item?.estoqueAtual, 50);
+    });
+  });
 });

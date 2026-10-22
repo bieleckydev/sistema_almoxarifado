@@ -161,6 +161,11 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     return copia;
   }
 
+  async buscarMovimentacaoPorId(id: string): Promise<Movimentacao | null> {
+    const mov = this.movimentacoes.find((m) => m.id === id);
+    return mov ? { ...mov } : null;
+  }
+
   async consultarExtratoItem(
     itemId: string,
     filtros?: MovimentacaoFiltros
@@ -213,8 +218,20 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
   async registrarMovimentacaoComSaldo(
     itemId: string,
     novoSaldo: number,
-    movimentacao: Movimentacao
+    movimentacao: Movimentacao,
+    opcoes: { estornoDe?: string } = {}
   ): Promise<Movimentacao> {
+    if (opcoes.estornoDe) {
+      const original = this.movimentacoes.find((m) => m.id === opcoes.estornoDe);
+      if (!original) {
+        throw new Error(`Movimentação com ID "${opcoes.estornoDe}" não foi encontrada para estorno.`);
+      }
+      if (original.estornado) {
+        throw new Error('Esta movimentação já foi estornada anteriormente.');
+      }
+      original.estornado = true;
+      original.estornadoPor = movimentacao.id;
+    }
     await this.atualizarSaldoItem(itemId, novoSaldo);
     return this.registrarMovimentacao(movimentacao);
   }

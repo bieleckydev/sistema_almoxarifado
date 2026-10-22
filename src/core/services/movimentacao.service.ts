@@ -99,6 +99,13 @@ export class NotaFiscalDuplicadaError extends Error {
   }
 }
 
+export class MovimentacaoJaEstornadaError extends Error {
+  constructor(public readonly movimentacaoId: string) {
+    super('Esta movimentação já foi estornada anteriormente.');
+    this.name = 'MovimentacaoJaEstornadaError';
+  }
+}
+
 /**
  * Serviço responsável por coordenar e orquestrar todas as operações de movimentação física de estoque,
  * assegurando integridade referencial, validação de regras de negócio e trilha de auditoria.
@@ -307,12 +314,32 @@ export class MovimentacaoService {
       faltante: number;
     }> = [];
 
+    // Mesmo objeto por itemId, para que itens repetidos no lote acumulem o débito.
+    const itensPorId = new Map<string, Item>();
+    const quantidadeTotalPorItem = new Map<string, number>();
     for (const itemSolicitado of validado.itens) {
-      const item = await this.validarItemAtivo(itemSolicitado.itemId);
-      const disponibilidade = validarDisponibilidadeEstoque(
-        item.estoqueAtual,
-        itemSolicitado.quantidade
+      quantidadeTotalPorItem.set(
+        itemSolicitado.itemId,
+        (quantidadeTotalPorItem.get(itemSolicitado.itemId) ?? 0) + itemSolicitado.quantidade
       );
+    }
+
+    for (const itemSolicitado of validado.itens) {
+      let item = itensPorId.get(itemSolicitado.itemId);
+      if (!item) {
+        item = await this.validarItemAtivo(itemSolicitado.itemId);
+        itensPorId.set(item.id, item);
+      } else {
+        // Item repetido: a disponibilidade já foi avaliada pelo total na primeira ocorrência.
+        itensCarregados.push({
+          item,
+          quantidade: itemSolicitado.quantidade,
+          observacao: itemSolicitado.observacao,
+        });
+        continue;
+      }
+      const quantidadeTotal = quantidadeTotalPorItem.get(item.id) ?? itemSolicitado.quantidade;
+      const disponibilidade = validarDisponibilidadeEstoque(item.estoqueAtual, quantidadeTotal);
 
       if (!disponibilidade.disponivel) {
         itensComProblema.push({
@@ -468,7 +495,7 @@ export class MovimentacaoService {
     }
 
     if (movOriginal.estornado) {
-      throw new Error('Esta movimentação já foi estornada anteriormente.');
+      throw new MovimentacaoJaEstornadaError(movOriginal.id);
     }
 
     if (movOriginal.estorno) {
@@ -483,23 +510,15 @@ export class MovimentacaoService {
       movOriginal.tipo === 'ENTRADA_PRODUCAO' ||
       movOriginal.tipo === 'AJUSTE_INVENTARIO_POSITIVO';
 
-    let saldoResultante: number;
-    let tipoEstorno: TipoMovimentacao;
-
-    if (ehEntradaOriginal) {
-      if (saldoAnterior < movOriginal.quantidade) {
-        throw new SaldoInsuficienteError(
-          saldoAnterior,
-          movOriginal.quantidade,
-          item.codigo
-        );
-      }
-      saldoResultante = saldoAnterior - movOriginal.quantidade;
-      tipoEstorno = 'AJUSTE_INVENTARIO_NEGATIVO';
-    } else {
-      saldoResultante = saldoAnterior + movOriginal.quantidade;
-      tipoEstorno = 'AJUSTE_INVENTARIO_POSITIVO';
-    }
+    const tipoEstorno: TipoMovimentacao = ehEntradaOriginal
+      ? 'AJUSTE_INVENTARIO_NEGATIVO'
+      : 'AJUSTE_INVENTARIO_POSITIVO';
+    const saldoResultante = calcularNovoSaldo(
+      saldoAnterior,
+      tipoEstorno,
+      movOriginal.quantidade,
+      { itemId: item.codigo }
+    );
 
     const agora = new Date().toISOString();
     const idEstorno = this.gerarIdMovimentacao();
@@ -528,11 +547,13 @@ export class MovimentacaoService {
     };
 
     if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
-      await this.repository.registrarMovimentacao(movOriginalAtualizada);
+      // O repositório marca a original como estornada na mesma transação,
+      // recusando o estorno se outra requisição já o tiver feito.
       return this.repository.registrarMovimentacaoComSaldo(
         item.id,
         saldoResultante,
-        movimentacaoEstorno
+        movimentacaoEstorno,
+        { estornoDe: movOriginal.id }
       );
     }
 

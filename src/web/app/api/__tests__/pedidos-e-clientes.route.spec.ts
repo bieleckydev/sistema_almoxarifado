@@ -4,6 +4,7 @@ import {
   setIdentityAuthenticator,
 } from '../api-helpers';
 import type { AuthenticatedIdentity } from '@/server/auth/identity';
+import { instalarFirestoreDeTeste, desinstalarFirestoreDeTeste } from './firestore-fixture';
 import { GET as getPedidos, POST as postPedidos } from '../pedidos/route';
 import { PATCH as patchPedido } from '../pedidos/[id]/route';
 import { GET as getClientes, POST as postClientes } from '../clientes/route';
@@ -36,6 +37,7 @@ const mockRequisitanteIdentity: AuthenticatedIdentity = {
 describe('Fase 7 — Rotas BFF e Integração (/api/pedidos e /api/clientes)', () => {
   beforeEach(() => {
     setIdentityAuthenticator(async () => mockAdminIdentity);
+    instalarFirestoreDeTeste();
   });
 
   describe('GET /api/pedidos', () => {
@@ -212,7 +214,6 @@ describe('Fase 7 — Rotas BFF e Integração (/api/pedidos e /api/clientes)', (
   });
 
   after(() => {
-    // Encerra imediatamente event loops ociosos do SDK Firestore gRPC
-    setTimeout(() => process.exit(0), 100);
+    desinstalarFirestoreDeTeste();
   });
 });

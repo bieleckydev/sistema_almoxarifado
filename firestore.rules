@@ -144,11 +144,11 @@ service cloud.firestore {
       allow delete: if isMestre();
     }
 
+    // O razão de movimentações e os saldos são gravados só pelo backend
+    // (Admin SDK), dentro de transações. O navegador apenas lê.
     match /movements/{movementId} {
       allow read: if signedIn();
-      allow create: if canOperateStock()
-        && request.resource.data.id == movementId;
-      allow update, delete: if false;
+      allow write: if false;
     }
 
     match /importBatches/{batchId} {
@@ -185,13 +185,32 @@ service cloud.firestore {
       allow delete: if isMestre();
     }
 
+    // Pedidos, notas, requisições e material de terceiros mudam de status com
+    // efeitos em estoque e faturamento; só o backend grava.
     match /orders/{orderId} {
       allow read: if signedIn();
-      allow create: if canOperateStock()
-        && request.resource.data.id == orderId;
-      allow update: if canOperateStock()
-        && request.resource.data.id == orderId;
-      allow delete: if isMestre();
+      allow write: if false;
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if canOperateStock();
+      allow write: if false;
+    }
+
+    match /requisicoes/{reqId} {
+      allow read: if canOperateStock()
+        || (signedIn() && resource.data.requisitanteId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /third_party_materials/{materialId} {
+      allow read: if canOperateStock();
+      allow write: if false;
+    }
+
+    match /third_party_movements/{movementId} {
+      allow read: if canOperateStock();
+      allow write: if false;
     }
 
     match /auditoria_operacional/{auditId} {

@@ -13,15 +13,15 @@ import {
   requireIdentity,
   requirePermission,
   getAuditoriaService,
+  getServerDb,
+  semUndefined,
   toErrorResponse,
 } from '../../api-helpers';
-import { db } from '@/core/services/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
-import {
-  MATERIAIS_TERCEIROS_INICIAIS,
-  MOVIMENTACOES_TERCEIROS_INICIAIS,
-  NOTAS_INICIAIS,
-} from '@/web/data/mock-almoxarifado';
+
+/** Subtração com arredondamento a 4 casas, igual ao cálculo de saldo do estoque. */
+function subtrair(a: number, b: number): number {
+  return Math.round((a - b + Number.EPSILON) * 10000) / 10000;
+}
 
 /**
  * POST /api/terceiros/movimentacoes
@@ -54,167 +54,129 @@ export async function POST(request: Request) {
       throw new ApiError(400, 'ID do material de terceiro é obrigatório.');
     }
 
-    // 1. Busca material no Firestore ou em memória
-    let material: MaterialTerceiro | null = null;
-    const materialRef = doc(db, 'third_party_materials', materialId);
-
-    try {
-      const snap = await getDoc(materialRef);
-      if (snap.exists()) {
-        material = { id: snap.id, ...(snap.data() as any) };
-      }
-    } catch {
-      // Fallback para memória
+    // Valida o corpo antes de abrir a transação.
+    const consumo = isConsumo ? ConsumirMaterialTerceiroSchema.parse(body) : null;
+    const devolucao = isDevolucao ? DevolverMaterialTerceiroSchema.parse(body) : null;
+    const qtdSucata = isSucata ? Number((body as any).quantidade) : 0;
+    if (isSucata && (!qtdSucata || qtdSucata <= 0)) {
+      throw new ApiError(400, 'A quantidade de sucata/perda deve ser maior que zero.');
     }
 
-    if (!material) {
-      material = MATERIAIS_TERCEIROS_INICIAIS.find((m) => m.id === materialId) || null;
-    }
-
-    if (!material) {
-      throw new ApiError(404, `Material de terceiro '${materialId}' não encontrado.`);
-    }
-
+    const db = getServerDb();
+    const materialRef = db.collection('third_party_materials').doc(materialId);
     const now = new Date().toISOString();
-    let novaMovimentacao: MovimentacaoTerceiro;
-    let notaFiscalRetorno: NotaFiscalEmitida | null = null;
-    let novoSaldo = material.saldoAtual;
+    const sufixo = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-    if (isConsumo) {
-      // Fluxo 1: CONSUMO NA PRODUÇÃO
-      const input = ConsumirMaterialTerceiroSchema.parse(body);
+    // Saldo relido e gravado na mesma transação, junto com a movimentação e a NF de retorno.
+    const { material, novaMovimentacao, notaFiscalRetorno, novoSaldo } = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(materialRef);
+      if (!snap.exists) {
+        throw new ApiError(404, `Material de terceiro '${materialId}' não encontrado.`);
+      }
+      const mat = { ...(snap.data() as MaterialTerceiro), id: snap.id };
+      mat.saldoAtual = Number(mat.saldoAtual) || 0;
 
-      if (!validarSaldoSuficienteTerceiro(material.saldoAtual, input.quantidade)) {
-        throw new ApiError(
-          422,
-          `Saldo insuficiente de ${material.descricao}. Saldo atual sob custódia: ${material.saldoAtual} ${material.unidade}, quantidade requisitada para consumo: ${input.quantidade} ${material.unidade}.`
-        );
+      let mov: MovimentacaoTerceiro;
+      let notaRetorno: NotaFiscalEmitida | null = null;
+      let saldo: number;
+
+      if (consumo) {
+        if (!validarSaldoSuficienteTerceiro(mat.saldoAtual, consumo.quantidade)) {
+          throw new ApiError(
+            422,
+            `Saldo insuficiente de ${mat.descricao}. Saldo atual sob custódia: ${mat.saldoAtual} ${mat.unidade}, quantidade requisitada para consumo: ${consumo.quantidade} ${mat.unidade}.`
+          );
+        }
+        saldo = subtrair(mat.saldoAtual, consumo.quantidade);
+        mov = {
+          id: `mov-cons-${sufixo}`,
+          materialTerceiroId: mat.id,
+          tipo: 'CONSUMO_PRODUCAO',
+          quantidade: consumo.quantidade,
+          saldoAnterior: mat.saldoAtual,
+          saldoResultante: saldo,
+          documento: consumo.ordemProducaoOuDocumento,
+          dataMovimentacao: consumo.dataMovimentacao,
+          responsavel: consumo.responsavel || identity.user.name || 'Produção',
+          observacao: consumo.observacao,
+          createdAt: now,
+        };
+      } else if (isSucata) {
+        if (!validarSaldoSuficienteTerceiro(mat.saldoAtual, qtdSucata)) {
+          throw new ApiError(
+            422,
+            `Saldo insuficiente para baixa de sucata. Saldo atual: ${mat.saldoAtual} ${mat.unidade}, quantidade informada: ${qtdSucata} ${mat.unidade}.`
+          );
+        }
+        saldo = subtrair(mat.saldoAtual, qtdSucata);
+        const motivo = String((body as any).motivo || (body as any).observacao || 'Refugo/Sucata de produção').trim();
+        mov = {
+          id: `mov-suc-${sufixo}`,
+          materialTerceiroId: mat.id,
+          tipo: 'SUCATA_PERDA',
+          quantidade: qtdSucata,
+          saldoAnterior: mat.saldoAtual,
+          saldoResultante: saldo,
+          documento: motivo.slice(0, 30),
+          dataMovimentacao: String((body as any).dataMovimentacao || now.slice(0, 10)),
+          responsavel: String((body as any).responsavel || identity.user.name || 'Produção'),
+          observacao: motivo,
+          createdAt: now,
+        };
+      } else {
+        const input = devolucao!;
+        if (!validarSaldoSuficienteTerceiro(mat.saldoAtual, input.quantidade)) {
+          throw new ApiError(
+            422,
+            `Saldo insuficiente para devolução de ${mat.descricao}. Saldo atual: ${mat.saldoAtual} ${mat.unidade}, quantidade a devolver: ${input.quantidade} ${mat.unidade}.`
+          );
+        }
+
+        // Automação: gera a Nota Fiscal de Retorno de Industrialização (número não pode repetir).
+        const notaRef = db.collection('invoices').doc(`nf-retorno-${input.numeroNFRetorno}`);
+        const notaSnap = await tx.get(notaRef);
+        if (notaSnap.exists) {
+          throw new ApiError(409, `A NF-e de retorno ${input.numeroNFRetorno} já foi registrada.`);
+        }
+
+        saldo = subtrair(mat.saldoAtual, input.quantidade);
+        const valorServico = input.valorServico || 0;
+        mov = {
+          id: `mov-dev-${sufixo}`,
+          materialTerceiroId: mat.id,
+          tipo: 'DEVOLUCAO_RETORNO',
+          quantidade: input.quantidade,
+          saldoAnterior: mat.saldoAtual,
+          saldoResultante: saldo,
+          documento: `NF-e ${input.numeroNFRetorno}`,
+          dataMovimentacao: input.dataMovimentacao,
+          responsavel: input.responsavel || identity.user.name || 'Expedição',
+          valorServico,
+          observacao: input.observacao,
+          createdAt: now,
+        };
+        notaRetorno = {
+          id: notaRef.id,
+          numeroNF: input.numeroNFRetorno,
+          serie: '1',
+          dataEmissao: input.dataMovimentacao,
+          tipo: 'RETORNO_INDUSTRIALIZACAO',
+          clienteId: mat.clienteId,
+          valorTotal: valorServico,
+          referencia: `Devolução ${input.quantidade} ${mat.unidade} de ${mat.descricao}`,
+          materialTerceiroId: mat.id,
+          observacoes: input.observacao || `Retorno de industrialização referente a NF de remessa ${mat.numeroNFRemessa || 'do cliente'}.`,
+          createdAt: now,
+          updatedAt: now,
+        };
+        tx.create(notaRef, semUndefined({ ...notaRetorno, status: 'EMITIDA' }));
       }
 
-      novoSaldo = material.saldoAtual - input.quantidade;
-      const movId = `mov-cons-${Date.now()}`;
+      tx.update(materialRef, { saldoAtual: saldo, updatedAt: now });
+      tx.create(db.collection('third_party_movements').doc(mov.id), semUndefined(mov));
 
-      novaMovimentacao = {
-        id: movId,
-        materialTerceiroId: material.id,
-        tipo: 'CONSUMO_PRODUCAO',
-        quantidade: input.quantidade,
-        saldoAnterior: material.saldoAtual,
-        saldoResultante: novoSaldo,
-        documento: input.ordemProducaoOuDocumento,
-        dataMovimentacao: input.dataMovimentacao,
-        responsavel: input.responsavel || identity.user.name || 'Produção',
-        observacao: input.observacao,
-        createdAt: now,
-      };
-    } else if (isSucata) {
-      // Fluxo 3: SUCATA OU PERDA DE MATERIAL
-      const qtd = Number((body as any).quantidade);
-      if (!qtd || qtd <= 0) {
-        throw new ApiError(400, 'A quantidade de sucata/perda deve ser maior que zero.');
-      }
-      if (!validarSaldoSuficienteTerceiro(material.saldoAtual, qtd)) {
-        throw new ApiError(
-          422,
-          `Saldo insuficiente para baixa de sucata. Saldo atual: ${material.saldoAtual} ${material.unidade}, quantidade informada: ${qtd} ${material.unidade}.`
-        );
-      }
-
-      novoSaldo = material.saldoAtual - qtd;
-      const movId = `mov-suc-${Date.now()}`;
-      const motivo = String((body as any).motivo || (body as any).observacao || 'Refugo/Sucata de produção').trim();
-
-      novaMovimentacao = {
-        id: movId,
-        materialTerceiroId: material.id,
-        tipo: 'SUCATA_PERDA',
-        quantidade: qtd,
-        saldoAnterior: material.saldoAtual,
-        saldoResultante: novoSaldo,
-        documento: motivo.slice(0, 30),
-        dataMovimentacao: String((body as any).dataMovimentacao || now.slice(0, 10)),
-        responsavel: (body as any).responsavel || identity.user.name || 'Produção',
-        observacao: motivo,
-        createdAt: now,
-      };
-    } else {
-      // Fluxo 2: DEVOLUÇÃO AO CLIENTE (RETORNO DE INDUSTRIALIZAÇÃO)
-      const input = DevolverMaterialTerceiroSchema.parse(body);
-
-      if (!validarSaldoSuficienteTerceiro(material.saldoAtual, input.quantidade)) {
-        throw new ApiError(
-          422,
-          `Saldo insuficiente para devolução de ${material.descricao}. Saldo atual: ${material.saldoAtual} ${material.unidade}, quantidade a devolver: ${input.quantidade} ${material.unidade}.`
-        );
-      }
-
-      novoSaldo = material.saldoAtual - input.quantidade;
-      const movId = `mov-dev-${Date.now()}`;
-      const valorServico = input.valorServico || 0;
-
-      novaMovimentacao = {
-        id: movId,
-        materialTerceiroId: material.id,
-        tipo: 'DEVOLUCAO_RETORNO',
-        quantidade: input.quantidade,
-        saldoAnterior: material.saldoAtual,
-        saldoResultante: novoSaldo,
-        documento: `NF-e ${input.numeroNFRetorno}`,
-        dataMovimentacao: input.dataMovimentacao,
-        responsavel: input.responsavel || identity.user.name || 'Expedição',
-        valorServico,
-        observacao: input.observacao,
-        createdAt: now,
-      };
-
-      // Automação: Gera automaticamente a Nota Fiscal de Retorno de Industrialização
-      const idNF = `nf-retorno-${input.numeroNFRetorno}`;
-      notaFiscalRetorno = {
-        id: idNF,
-        numeroNF: input.numeroNFRetorno,
-        serie: '1',
-        dataEmissao: input.dataMovimentacao,
-        tipo: 'RETORNO_INDUSTRIALIZACAO',
-        clienteId: material.clienteId,
-        valorTotal: valorServico,
-        referencia: `Devolução ${input.quantidade} ${material.unidade} de ${material.descricao}`,
-        materialTerceiroId: material.id,
-        observacoes: input.observacao || `Retorno de industrialização referente a NF de remessa ${material.numeroNFRemessa || 'do cliente'}.`,
-        createdAt: now,
-        updatedAt: now,
-      };
-    }
-
-    // Persistência no Firestore
-    try {
-      await updateDoc(materialRef, {
-        saldoAtual: novoSaldo,
-        updatedAt: now,
-      });
-      await setDoc(doc(db, 'third_party_movements', novaMovimentacao.id), novaMovimentacao);
-
-      if (notaFiscalRetorno) {
-        await setDoc(doc(db, 'invoices', notaFiscalRetorno.id), notaFiscalRetorno);
-      }
-    } catch {
-      // Ignora erro se Firestore offline
-    }
-
-    // Sincroniza em memória
-    material.saldoAtual = novoSaldo;
-    material.updatedAt = now;
-
-    const memMat = MATERIAIS_TERCEIROS_INICIAIS.find((m) => m.id === material!.id);
-    if (memMat) {
-      memMat.saldoAtual = novoSaldo;
-      memMat.updatedAt = now;
-    }
-
-    MOVIMENTACOES_TERCEIROS_INICIAIS.unshift(novaMovimentacao);
-
-    if (notaFiscalRetorno && !NOTAS_INICIAIS.some((n) => n.id === notaFiscalRetorno!.id)) {
-      NOTAS_INICIAIS.unshift(notaFiscalRetorno as any);
-    }
+      return { material: { ...mat, saldoAtual: saldo, updatedAt: now }, novaMovimentacao: mov, notaFiscalRetorno: notaRetorno, novoSaldo: saldo };
+    });
 
     // Auditoria Operacional (3.0)
     try {
