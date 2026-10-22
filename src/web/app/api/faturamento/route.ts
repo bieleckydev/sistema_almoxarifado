@@ -6,24 +6,21 @@ import {
   calcularTotalNotasEmitidas,
 } from '@/core/domain/nota-fiscal-emitida.schema';
 import {
-  type Pedido,
+  type FaturamentoPedido,
   calcularTotalPedido,
   isPedidoElegivelFaturamento,
 } from '@/core/domain/pedido.schema';
 import {
   ApiError,
+  getAuditoriaService,
+  getServerDb,
   readJson,
   requireIdentity,
   requirePermission,
+  semUndefined,
   toErrorResponse,
 } from '../api-helpers';
-import { db } from '@/core/services/firebase';
-import { collection, getDocs, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
-import {
-  CLIENTES_INICIAIS,
-  PEDIDOS_INICIAIS,
-  NOTAS_INICIAIS,
-} from '@/web/data/mock-almoxarifado';
+import { pedidoFromDoc } from '../pedidos/pedido-firestore';
 
 export interface PedidoAFaturarItem {
   id: string;
@@ -38,6 +35,8 @@ export interface PedidoAFaturarItem {
 
 export interface NotaFiscalEmitidaEnriquecida extends NotaFiscalEmitida {
   clienteNome: string;
+  status?: 'EMITIDA' | 'CANCELADA';
+  motivoCancelamento?: string;
 }
 
 export interface FaturamentoDashboardResponse {
@@ -58,129 +57,73 @@ export interface FaturamentoDashboardResponse {
 export async function GET(request: Request) {
   try {
     await requireIdentity(request);
+    const db = getServerDb();
 
-    // 1. Mapa de Clientes
+    const [clientsSnap, itemsSnap, invoicesSnap, ordersSnap] = await Promise.all([
+      db.collection('clients').get(),
+      db.collection('items').get(),
+      db.collection('invoices').get(),
+      db.collection('orders').get(),
+    ]);
+
     const clientesMap = new Map<string, string>();
-    try {
-      const clientsSnap = await getDocs(collection(db, 'clients'));
-      clientsSnap.forEach((d) => {
-        clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
-      });
-    } catch {
-      CLIENTES_INICIAIS.forEach((c) => {
-        clientesMap.set(c.id, c.nome);
-      });
-    }
+    clientsSnap.forEach((d) => {
+      clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
+    });
 
-    // 2. Mapa de Itens (para descrições no resumo)
     const itensNomeMap = new Map<string, string>();
-    try {
-      const itemsSnap = await getDocs(collection(db, 'items'));
-      itemsSnap.forEach((d) => {
-        itensNomeMap.set(d.id, String(d.data().descricao || d.data().nome || 'Item'));
-      });
-    } catch {
-      // Ignora erro se coleção não estiver disponível
-    }
+    itemsSnap.forEach((d) => {
+      itensNomeMap.set(d.id, String(d.data().descricao || d.data().nome || 'Item'));
+    });
 
-    // 3. Notas Fiscais Emitidas
-    let notasEmitidas: NotaFiscalEmitidaEnriquecida[] = [];
-    try {
-      const invoicesSnap = await getDocs(collection(db, 'invoices'));
-      invoicesSnap.forEach((d) => {
-        const data = d.data();
-        const nf: NotaFiscalEmitida = {
-          id: d.id,
-          numeroNF: String(data.numeroNF || ''),
-          serie: String(data.serie || '1'),
-          dataEmissao: String(data.dataEmissao || ''),
-          dataVencimento: data.dataVencimento ? String(data.dataVencimento) : undefined,
-          tipo: data.tipo === 'RETORNO_INDUSTRIALIZACAO' ? 'RETORNO_INDUSTRIALIZACAO' : 'VENDA',
-          clienteId: String(data.clienteId || ''),
-          valorTotal: Number(data.valorTotal) || 0,
-          referencia: String(data.referencia || ''),
-          pedidoId: data.pedidoId ? String(data.pedidoId) : undefined,
-          materialTerceiroId: data.materialTerceiroId ? String(data.materialTerceiroId) : undefined,
-          observacoes: data.observacoes ? String(data.observacoes) : undefined,
-          createdAt: data.createdAt ? String(data.createdAt) : undefined,
-        };
-        const clienteNome = clientesMap.get(nf.clienteId) || 'Cliente não identificado';
-        notasEmitidas.push({ ...nf, clienteNome });
-      });
-    } catch {
-      notasEmitidas = [];
-    }
-
-    if (notasEmitidas.length === 0) {
-      notasEmitidas = NOTAS_INICIAIS.map((n) => ({
-        ...n,
-        clienteNome: clientesMap.get(n.clienteId) || 'Cliente não identificado',
-      }));
-    }
+    const notasEmitidas: NotaFiscalEmitidaEnriquecida[] = invoicesSnap.docs.map((d) => {
+      const data = d.data();
+      const nf: NotaFiscalEmitida = {
+        id: d.id,
+        numeroNF: String(data.numeroNF || ''),
+        serie: String(data.serie || '1'),
+        dataEmissao: String(data.dataEmissao || ''),
+        dataVencimento: data.dataVencimento ? String(data.dataVencimento) : undefined,
+        tipo: data.tipo === 'RETORNO_INDUSTRIALIZACAO' ? 'RETORNO_INDUSTRIALIZACAO' : 'VENDA',
+        clienteId: String(data.clienteId || ''),
+        valorTotal: Number(data.valorTotal) || 0,
+        referencia: String(data.referencia || ''),
+        pedidoId: data.pedidoId ? String(data.pedidoId) : undefined,
+        materialTerceiroId: data.materialTerceiroId ? String(data.materialTerceiroId) : undefined,
+        observacoes: data.observacoes ? String(data.observacoes) : undefined,
+        createdAt: data.createdAt ? String(data.createdAt) : undefined,
+      };
+      return {
+        ...nf,
+        clienteNome: clientesMap.get(nf.clienteId) || 'Cliente não identificado',
+        status: data.status === 'CANCELADA' ? 'CANCELADA' : 'EMITIDA',
+        motivoCancelamento: data.motivoCancelamento ? String(data.motivoCancelamento) : undefined,
+      };
+    });
 
     // Ordena notas da mais recente para a mais antiga
     notasEmitidas.sort((a, b) => b.dataEmissao.localeCompare(a.dataEmissao));
 
-    // 4. Pedidos Elegíveis para Faturamento
-    let pedidosTodos: Pedido[] = [];
-    try {
-      const ordersSnap = await getDocs(collection(db, 'orders'));
-      ordersSnap.forEach((d) => {
-        const data = d.data();
-        const itens = Array.isArray(data.itens)
-          ? data.itens.map((i) => ({
-              itemId: String(i.itemId || ''),
-              quantidade: Number(i.quantidade) || 0,
-              precoUnitario: Number(i.precoUnitario) || 0,
-            }))
-          : [];
-        const valorTotal = Number(data.valorTotal) || calcularTotalPedido(itens);
-
-        pedidosTodos.push({
-          id: d.id,
-          numeroSequencial: Number(data.numeroSequencial) || 1,
-          clienteId: String(data.clienteId || ''),
-          prazoEntrega: String(data.prazoEntrega || ''),
-          status: data.status || 'PENDENTE',
-          itens,
-          valorTotal,
-          faturamento: data.faturamento || undefined,
-          observacoes: data.observacoes || undefined,
-        });
-      });
-    } catch {
-      pedidosTodos = [];
-    }
-
-    if (pedidosTodos.length === 0) {
-      pedidosTodos = PEDIDOS_INICIAIS;
-    }
-
-    const pedidosAFaturar: PedidoAFaturarItem[] = pedidosTodos
+    const pedidosAFaturar: PedidoAFaturarItem[] = ordersSnap.docs
+      .map((d) => pedidoFromDoc(d.id, d.data()))
       .filter((p) => isPedidoElegivelFaturamento(p))
-      .map((p) => {
-        const clienteNome = clientesMap.get(p.clienteId) || 'Cliente não identificado';
-        const valorTotal = p.valorTotal || calcularTotalPedido(p.itens);
-        const itensResumo = p.itens
+      .map((p) => ({
+        id: p.id,
+        numeroSequencial: p.numeroSequencial,
+        clienteId: p.clienteId,
+        clienteNome: clientesMap.get(p.clienteId) || 'Cliente não identificado',
+        prazoEntrega: p.prazoEntrega,
+        status: p.status,
+        valorTotal: p.valorTotal || calcularTotalPedido(p.itens),
+        itensResumo: p.itens
           .map((i) => `${i.quantidade}x ${itensNomeMap.get(i.itemId) || 'Item ' + i.itemId}`)
-          .join(', ');
-
-        return {
-          id: p.id,
-          numeroSequencial: p.numeroSequencial,
-          clienteId: p.clienteId,
-          clienteNome,
-          prazoEntrega: p.prazoEntrega,
-          status: p.status,
-          valorTotal,
-          itensResumo,
-        };
-      })
+          .join(', '),
+      }))
       .sort((a, b) => a.prazoEntrega.localeCompare(b.prazoEntrega));
 
-    // 5. KPIs Consolidados
+    // KPIs consolidados (notas canceladas não entram no faturado)
+    const notasValidas = notasEmitidas.filter((n) => n.status !== 'CANCELADA');
     const valorPedidosAFaturar = pedidosAFaturar.reduce((acc, curr) => acc + curr.valorTotal, 0);
-    const valorTotalFaturado = calcularTotalNotasEmitidas(notasEmitidas);
 
     const response: FaturamentoDashboardResponse = {
       pedidosAFaturar,
@@ -188,8 +131,8 @@ export async function GET(request: Request) {
       kpis: {
         totalPedidosAFaturar: pedidosAFaturar.length,
         valorPedidosAFaturar,
-        totalNotasEmitidas: notasEmitidas.length,
-        valorTotalFaturado,
+        totalNotasEmitidas: notasValidas.length,
+        valorTotalFaturado: calcularTotalNotasEmitidas(notasValidas),
       },
     };
 
@@ -202,6 +145,9 @@ export async function GET(request: Request) {
 /**
  * POST /api/faturamento
  * Registra o faturamento de um pedido de venda, vinculando a NF-e e criando a nota fiscal emitida.
+ *
+ * Em uma única transação: relê o pedido, recusa se já faturado ou cancelado, recusa
+ * número/série de NF já usado e grava nota + vínculo no pedido juntos.
  */
 export async function POST(request: Request) {
   try {
@@ -211,121 +157,100 @@ export async function POST(request: Request) {
     const body = await readJson(request);
     const input = FaturarPedidoInputSchema.parse(body);
 
-    // 1. Busca o pedido alvo
-    let pedido: Pedido | null = null;
-    const orderDocRef = doc(db, 'orders', input.pedidoId);
-
-    try {
-      const snap = await getDoc(orderDocRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        pedido = {
-          id: snap.id,
-          numeroSequencial: Number(data.numeroSequencial) || 1,
-          clienteId: String(data.clienteId || ''),
-          prazoEntrega: String(data.prazoEntrega || ''),
-          status: data.status || 'PENDENTE',
-          itens: Array.isArray(data.itens) ? data.itens : [],
-          valorTotal: Number(data.valorTotal) || 0,
-          faturamento: data.faturamento || undefined,
-          observacoes: data.observacoes || undefined,
-        };
-      }
-    } catch {
-      // fallback para memória
-    }
-
-    if (!pedido) {
-      pedido = PEDIDOS_INICIAIS.find((p) => p.id === input.pedidoId) || null;
-    }
-
-    if (!pedido) {
-      throw new ApiError(404, 'Pedido não encontrado para faturamento.');
-    }
-
-    if (pedido.status === 'PENDENTE') {
-      throw new ApiError(
-        400,
-        'O pedido ainda está Pendente. Realize a Separação física antes de faturar.'
-      );
-    }
-
-    if (pedido.faturamento) {
-      throw new ApiError(
-        400,
-        `Este pedido já foi faturado anteriormente sob a NF-e ${pedido.faturamento.numeroNFe}.`
-      );
-    }
-
-    const valorTotalPedido =
-      pedido.valorTotal || calcularTotalPedido(pedido.itens);
-
-    if (valorTotalPedido <= 0) {
-      throw new ApiError(
-        400,
-        'O pedido possui valor total zerado. Verifique os preços unitários antes de faturar.'
-      );
-    }
-
-    // 2. Cria a Nota Fiscal Emitida
+    const db = getServerDb();
+    const orderRef = db.collection('orders').doc(input.pedidoId);
+    const serie = input.serie || '1';
+    const idNota = `nf-${input.numeroNF}-${serie}`;
+    const notaRef = db.collection('invoices').doc(idNota);
     const now = new Date().toISOString();
-    const idNota = `nf-${input.numeroNF}-${input.serie || '1'}`;
 
-    const novaNota: NotaFiscalEmitida = {
-      id: idNota,
-      numeroNF: input.numeroNF,
-      serie: input.serie || '1',
-      dataEmissao: input.dataEmissao,
-      tipo: 'VENDA',
-      clienteId: pedido.clienteId,
-      valorTotal: valorTotalPedido,
-      referencia: `Pedido #${pedido.numeroSequencial || pedido.id}`,
-      pedidoId: pedido.id,
-      createdAt: now,
-      updatedAt: now,
-    };
-    if (input.dataVencimento) {
-      novaNota.dataVencimento = input.dataVencimento;
-    }
-    if (input.observacoes) {
-      novaNota.observacoes = input.observacoes;
-    }
+    const { novaNota, dadosFaturamentoPedido, numeroPedido } = await db.runTransaction(async (tx) => {
+      const [pedidoSnap, notaSnap] = await Promise.all([tx.get(orderRef), tx.get(notaRef)]);
 
-    const dadosFaturamentoPedido: any = {
-      numeroNFe: input.numeroNF,
-      serie: input.serie || '1',
-      dataEmissao: input.dataEmissao,
-      valorTotal: valorTotalPedido,
-    };
-    if (input.dataVencimento) {
-      dadosFaturamentoPedido.dataVencimento = input.dataVencimento;
-    }
+      if (!pedidoSnap.exists) {
+        throw new ApiError(404, 'Pedido não encontrado para faturamento.');
+      }
+      const pedido = pedidoFromDoc(pedidoSnap.id, pedidoSnap.data() || {});
 
-    // 3. Persistência no Firestore
-    try {
-      await setDoc(doc(db, 'invoices', idNota), novaNota);
-      await updateDoc(orderDocRef, {
-        faturamento: dadosFaturamentoPedido,
+      if (pedido.status === 'PENDENTE') {
+        throw new ApiError(
+          400,
+          'O pedido ainda está Pendente. Realize a Separação física antes de faturar.'
+        );
+      }
+      if (pedido.status === 'CANCELADO') {
+        throw new ApiError(400, 'Pedido cancelado não pode ser faturado.');
+      }
+      if (pedido.faturamento) {
+        throw new ApiError(
+          400,
+          `Este pedido já foi faturado anteriormente sob a NF-e ${pedido.faturamento.numeroNFe}.`
+        );
+      }
+      if (notaSnap.exists) {
+        throw new ApiError(409, `A NF-e ${input.numeroNF} série ${serie} já foi registrada.`);
+      }
+
+      const valorTotalPedido = pedido.valorTotal || calcularTotalPedido(pedido.itens);
+      if (valorTotalPedido <= 0) {
+        throw new ApiError(
+          400,
+          'O pedido possui valor total zerado. Verifique os preços unitários antes de faturar.'
+        );
+      }
+
+      const nota: NotaFiscalEmitida = {
+        id: idNota,
+        numeroNF: input.numeroNF,
+        serie,
+        dataEmissao: input.dataEmissao,
+        dataVencimento: input.dataVencimento,
+        tipo: 'VENDA',
+        clienteId: pedido.clienteId,
+        valorTotal: valorTotalPedido,
+        referencia: `Pedido #${pedido.numeroSequencial || pedido.id}`,
+        pedidoId: pedido.id,
+        observacoes: input.observacoes,
+        createdAt: now,
         updatedAt: now,
-      });
-    } catch {
-      // Ignora falha de gravação remota se Firestore offline
-    }
+      };
 
-    // Sincroniza estado em memória para consistência de cache e testes
-    pedido.faturamento = dadosFaturamentoPedido;
-    const memPedido = PEDIDOS_INICIAIS.find((p) => p.id === pedido.id);
-    if (memPedido) {
-      memPedido.faturamento = dadosFaturamentoPedido;
-      memPedido.updatedAt = now;
-    }
-    if (!NOTAS_INICIAIS.some((n) => n.id === idNota)) {
-      NOTAS_INICIAIS.push(novaNota);
+      const faturamento: FaturamentoPedido = {
+        numeroNFe: input.numeroNF,
+        serie,
+        dataEmissao: input.dataEmissao,
+        dataVencimento: input.dataVencimento,
+        valorTotal: valorTotalPedido,
+      };
+
+      tx.create(notaRef, semUndefined({ ...nota, status: 'EMITIDA' }));
+      tx.update(orderRef, { faturamento: semUndefined(faturamento), updatedAt: now });
+
+      return {
+        novaNota: semUndefined(nota),
+        dadosFaturamentoPedido: semUndefined(faturamento),
+        numeroPedido: pedido.numeroSequencial || pedido.id,
+      };
+    });
+
+    try {
+      await getAuditoriaService().registrar({
+        quando: now,
+        usuarioId: identity.user.id,
+        usuarioNome: identity.user.name || 'Operador',
+        papel: identity.user.role || 'operador',
+        acao: 'FATURAMENTO_PEDIDO',
+        detalhe: `Pedido #${numeroPedido} faturado na NF-e ${input.numeroNF} série ${serie}`,
+        entidade: 'NotaFiscalEmitida',
+        entidadeId: idNota,
+      });
+    } catch (auditErr) {
+      console.warn('Falha ao auditar faturamento:', auditErr);
     }
 
     return NextResponse.json(
       {
-        mensagem: `Pedido #${pedido.numeroSequencial || pedido.id} faturado com sucesso. NF-e ${input.numeroNF}.`,
+        mensagem: `Pedido #${numeroPedido} faturado com sucesso. NF-e ${input.numeroNF}.`,
         notaFiscal: novaNota,
         faturamento: dadosFaturamentoPedido,
       },

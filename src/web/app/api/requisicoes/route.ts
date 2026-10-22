@@ -9,59 +9,9 @@ import {
   requireAcaoPermissao,
   toErrorResponse,
   getAuditoriaService,
+  getServerDb,
+  semUndefined,
 } from '../api-helpers';
-import { db } from '@/core/services/firebase';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
-
-// Armazenamento em memória caso offline
-export let REQUISICOES_MEMORIA: Requisicao[] = [
-  {
-    id: 'req-001',
-    numeroSequencial: 101,
-    requisitanteId: 'usr-linha1',
-    requisitanteNome: 'Carlos Eduardo (Linha de Montagem)',
-    setor: 'Montagem',
-    prioridade: 'URGENTE',
-    status: 'PENDENTE',
-    itens: [
-      {
-        itemId: 'mp-aco-1020',
-        codigo: 'MP-001',
-        descricao: 'Chapa de Aço 1020 2mm',
-        unidade: 'CHAPA',
-        quantidadeSolicitada: 5,
-      },
-    ],
-    observacao: 'Reposição para lote de produção 2026-B',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'req-002',
-    numeroSequencial: 102,
-    requisitanteId: 'usr-manut',
-    requisitanteNome: 'Marcos Silva (Manutenção)',
-    setor: 'Manutenção',
-    prioridade: 'NORMAL',
-    status: 'APROVADA',
-    itens: [
-      {
-        itemId: 'imp-graxa',
-        codigo: 'IMP-002',
-        descricao: 'Graxa Branca de Lítio',
-        unidade: 'TUBO',
-        quantidadeSolicitada: 2,
-      },
-    ],
-    observacao: 'Manutenção preventiva torno 03',
-    aprovadoPor: 'Gestor de Estoque',
-    aprovadoEm: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-let seqCounter = 103;
 
 /**
  * GET /api/requisicoes
@@ -72,20 +22,8 @@ export async function GET(request: Request) {
     const identity = await requireIdentity(request);
     requireAcaoPermissao(identity, 'requisitar');
 
-    let dados: Requisicao[] = [];
-
-    try {
-      const snap = await getDocs(collection(db, 'requisicoes'));
-      if (!snap.empty) {
-        dados = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-      }
-    } catch {
-      // Fallback memória
-    }
-
-    if (dados.length === 0) {
-      dados = [...REQUISICOES_MEMORIA];
-    }
+    const snap = await getServerDb().collection('requisicoes').get();
+    let dados: Requisicao[] = snap.docs.map((d) => ({ ...(d.data() as Requisicao), id: d.id }));
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -119,28 +57,45 @@ export async function POST(request: Request) {
     const input = CriarRequisicaoInputSchema.parse(body);
 
     const now = new Date().toISOString();
-    const id = `req-${Date.now()}`;
-    const novaReq: Requisicao = {
-      id,
-      numeroSequencial: seqCounter++,
-      requisitanteId: identity.user.id,
-      requisitanteNome: identity.user.name || 'Requisitante',
-      setor: input.setor,
-      prioridade: input.prioridade,
-      status: 'PENDENTE',
-      itens: input.itens,
-      observacao: input.observacao,
-      createdAt: now,
-      updatedAt: now,
-    };
+    const db = getServerDb();
+    const contadorRef = db.collection('counters').doc('requisicoes');
 
-    try {
-      await setDoc(doc(db, 'requisicoes', id), novaReq);
-    } catch {
-      // Ignora falha de rede
-    }
+    // Número sequencial via contador transacional (sem repetição em criações simultâneas).
+    const novaReq = await db.runTransaction(async (tx) => {
+      const contadorSnap = await tx.get(contadorRef);
+      let ultimo: number;
+      if (contadorSnap.exists) {
+        ultimo = Number(contadorSnap.data()?.ultimo) || 100;
+      } else {
+        const existentes = await tx.get(db.collection('requisicoes'));
+        ultimo = 100;
+        existentes.forEach((d) => {
+          const seq = Number(d.data().numeroSequencial);
+          if (!Number.isNaN(seq) && seq > ultimo) ultimo = seq;
+        });
+      }
 
-    REQUISICOES_MEMORIA.unshift(novaReq);
+      const numeroSequencial = ultimo + 1;
+      const id = `req-${numeroSequencial}`;
+      const req: Requisicao = {
+        id,
+        numeroSequencial,
+        requisitanteId: identity.user.id,
+        requisitanteNome: identity.user.name || 'Requisitante',
+        setor: input.setor,
+        prioridade: input.prioridade,
+        status: 'PENDENTE',
+        itens: input.itens,
+        observacao: input.observacao,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      tx.set(contadorRef, { ultimo: numeroSequencial, updatedAt: now });
+      tx.create(db.collection('requisicoes').doc(id), semUndefined(req));
+      return req;
+    });
+    const id = novaReq.id;
 
     // Auditoria Operacional
     try {
