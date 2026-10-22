@@ -9,15 +9,15 @@ import {
 } from '@/core/domain/pedido.schema';
 import {
   ApiError,
+  getServerDb,
   parseQueryParams,
   readJson,
   requireIdentity,
   requirePermission,
+  semUndefined,
   toErrorResponse,
 } from '../api-helpers';
-import { db } from '@/core/services/firebase';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
-import { CLIENTES_INICIAIS, PEDIDOS_INICIAIS } from '@/web/data/mock-almoxarifado';
+import { pedidoFromDoc } from './pedido-firestore';
 
 export interface PedidoEnriquecidoItem {
   itemId: string;
@@ -69,139 +69,62 @@ export async function GET(request: Request) {
   try {
     await requireIdentity(request);
     const filtros = parsePedidoFiltros(request);
+    const db = getServerDb();
 
-    // 1. Carrega Clientes para resolução de nomes
+    const [clientsSnap, itemsSnap, ordersSnap] = await Promise.all([
+      db.collection('clients').get(),
+      db.collection('items').get(),
+      db.collection('orders').get(),
+    ]);
+
     const clientesMap = new Map<string, string>();
-    try {
-      const clientsSnap = await getDocs(collection(db, 'clients'));
-      clientsSnap.forEach((d) => {
-        clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
-      });
-    } catch {
-      CLIENTES_INICIAIS.forEach((c) => {
-        clientesMap.set(c.id, c.nome);
-      });
-    }
+    clientsSnap.forEach((d) => {
+      clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
+    });
 
-    // 2. Carrega Itens para cálculo de saldo e resolução de nomes
     const itensMap = new Map<
       string,
       { nome: string; codigo: string; unidade: string; estoqueAtual: number }
     >();
     const estoqueDisponivelMap = new Map<string, number>();
-
-    try {
-      const itemsSnap = await getDocs(collection(db, 'items'));
-      itemsSnap.forEach((d) => {
-        const data = d.data();
-        const nome = String(data.descricao || data.nome || 'Produto');
-        const codigo = String(data.codigo || '');
-        const unidade = String(data.unidade || 'UNIDADE');
-        const estoqueAtual = Number(data.estoqueAtual) || 0;
-
-        itensMap.set(d.id, { nome, codigo, unidade, estoqueAtual });
-        estoqueDisponivelMap.set(d.id, estoqueAtual);
+    itemsSnap.forEach((d) => {
+      const data = d.data();
+      const estoqueAtual = Number(data.estoqueAtual) || 0;
+      itensMap.set(d.id, {
+        nome: String(data.descricao || data.nome || 'Produto'),
+        codigo: String(data.codigo || ''),
+        unidade: String(data.unidade || 'UNIDADE'),
+        estoqueAtual,
       });
-    } catch {
-      // Itens default para cálculo em memória
-    }
+      estoqueDisponivelMap.set(d.id, estoqueAtual);
+    });
 
-    // 3. Carrega Pedidos
-    let pedidos: PedidoEnriquecido[] = [];
-
-    try {
-      const ordersSnap = await getDocs(collection(db, 'orders'));
-      ordersSnap.forEach((d) => {
-        const data = d.data();
-        const itens = Array.isArray(data.itens)
-          ? data.itens.map((i) => ({
-              itemId: String(i.itemId || ''),
-              quantidade: Number(i.quantidade) || 0,
-              precoUnitario: Number(i.precoUnitario) || 0,
-              observacao: i.observacao ? String(i.observacao) : undefined,
-            }))
-          : [];
-
-        const valorTotal =
-          Number(data.valorTotal) || calcularTotalPedido(itens);
-
-        const pedidoRaw: Pedido = {
-          id: d.id,
-          numeroSequencial: Number(data.numeroSequencial) || 1,
-          clienteId: String(data.clienteId || ''),
-          prazoEntrega: String(data.prazoEntrega || ''),
-          status: data.status || 'PENDENTE',
-          itens,
-          valorTotal,
-          faturamento: data.faturamento || undefined,
-          observacoes: data.observacoes || undefined,
-          createdAt: data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt || new Date().toISOString(),
+    let pedidos: PedidoEnriquecido[] = ordersSnap.docs.map((d) => {
+      const pedidoRaw = pedidoFromDoc(d.id, d.data());
+      const itensDetalhes: PedidoEnriquecidoItem[] = pedidoRaw.itens.map((it) => {
+        const itemInfo = itensMap.get(it.itemId);
+        const precoUnitario = it.precoUnitario || 0;
+        return {
+          itemId: it.itemId,
+          quantidade: it.quantidade,
+          precoUnitario,
+          subtotal: it.quantidade * precoUnitario,
+          observacao: it.observacao,
+          nome: itemInfo?.nome || it.observacao || 'Item ' + it.itemId,
+          codigo: itemInfo?.codigo || '',
+          unidade: itemInfo?.unidade || 'un',
+          estoqueAtual: itemInfo?.estoqueAtual ?? 0,
         };
-
-        const clienteNome = clientesMap.get(pedidoRaw.clienteId) || 'Cliente não identificado';
-
-        const itensDetalhes: PedidoEnriquecidoItem[] = pedidoRaw.itens.map((it) => {
-          const itemInfo = itensMap.get(it.itemId);
-          const precoUnitario = it.precoUnitario || 0;
-          return {
-            itemId: it.itemId,
-            quantidade: it.quantidade,
-            precoUnitario,
-            subtotal: it.quantidade * precoUnitario,
-            observacao: it.observacao,
-            nome: itemInfo?.nome || it.observacao || 'Item ' + it.itemId,
-            codigo: itemInfo?.codigo || '',
-            unidade: itemInfo?.unidade || 'un',
-            estoqueAtual: itemInfo?.estoqueAtual ?? 0,
-          };
-        });
-
-        const atrasado = isPedidoAtrasado(pedidoRaw);
-        const faltaEstoque = hasPedidoFaltaEstoque(pedidoRaw, estoqueDisponivelMap);
-
-        pedidos.push({
-          ...pedidoRaw,
-          clienteNome,
-          itensDetalhes,
-          atrasado,
-          faltaEstoque,
-        });
       });
-    } catch {
-      pedidos = [];
-    }
 
-    if (pedidos.length === 0) {
-      for (const ped of PEDIDOS_INICIAIS) {
-        const clienteNome = clientesMap.get(ped.clienteId) || 'Cliente não identificado';
-        const valorTotal = ped.valorTotal || calcularTotalPedido(ped.itens);
-        const itensDetalhes: PedidoEnriquecidoItem[] = ped.itens.map((it) => {
-          const itemInfo = itensMap.get(it.itemId);
-          const precoUnitario = it.precoUnitario || 0;
-          return {
-            itemId: it.itemId,
-            quantidade: it.quantidade,
-            precoUnitario,
-            subtotal: it.quantidade * precoUnitario,
-            observacao: it.observacao,
-            nome: itemInfo?.nome || 'Item ' + it.itemId,
-            codigo: itemInfo?.codigo || '',
-            unidade: itemInfo?.unidade || 'un',
-            estoqueAtual: itemInfo?.estoqueAtual ?? 50,
-          };
-        });
-
-        pedidos.push({
-          ...ped,
-          valorTotal,
-          clienteNome,
-          itensDetalhes,
-          atrasado: isPedidoAtrasado(ped),
-          faltaEstoque: hasPedidoFaltaEstoque(ped, estoqueDisponivelMap),
-        });
-      }
-    }
+      return {
+        ...pedidoRaw,
+        clienteNome: clientesMap.get(pedidoRaw.clienteId) || 'Cliente não identificado',
+        itensDetalhes,
+        atrasado: isPedidoAtrasado(pedidoRaw),
+        faltaEstoque: hasPedidoFaltaEstoque(pedidoRaw, estoqueDisponivelMap),
+      };
+    });
 
     // Filtros
     if (filtros.status && filtros.status !== 'TODOS') {
@@ -249,6 +172,11 @@ export async function GET(request: Request) {
 /**
  * POST /api/pedidos
  * Cria um novo pedido de venda com itens dinâmicos.
+ *
+ * O número sequencial vem de um contador transacional (`counters/pedidos`), evitando
+ * números repetidos em criações simultâneas. Status, faturamento e valor total não
+ * são aceitos do cliente: o pedido nasce PENDENTE ou SEPARADO, sem faturamento, e o
+ * total é calculado a partir dos itens.
  */
 export async function POST(request: Request) {
   try {
@@ -258,54 +186,49 @@ export async function POST(request: Request) {
     const body = await readJson(request);
     const input = CreatePedidoSchema.parse(body);
 
-    // Calcula o próximo numeroSequencial
-    let maxSeq = 100;
-    try {
-      const ordersSnap = await getDocs(collection(db, 'orders'));
-      ordersSnap.forEach((d) => {
-        const seq = Number(d.data().numeroSequencial);
-        if (!isNaN(seq) && seq > maxSeq) {
-          maxSeq = seq;
-        }
-      });
-    } catch {
-      PEDIDOS_INICIAIS.forEach((d) => {
-        if (d.numeroSequencial > maxSeq) {
-          maxSeq = d.numeroSequencial;
-        }
-      });
+    if (input.status !== 'PENDENTE' && input.status !== 'SEPARADO') {
+      throw new ApiError(400, 'Um pedido novo só pode ser criado como Pendente ou Separado.');
     }
 
-    const numeroSequencial = input.numeroSequencial || maxSeq + 1;
-    const id = input.id || `order-${numeroSequencial}`;
-
+    const db = getServerDb();
+    const contadorRef = db.collection('counters').doc('pedidos');
     const now = new Date().toISOString();
-    const valorTotal = input.valorTotal || calcularTotalPedido(input.itens);
-    const novoPedido: Pedido = {
-      id,
-      numeroSequencial,
-      clienteId: input.clienteId,
-      prazoEntrega: input.prazoEntrega,
-      status: input.status || 'PENDENTE',
-      itens: input.itens,
-      valorTotal,
-      faturamento: input.faturamento,
-      observacoes: input.observacoes || undefined,
-      createdAt: now,
-      updatedAt: now,
-    };
+    const valorTotal = calcularTotalPedido(input.itens);
 
-    try {
-      await setDoc(doc(db, 'orders', id), novoPedido);
-    } catch {
-      // Fallback em memória quando Firestore emulador/conexão estiver offline
-      const jaExiste = PEDIDOS_INICIAIS.findIndex((p) => p.id === id);
-      if (jaExiste >= 0) {
-        PEDIDOS_INICIAIS[jaExiste] = novoPedido;
+    const novoPedido = await db.runTransaction(async (tx) => {
+      const contadorSnap = await tx.get(contadorRef);
+      let ultimo: number;
+      if (contadorSnap.exists) {
+        ultimo = Number(contadorSnap.data()?.ultimo) || 100;
       } else {
-        PEDIDOS_INICIAIS.push(novoPedido);
+        // Primeira execução: parte do maior número já existente.
+        const ordersSnap = await tx.get(db.collection('orders'));
+        ultimo = 100;
+        ordersSnap.forEach((d) => {
+          const seq = Number(d.data().numeroSequencial);
+          if (!Number.isNaN(seq) && seq > ultimo) ultimo = seq;
+        });
       }
-    }
+
+      const numeroSequencial = ultimo + 1;
+      const id = `order-${numeroSequencial}`;
+      const pedido: Pedido = {
+        id,
+        numeroSequencial,
+        clienteId: input.clienteId,
+        prazoEntrega: input.prazoEntrega,
+        status: input.status,
+        itens: input.itens,
+        valorTotal,
+        observacoes: input.observacoes || undefined,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      tx.set(contadorRef, { ultimo: numeroSequencial, updatedAt: now });
+      tx.create(db.collection('orders').doc(id), semUndefined(pedido));
+      return pedido;
+    });
 
     return NextResponse.json(novoPedido, { status: 201 });
   } catch (error) {

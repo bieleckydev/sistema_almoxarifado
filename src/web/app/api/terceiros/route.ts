@@ -5,19 +5,13 @@ import {
   type MovimentacaoTerceiro,
 } from '@/core/domain/material-terceiro.schema';
 import {
-  ApiError,
+  getServerDb,
   readJson,
   requireIdentity,
   requirePermission,
+  semUndefined,
   toErrorResponse,
 } from '../api-helpers';
-import { db } from '@/core/services/firebase';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
-import {
-  CLIENTES_INICIAIS,
-  MATERIAIS_TERCEIROS_INICIAIS,
-  MOVIMENTACOES_TERCEIROS_INICIAIS,
-} from '@/web/data/mock-almoxarifado';
 
 export interface MaterialTerceiroEnriquecido extends MaterialTerceiro {
   clienteNome: string;
@@ -47,73 +41,50 @@ export async function GET(request: Request) {
     const clienteIdFiltro = searchParams.get('clienteId');
     const busca = searchParams.get('busca')?.toLowerCase().trim();
 
-    // 1. Carrega Clientes para resolução de nomes
+    const db = getServerDb();
+    const [clientsSnap, materiaisSnap, movSnap] = await Promise.all([
+      db.collection('clients').get(),
+      db.collection('third_party_materials').get(),
+      db.collection('third_party_movements').get(),
+    ]);
+
     const clientesMap = new Map<string, string>();
-    try {
-      const clientsSnap = await getDocs(collection(db, 'clients'));
-      clientsSnap.forEach((d) => {
-        clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
-      });
-    } catch {
-      CLIENTES_INICIAIS.forEach((c) => {
-        clientesMap.set(c.id, c.nome);
-      });
-    }
+    clientsSnap.forEach((d) => {
+      clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
+    });
 
-    // 2. Carrega Materiais de Terceiros
-    let materiais: MaterialTerceiro[] = [];
-    try {
-      const snap = await getDocs(collection(db, 'third_party_materials'));
-      snap.forEach((d) => {
-        const data = d.data();
-        materiais.push({
-          id: d.id,
-          clienteId: String(data.clienteId || ''),
-          descricao: String(data.descricao || ''),
-          codigoSku: data.codigoSku ? String(data.codigoSku) : '',
-          unidade: String(data.unidade || 'un'),
-          saldoAtual: Number(data.saldoAtual) || 0,
-          numeroNFRemessa: data.numeroNFRemessa ? String(data.numeroNFRemessa) : undefined,
-          createdAt: data.createdAt ? String(data.createdAt) : undefined,
-          updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-        });
-      });
-    } catch {
-      materiais = [];
-    }
+    const materiais: MaterialTerceiro[] = materiaisSnap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        clienteId: String(data.clienteId || ''),
+        descricao: String(data.descricao || ''),
+        codigoSku: data.codigoSku ? String(data.codigoSku) : '',
+        unidade: String(data.unidade || 'un'),
+        saldoAtual: Number(data.saldoAtual) || 0,
+        numeroNFRemessa: data.numeroNFRemessa ? String(data.numeroNFRemessa) : undefined,
+        createdAt: data.createdAt ? String(data.createdAt) : undefined,
+        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+      };
+    });
 
-    if (materiais.length === 0) {
-      materiais = [...MATERIAIS_TERCEIROS_INICIAIS];
-    }
-
-    // 3. Carrega Movimentações de Terceiros
-    let movimentacoes: MovimentacaoTerceiro[] = [];
-    try {
-      const movSnap = await getDocs(collection(db, 'third_party_movements'));
-      movSnap.forEach((d) => {
-        const data = d.data();
-        movimentacoes.push({
-          id: d.id,
-          materialTerceiroId: String(data.materialTerceiroId || ''),
-          tipo: data.tipo,
-          quantidade: Number(data.quantidade) || 0,
-          saldoAnterior: Number(data.saldoAnterior) || 0,
-          saldoResultante: Number(data.saldoResultante) || 0,
-          documento: String(data.documento || ''),
-          dataMovimentacao: String(data.dataMovimentacao || ''),
-          responsavel: String(data.responsavel || ''),
-          valorServico: data.valorServico ? Number(data.valorServico) : undefined,
-          observacao: data.observacao ? String(data.observacao) : undefined,
-          createdAt: data.createdAt ? String(data.createdAt) : undefined,
-        });
-      });
-    } catch {
-      movimentacoes = [];
-    }
-
-    if (movimentacoes.length === 0) {
-      movimentacoes = [...MOVIMENTACOES_TERCEIROS_INICIAIS];
-    }
+    const movimentacoes: MovimentacaoTerceiro[] = movSnap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        materialTerceiroId: String(data.materialTerceiroId || ''),
+        tipo: data.tipo,
+        quantidade: Number(data.quantidade) || 0,
+        saldoAnterior: Number(data.saldoAnterior) || 0,
+        saldoResultante: Number(data.saldoResultante) || 0,
+        documento: String(data.documento || ''),
+        dataMovimentacao: String(data.dataMovimentacao || ''),
+        responsavel: String(data.responsavel || ''),
+        valorServico: data.valorServico ? Number(data.valorServico) : undefined,
+        observacao: data.observacao ? String(data.observacao) : undefined,
+        createdAt: data.createdAt ? String(data.createdAt) : undefined,
+      };
+    });
 
     // Mapa de contagem de movimentações por material
     const movContagemMap = new Map<string, number>();
@@ -200,8 +171,9 @@ export async function POST(request: Request) {
     const input = ReceberMaterialTerceiroSchema.parse(body);
 
     const now = new Date().toISOString();
-    const materialId = `terc-${Date.now()}`;
-    const movId = `mov-rem-${Date.now()}`;
+    const sufixo = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const materialId = `terc-${sufixo}`;
+    const movId = `mov-rem-${sufixo}`;
 
     // 1. Cria a entidade do Material de Terceiro com saldo inicial
     const novoMaterial: MaterialTerceiro = {
@@ -231,17 +203,12 @@ export async function POST(request: Request) {
       createdAt: now,
     };
 
-    // 3. Persistência no Firestore
-    try {
-      await setDoc(doc(db, 'third_party_materials', materialId), novoMaterial);
-      await setDoc(doc(db, 'third_party_movements', movId), novaMovimentacao);
-    } catch {
-      // Ignora falha de gravação remota se Firestore offline
-    }
-
-    // Sincroniza em memória
-    MATERIAIS_TERCEIROS_INICIAIS.unshift(novoMaterial);
-    MOVIMENTACOES_TERCEIROS_INICIAIS.unshift(novaMovimentacao);
+    // 3. Material e movimentação gravados juntos
+    const db = getServerDb();
+    const batch = db.batch();
+    batch.create(db.collection('third_party_materials').doc(materialId), semUndefined(novoMaterial));
+    batch.create(db.collection('third_party_movements').doc(movId), semUndefined(novaMovimentacao));
+    await batch.commit();
 
     return NextResponse.json(
       {

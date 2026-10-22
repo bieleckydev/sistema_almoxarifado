@@ -6,16 +6,14 @@ import {
   type Cliente,
 } from '@/core/domain/cliente.schema';
 import {
-  ApiError,
+  getServerDb,
   parseQueryParams,
   readJson,
   requireIdentity,
   requirePermission,
+  semUndefined,
   toErrorResponse,
 } from '../api-helpers';
-import { db } from '@/core/services/firebase';
-import { collection, getDocs, doc, setDoc, query, where } from 'firebase/firestore';
-import { CLIENTES_INICIAIS } from '@/web/data/mock-almoxarifado';
 
 /**
  * Converte query params de URL em filtros estruturados e validados pelo Zod.
@@ -46,33 +44,22 @@ export async function GET(request: Request) {
     await requireIdentity(request);
     const filtros = parseClienteFiltros(request);
 
-    let clientes: Cliente[] = [];
-
-    try {
-      const snapshot = await getDocs(collection(db, 'clients'));
-      snapshot.forEach((snapDoc) => {
-        const data = snapDoc.data();
-        const c: Cliente = {
-          id: snapDoc.id,
-          nome: String(data.nome || ''),
-          tipo: data.tipo || 'CLIENTE',
-          documento: data.documento || undefined,
-          contato: data.contato || undefined,
-          telefone: data.telefone || undefined,
-          cidade: data.cidade || undefined,
-          ativo: data.ativo ?? true,
-          createdAt: data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt || new Date().toISOString(),
-        };
-        clientes.push(c);
-      });
-    } catch {
-      clientes = [];
-    }
-
-    if (clientes.length === 0) {
-      clientes = [...CLIENTES_INICIAIS];
-    }
+    const snapshot = await getServerDb().collection('clients').get();
+    let clientes: Cliente[] = snapshot.docs.map((snapDoc) => {
+      const data = snapDoc.data();
+      return {
+        id: snapDoc.id,
+        nome: String(data.nome || ''),
+        tipo: data.tipo || 'CLIENTE',
+        documento: data.documento || undefined,
+        contato: data.contato || undefined,
+        telefone: data.telefone || undefined,
+        cidade: data.cidade || undefined,
+        ativo: data.ativo ?? true,
+        createdAt: data.createdAt || undefined,
+        updatedAt: data.updatedAt || undefined,
+      };
+    });
 
     // Filtros em memória
     if (filtros.tipo && filtros.tipo !== 'TODOS') {
@@ -119,12 +106,7 @@ export async function POST(request: Request) {
     const body = await readJson(request);
     const input = CreateClienteSchema.parse(body);
 
-    const id =
-      input.id ||
-      'cli-' +
-        Date.now() +
-        '-' +
-        Math.random().toString(36).substring(2, 7);
+    const id = 'cli-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
 
     const now = new Date().toISOString();
     const novoCliente: Cliente = {
@@ -138,7 +120,7 @@ export async function POST(request: Request) {
     // Valida o schema consolidado
     const validado = ClienteSchema.parse(novoCliente);
 
-    await setDoc(doc(db, 'clients', id), validado);
+    await getServerDb().collection('clients').doc(id).create(semUndefined(validado));
 
     return NextResponse.json(validado, { status: 201 });
   } catch (error) {

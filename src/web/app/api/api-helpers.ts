@@ -21,6 +21,7 @@ import {
   MovimentacaoService,
 } from '@/core/services/movimentacao.service';
 import { SaldoInsuficienteError } from '@/core/services/estoque-calculator';
+import { AuditoriaService } from '@/core/services/auditoria.service';
 import type { IEstoqueRepository } from '@/core/storage/estoque.repository.interface';
 
 // ==========================================
@@ -270,6 +271,40 @@ export function getMovimentacaoService(
 }
 
 // ------------------------------------------
+// FIRESTORE DO SERVIDOR (Admin SDK)
+// ------------------------------------------
+
+let globalServerDb: import('firebase-admin/firestore').Firestore | null = null;
+
+/**
+ * Firestore do servidor (firebase-admin). As rotas de API devem usar esta instância,
+ * nunca o SDK de navegador: no servidor não há usuário autenticado no SDK cliente
+ * e as regras do Firestore negariam o acesso.
+ */
+export function getServerDb(): import('firebase-admin/firestore').Firestore {
+  if (!globalServerDb) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { adminDb } = require('@/server/firebase-admin');
+    globalServerDb = adminDb;
+  }
+  return globalServerDb!;
+}
+
+/**
+ * Substitui o Firestore do servidor (testes usam um Firestore em memória).
+ */
+export function setServerDb(db: unknown): void {
+  globalServerDb = db as import('firebase-admin/firestore').Firestore | null;
+}
+
+/**
+ * Remove campos `undefined` (o Admin SDK recusa esses valores).
+ */
+export function semUndefined<T>(valor: T): T {
+  return JSON.parse(JSON.stringify(valor)) as T;
+}
+
+// ------------------------------------------
 // AUDITORIA OPERACIONAL
 // ------------------------------------------
 
@@ -290,10 +325,6 @@ export function setAuditoriaRepository(
   globalAuditoriaRepo = repo;
 }
 
-export function getAuditoriaService(
-  repo = getAuditoriaRepository()
-): import('@/core/services/auditoria.service').AuditoriaService {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { AuditoriaService } = require('@/core/services/auditoria.service');
+export function getAuditoriaService(repo = getAuditoriaRepository()): AuditoriaService {
   return new AuditoriaService(repo);
 }
