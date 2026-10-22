@@ -90,7 +90,7 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
 
     try {
       setIsCancelandoNota(true);
-      await api.post(`/api/faturamento/notas/${notaParaCancelar.id}/cancelar`, {
+      await api.post(`/faturamento/notas/${notaParaCancelar.id}/cancelar`, {
         motivo: motivoCancelamento.trim(),
       });
       toast(`NF-e nº ${notaParaCancelar.numeroNF} cancelada com sucesso! Pedido liberado.`, { type: 'success' });

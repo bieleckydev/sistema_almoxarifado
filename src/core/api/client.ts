@@ -110,8 +110,10 @@ export function createApiClient(config: ApiClientConfig = {}): AxiosInstance {
         }
       }
 
+      const dadosErro = error.response?.data as { message?: string; error?: string } | undefined;
       const mensagemErro =
-        (error.response?.data as { message?: string })?.message ||
+        dadosErro?.message ||
+        dadosErro?.error ||
         error.message ||
         'Ocorreu um erro na comunicação com o servidor.';
 
