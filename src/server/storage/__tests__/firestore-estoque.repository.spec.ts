@@ -338,6 +338,28 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
       assert(extrato.some((m) => m.id === 'mov-tx-1'));
     });
 
+    it('recalcula o saldo dentro da transação, ignorando estimativa desatualizada', async () => {
+      const baixa = (id: string): Movimentacao => ({
+        id,
+        itemId: 'item-flap-1',
+        tipo: 'SAIDA_CONSUMO_INTERNO',
+        quantidade: 5,
+        saldoAnterior: 50,
+        saldoResultante: 45,
+        dataMovimentacao: new Date().toISOString(),
+      });
+
+      // Duas baixas calculadas a partir do mesmo saldo lido (50) antes da transação.
+      const m1 = await repo.registrarMovimentacaoComSaldo('item-flap-1', 45, baixa('mov-c-1'));
+      const m2 = await repo.registrarMovimentacaoComSaldo('item-flap-1', 45, baixa('mov-c-2'));
+
+      assert.equal(m1.saldoResultante, 45);
+      assert.equal(m2.saldoAnterior, 45);
+      assert.equal(m2.saldoResultante, 40);
+      const item = await repo.buscarItemPorId('item-flap-1');
+      assert.equal(item?.estoqueAtual, 40);
+    });
+
     it('deve rejeitar e abortar transação se o novoSaldo for negativo', async () => {
       const movInvalida: Movimentacao = {
         id: 'mov-neg-1',

@@ -3,11 +3,16 @@ import { IEstoqueRepository } from '@/core/storage/estoque.repository.interface'
 import { Item, ItemFiltros } from '@/core/domain/item.schema';
 import { Colaborador, ColaboradorFiltros, normalizarMatricula } from '@/core/domain/colaborador.schema';
 import { Movimentacao, MovimentacaoFiltros } from '@/core/domain/movimentacao.schema';
-import { determinarStatusEstoque, SaldoInsuficienteError } from '@/core/services/estoque-calculator';
+import {
+  calcularNovoSaldo,
+  determinarStatusEstoque,
+  SaldoInsuficienteError,
+} from '@/core/services/estoque-calculator';
 import {
   ItemNaoEncontradoError,
   ItemInativoError,
   LoteEstoqueInsuficienteError,
+  MovimentacaoJaEstornadaError,
 } from '@/core/services/movimentacao.service';
 import {
   itemFromFirestore,
@@ -371,15 +376,22 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
    */
   async registrarMovimentacaoComSaldo(
     itemId: string,
-    novoSaldo: number,
-    movimentacao: Movimentacao
+    _novoSaldoEstimado: number,
+    movimentacao: Movimentacao,
+    opcoes: { estornoDe?: string } = {}
   ): Promise<Movimentacao> {
     const itemRef = this.db.collection('items').doc(itemId);
     const movRef = this.db.collection('movements').doc(movimentacao.id);
+    const originalRef = opcoes.estornoDe
+      ? this.db.collection('movements').doc(opcoes.estornoDe)
+      : null;
 
-    await this.db.runTransaction(async (transaction) => {
-      // 1. Leitura prévia (regra estrita do Firestore: leituras antes de escritas)
+    // O saldo é recalculado a partir do valor lido DENTRO da transação. Se outra
+    // requisição alterar o item antes do commit, o Firestore repete o callback.
+    return this.db.runTransaction(async (transaction) => {
       const itemSnap = await transaction.get(itemRef);
+      const originalSnap = originalRef ? await transaction.get(originalRef) : null;
+
       if (!itemSnap.exists) {
         throw new ItemNaoEncontradoError(itemId);
       }
@@ -389,26 +401,36 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
         throw new ItemInativoError(itemId, itemData.codigo || itemId);
       }
 
-      // 2. Validação estrita de saldo
-      if (novoSaldo < 0) {
-        throw new SaldoInsuficienteError(
-          itemData.estoqueAtual || 0,
-          movimentacao.quantidade,
-          itemData.codigo || itemId
-        );
+      if (originalRef && opcoes.estornoDe) {
+        if (!originalSnap?.exists) {
+          throw new Error(`Movimentação com ID "${opcoes.estornoDe}" não foi encontrada para estorno.`);
+        }
+        if (originalSnap.data()?.estornado === true) {
+          throw new MovimentacaoJaEstornadaError(opcoes.estornoDe);
+        }
       }
 
-      // 3. Escritas atômicas conjuntas
+      const saldoAnterior = typeof itemData.estoqueAtual === 'number' ? itemData.estoqueAtual : 0;
+      const saldoResultante = calcularNovoSaldo(
+        saldoAnterior,
+        movimentacao.tipo,
+        movimentacao.quantidade,
+        { itemId: itemData.codigo || itemId }
+      );
+      const movFinal: Movimentacao = { ...movimentacao, saldoAnterior, saldoResultante };
+
       transaction.update(itemRef, {
-        estoqueAtual: novoSaldo,
+        estoqueAtual: saldoResultante,
         updatedAt: new Date().toISOString(),
       });
+      transaction.set(movRef, movimentacaoToFirestore(movFinal));
 
-      const movData = movimentacaoToFirestore(movimentacao);
-      transaction.set(movRef, movData);
+      if (originalRef) {
+        transaction.update(originalRef, { estornado: true, estornadoPor: movimentacao.id });
+      }
+
+      return movFinal;
     });
-
-    return movimentacao;
   }
 
   /**
@@ -426,11 +448,13 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       return [];
     }
 
-    const itemRefs = operacoes.map((op) => this.db.collection('items').doc(op.itemId));
+    const idsUnicos = [...new Set(operacoes.map((op) => op.itemId))];
+    const refPorId = new Map(idsUnicos.map((id) => [id, this.db.collection('items').doc(id)]));
 
-    await this.db.runTransaction(async (transaction) => {
-      // 1. TODAS as leituras primeiro
-      const itemSnaps = await Promise.all(itemRefs.map((ref) => transaction.get(ref)));
+    return this.db.runTransaction(async (transaction) => {
+      // 1. TODAS as leituras primeiro (uma por item, mesmo se repetido no lote)
+      const snaps = await Promise.all(idsUnicos.map((id) => transaction.get(refPorId.get(id)!)));
+      const snapPorId = new Map(idsUnicos.map((id, i) => [id, snaps[i]]));
 
       // 2. Validações e detecção de concorrência/saldo insuficiente
       const itensComProblema: Array<{
@@ -442,30 +466,41 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
         faltante: number;
       }> = [];
 
-      for (let i = 0; i < operacoes.length; i++) {
-        const op = operacoes[i];
-        const snap = itemSnaps[i];
-
+      // Saldo corrente por item, recalculado a partir do banco e acumulado entre operações.
+      const saldoCorrente = new Map<string, number>();
+      for (const id of idsUnicos) {
+        const snap = snapPorId.get(id)!;
         if (!snap.exists) {
-          throw new ItemNaoEncontradoError(op.itemId);
+          throw new ItemNaoEncontradoError(id);
         }
-
         const data = snap.data() || {};
         if (data.ativo === false) {
-          throw new ItemInativoError(op.itemId, data.codigo || op.itemId);
+          throw new ItemInativoError(id, data.codigo || id);
         }
+        saldoCorrente.set(id, typeof data.estoqueAtual === 'number' ? data.estoqueAtual : 0);
+      }
 
-        const saldoRealNoBanco = typeof data.estoqueAtual === 'number' ? data.estoqueAtual : 0;
-        if (op.novoSaldo < 0 || saldoRealNoBanco < op.movimentacao.quantidade) {
+      const movsFinais: Movimentacao[] = [];
+      for (const op of operacoes) {
+        const data = snapPorId.get(op.itemId)!.data() || {};
+        const saldoAnterior = saldoCorrente.get(op.itemId)!;
+        let saldoResultante: number;
+        try {
+          saldoResultante = calcularNovoSaldo(saldoAnterior, op.movimentacao.tipo, op.movimentacao.quantidade);
+        } catch (err) {
+          if (!(err instanceof SaldoInsuficienteError)) throw err;
           itensComProblema.push({
             itemId: op.itemId,
             codigo: data.codigo || op.itemId,
             descricao: data.descricao || '',
-            saldoAtual: saldoRealNoBanco,
+            saldoAtual: saldoAnterior,
             quantidadeSolicitada: op.movimentacao.quantidade,
-            faltante: Math.max(0, op.movimentacao.quantidade - saldoRealNoBanco),
+            faltante: Math.max(0, op.movimentacao.quantidade - saldoAnterior),
           });
+          continue;
         }
+        saldoCorrente.set(op.itemId, saldoResultante);
+        movsFinais.push({ ...op.movimentacao, saldoAnterior, saldoResultante });
       }
 
       if (itensComProblema.length > 0) {
@@ -474,20 +509,20 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
 
       // 3. TODAS as escritas atômicas
       const agora = new Date().toISOString();
-      for (let i = 0; i < operacoes.length; i++) {
-        const op = operacoes[i];
-        const ref = itemRefs[i];
-        const movRef = this.db.collection('movements').doc(op.movimentacao.id);
-
-        transaction.update(ref, {
-          estoqueAtual: op.novoSaldo,
+      for (const id of idsUnicos) {
+        transaction.update(refPorId.get(id)!, {
+          estoqueAtual: saldoCorrente.get(id)!,
           updatedAt: agora,
         });
-
-        transaction.set(movRef, movimentacaoToFirestore(op.movimentacao));
       }
-    });
+      for (const mov of movsFinais) {
+        transaction.set(
+          this.db.collection('movements').doc(mov.id),
+          movimentacaoToFirestore(mov)
+        );
+      }
 
-    return operacoes.map((op) => op.movimentacao);
+      return movsFinais;
+    });
   }
 }
