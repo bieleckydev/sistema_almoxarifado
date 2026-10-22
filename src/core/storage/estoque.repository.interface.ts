@@ -70,11 +70,17 @@ export interface IEstoqueRepository {
   /**
    * Registra atomicamente uma movimentação física e atualiza o saldo do item em uma única transação.
    * Em bancos relacionais ou Firestore, garante integridade ACID estrita.
+   *
+   * Implementações transacionais devem recalcular o saldo a partir do valor lido dentro
+   * da transação (o `novoSaldo` informado é só a estimativa do serviço) e, quando
+   * `opcoes.estornoDe` vier preenchido, marcar a movimentação original como estornada
+   * na mesma transação, falhando se ela já estiver estornada.
    */
   registrarMovimentacaoComSaldo?(
     itemId: string,
     novoSaldo: number,
-    movimentacao: Movimentacao
+    movimentacao: Movimentacao,
+    opcoes?: { estornoDe?: string }
   ): Promise<Movimentacao>;
 
   /**
