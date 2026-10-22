@@ -12,6 +12,7 @@ import type {
   MovimentacaoTerceiro,
 } from '@/core/domain/material-terceiro.schema';
 import { useToast } from './useToast';
+import { api } from '@/core/api/client';
 
 export interface UseMaterialTerceirosFiltros {
   clienteId?: string;
@@ -35,13 +36,10 @@ export function useMaterialTerceiros(filtros?: UseMaterialTerceirosFiltros) {
         params.set('busca', filtros.busca);
       }
 
-      const url = `/api/terceiros${params.toString() ? `?${params.toString()}` : ''}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.error || 'Erro ao carregar materiais de terceiros.');
-      }
-      return res.json();
+      // Cliente `api` envia o token de autenticação exigido pelas rotas.
+      const url = `/terceiros${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await api.get<TerceirosDashboardResponse>(url);
+      return res.data;
     },
     staleTime: 1000 * 30, // 30s
   });
@@ -49,18 +47,8 @@ export function useMaterialTerceiros(filtros?: UseMaterialTerceirosFiltros) {
   // Mutação para receber remessa inicial de terceiro
   const receberMaterialMutation = useMutation({
     mutationFn: async (dados: ReceberMaterialTerceiroInput) => {
-      const res = await fetch('/api/terceiros', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dados),
-      });
-
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.error || 'Erro ao registrar remessa de terceiro.');
-      }
-
-      return res.json();
+      const res = await api.post('/terceiros', dados);
+      return res.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['terceiros'] });
@@ -75,21 +63,11 @@ export function useMaterialTerceiros(filtros?: UseMaterialTerceirosFiltros) {
   // Mutação para apontar consumo na produção
   const consumirMaterialMutation = useMutation({
     mutationFn: async (dados: ConsumirMaterialTerceiroInput) => {
-      const res = await fetch('/api/terceiros/movimentacoes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await api.post('/terceiros/movimentacoes', {
           ...dados,
           tipo: 'CONSUMO_PRODUCAO',
-        }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.error || 'Erro ao registrar consumo na produção.');
-      }
-
-      return res.json();
+        });
+      return res.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['terceiros'] });
@@ -103,21 +81,11 @@ export function useMaterialTerceiros(filtros?: UseMaterialTerceirosFiltros) {
   // Mutação para devolução ao cliente com emissão de NF-e
   const devolverMaterialMutation = useMutation({
     mutationFn: async (dados: DevolverMaterialTerceiroInput) => {
-      const res = await fetch('/api/terceiros/movimentacoes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await api.post('/terceiros/movimentacoes', {
           ...dados,
           tipo: 'DEVOLUCAO_RETORNO',
-        }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.error || 'Erro ao registrar devolução.');
-      }
-
-      return res.json();
+        });
+      return res.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['terceiros'] });
@@ -139,21 +107,11 @@ export function useMaterialTerceiros(filtros?: UseMaterialTerceirosFiltros) {
       responsavel?: string;
       observacao?: string;
     }) => {
-      const res = await fetch('/api/terceiros/movimentacoes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await api.post('/terceiros/movimentacoes', {
           ...dados,
           tipo: 'SUCATA_PERDA',
-        }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.error || 'Erro ao registrar refugo/sucata de terceiro.');
-      }
-
-      return res.json();
+        });
+      return res.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['terceiros'] });

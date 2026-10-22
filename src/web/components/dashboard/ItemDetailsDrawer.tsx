@@ -82,7 +82,7 @@ export function ItemDetailsDrawer({
 
     try {
       setIsEstornando(true);
-      await api.post(`/api/movimentacoes/${estornoModal.movId}/estorno`, {
+      await api.post(`/movimentacoes/${estornoModal.movId}/estorno`, {
         motivo: motivoEstorno.trim(),
       });
 
