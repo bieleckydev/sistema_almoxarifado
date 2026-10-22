@@ -17,6 +17,7 @@ import {
   ColaboradorInativoError,
   LoteEstoqueInsuficienteError,
   NotaFiscalDuplicadaError,
+  MovimentacaoJaEstornadaError,
   MovimentacaoService,
 } from '@/core/services/movimentacao.service';
 import { SaldoInsuficienteError } from '@/core/services/estoque-calculator';
@@ -170,6 +171,10 @@ export function toErrorResponse(error: unknown): NextResponse {
     );
   }
 
+  if (error instanceof MovimentacaoJaEstornadaError) {
+    return NextResponse.json({ error: error.message }, { status: 409 });
+  }
+
   // Duplicidade de Nota Fiscal na Entrada (409 Conflict)
   if (error instanceof NotaFiscalDuplicadaError) {
     return NextResponse.json(
@@ -221,13 +226,10 @@ export function toErrorResponse(error: unknown): NextResponse {
   }
 
   // Erro interno não tratado (500 Internal Server Error)
+  // Detalhes ficam só no log do servidor; nunca expor mensagens internas ao cliente.
   console.error('Erro interno na API:', error);
-  const errorMessage = error instanceof Error ? error.message : 'Erro interno ao processar a solicitação.';
   return NextResponse.json(
-    {
-      error: 'Erro interno ao processar a solicitação.',
-      mensagemInterna: errorMessage,
-    },
+    { error: 'Erro interno ao processar a solicitação.' },
     { status: 500 }
   );
 }

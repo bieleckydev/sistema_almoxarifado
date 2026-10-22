@@ -53,49 +53,15 @@ export async function authenticateIdentity(
 
   let decodedToken: DecodedIdToken;
   try {
-    const hasServiceAccount = Boolean(
-      process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim() &&
-      process.env.FIREBASE_ADMIN_PRIVATE_KEY?.trim()
-    );
-    decodedToken = await dependencies.auth.verifyIdToken(token, hasServiceAccount);
+    // checkRevoked=true: tokens de usuários desativados ou com sessão revogada são recusados.
+    decodedToken = await dependencies.auth.verifyIdToken(token, true);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Token inválido';
-    throw new IdentityError(`Falha na validação do token de autenticação: ${msg}`, 401);
+    throw new IdentityError('Token de autenticação inválido ou expirado.', 401, { cause: err });
   }
 
-  let userSnapshot;
-  try {
-    if (!dependencies.db || typeof dependencies.db.collection !== 'function') {
-      throw new Error('Firestore adminDb não inicializado (sem credenciais de service account)');
-    }
-    userSnapshot = await dependencies.db.collection('users').doc(decodedToken.uid).get();
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : '';
-    // Se o backend estiver rodando sem credenciais de service account configuradas para o Firestore Admin
-    if (
-      !dependencies.db ||
-      typeof dependencies.db?.collection !== 'function' ||
-      msg.includes('credentials') ||
-      msg.includes('default credentials') ||
-      msg.includes('permission') ||
-      msg.includes('não inicializado')
-    ) {
-      const isMestre = decodedToken.email === 'eduardombielecky@gmail.com';
-      const fallbackUser: User = {
-        id: decodedToken.uid,
-        name: (decodedToken.name as string) || decodedToken.email?.split('@')[0] || 'Administrador',
-        email: decodedToken.email || '',
-        role: isMestre ? 'mestre' : 'operador',
-        ativo: true,
-        mustChangePassword: false,
-      };
-      return {
-        token: decodedToken,
-        user: fallbackUser,
-      };
-    }
-    throw err;
-  }
+  // Sem fallback: se o perfil não puder ser lido (ex.: Admin SDK sem credenciais),
+  // a requisição falha. Nunca conceder papel a partir de um erro de infraestrutura.
+  const userSnapshot = await dependencies.db.collection('users').doc(decodedToken.uid).get();
 
   if (!userSnapshot.exists) {
     throw new IdentityError('Perfil do usuário autenticado não foi encontrado.', 404);
