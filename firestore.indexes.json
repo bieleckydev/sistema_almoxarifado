@@ -1,4 +1,54 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "auditoria_operacional",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "acao", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "auditoria_operacional",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "usuarioId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "movements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "itemId", "order": "ASCENDING" },
+        { "fieldPath": "dataMovimentacao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "movements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tipo", "order": "ASCENDING" },
+        { "fieldPath": "dataMovimentacao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "movements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "colaboradorId", "order": "ASCENDING" },
+        { "fieldPath": "dataMovimentacao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "movements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "itemId", "order": "ASCENDING" },
+        { "fieldPath": "tipo", "order": "ASCENDING" },
+        { "fieldPath": "dataMovimentacao", "order": "DESCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
