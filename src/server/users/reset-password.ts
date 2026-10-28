@@ -109,10 +109,41 @@ export async function sendPasswordReset(
     throw new PasswordResetError('Não é possível redefinir senha de usuário inativo.');
   }
 
-  const resetLink = await dependencies.auth.generatePasswordResetLink(authUser.email, {
-    url: validateContinueUrl(dependencies.continueUrl),
-    handleCodeInApp: true,
-  });
+  let resetLink: string;
+  try {
+    resetLink = await dependencies.auth.generatePasswordResetLink(authUser.email, {
+      url: validateContinueUrl(dependencies.continueUrl),
+      handleCodeInApp: true,
+    });
+  } catch (error) {
+    const isDomainNotAllowlisted =
+      error instanceof Error &&
+      (('code' in error && (error as any).code === 'auth/unauthorized-continue-uri') ||
+        error.message.includes('Domain not allowlisted') ||
+        error.message.includes('unauthorized-continue-uri'));
+
+    if (isDomainNotAllowlisted) {
+      const projectId =
+        process.env.FIREBASE_ADMIN_PROJECT_ID?.trim() ||
+        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() ||
+        'rhowert-a57af';
+      const firebaseDefaultUrl = `https://${projectId}.firebaseapp.com`;
+
+      try {
+        resetLink = await dependencies.auth.generatePasswordResetLink(authUser.email, {
+          url: firebaseDefaultUrl,
+          handleCodeInApp: true,
+        });
+      } catch (fallbackError) {
+        throw new PasswordResetError(
+          `O domínio da aplicação não está autorizado no Firebase Authentication. Adicione '${dependencies.continueUrl}' em Firebase Console > Authentication > Settings > Authorized domains.`,
+          { cause: fallbackError }
+        );
+      }
+    } else {
+      throw error;
+    }
+  }
 
   try {
     await delivery.sendPasswordReset({
