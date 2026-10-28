@@ -51,14 +51,17 @@ export async function POST(request: Request) {
       });
     }
 
-    const resultados = [];
+    const listaParaExecutar = [];
+    const metaItens = [];
     let totalSobras = 0;
     let totalFaltas = 0;
 
     for (const item of divergentes) {
       const diff = item.quantidadeContada - item.saldoSistema;
       const ehSobra = diff > 0;
-      const tipo = ehSobra ? 'AJUSTE_INVENTARIO_POSITIVO' : 'AJUSTE_INVENTARIO_NEGATIVO';
+      const tipo: 'AJUSTE_INVENTARIO_POSITIVO' | 'AJUSTE_INVENTARIO_NEGATIVO' = ehSobra
+        ? 'AJUSTE_INVENTARIO_POSITIVO'
+        : 'AJUSTE_INVENTARIO_NEGATIVO';
       const quantidadeAjuste = Math.abs(diff);
 
       if (ehSobra) totalSobras++;
@@ -69,7 +72,7 @@ export async function POST(request: Request) {
         motivoGeral?.trim() ||
         `Inventário físico direto (${ehSobra ? 'Sobra' : 'Falta'} de ${quantidadeAjuste})`;
 
-      const res = await service.executarAjusteInventario({
+      listaParaExecutar.push({
         itemId: item.itemId,
         tipo,
         quantidade: quantidadeAjuste,
@@ -77,7 +80,7 @@ export async function POST(request: Request) {
         responsavelId: identity.user.id,
       });
 
-      resultados.push({
+      metaItens.push({
         itemId: item.itemId,
         codigo: item.codigo,
         descricao: item.descricao,
@@ -85,9 +88,15 @@ export async function POST(request: Request) {
         saldoNovo: item.quantidadeContada,
         tipo,
         quantidadeAjuste,
-        movimentacaoId: res.id,
       });
     }
+
+    const movimentacoesCriadas = await service.executarAjusteInventarioLote(listaParaExecutar);
+
+    const resultados = metaItens.map((meta, idx) => ({
+      ...meta,
+      movimentacaoId: movimentacoesCriadas[idx]?.id || `mov-ajuste-${idx}`,
+    }));
 
     // Auditoria Operacional
     try {

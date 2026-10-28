@@ -268,6 +268,36 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       assert.equal(mov.tipo, 'AJUSTE_INVENTARIO_POSITIVO');
       assert.equal(mov.saldoResultante, 55);
     });
+
+    it('deve processar ajuste de inventário em lote para múltiplos itens', async () => {
+      const resultado = await service.executarAjusteInventarioLote([
+        {
+          itemId: 'item-1',
+          tipo: 'AJUSTE_INVENTARIO_POSITIVO',
+          quantidade: 10,
+          motivo: 'Sobra física na contagem',
+          responsavelId: 'user-admin',
+        },
+        {
+          itemId: 'item-2',
+          tipo: 'AJUSTE_INVENTARIO_NEGATIVO',
+          quantidade: 1,
+          motivo: 'Quebra física na contagem',
+          responsavelId: 'user-admin',
+        },
+      ]);
+
+      assert.equal(resultado.length, 2);
+      assert.equal(resultado[0].tipo, 'AJUSTE_INVENTARIO_POSITIVO');
+      assert.equal(resultado[0].saldoResultante, 60); // 50 + 10
+      assert.equal(resultado[1].tipo, 'AJUSTE_INVENTARIO_NEGATIVO');
+      assert.equal(resultado[1].saldoResultante, 2); // 3 - 1
+
+      const item1 = await repo.buscarItemPorId('item-1');
+      const item2 = await repo.buscarItemPorId('item-2');
+      assert.equal(item1?.estoqueAtual, 60);
+      assert.equal(item2?.estoqueAtual, 2);
+    });
   });
 
   describe('Delegação e Fallback de Transações Atômicas', () => {

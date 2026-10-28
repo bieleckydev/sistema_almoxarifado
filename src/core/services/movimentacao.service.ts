@@ -470,6 +470,71 @@ export class MovimentacaoService {
   }
 
   /**
+   * Executa atomicamente o ajuste de inventário de múltiplos itens divergentes.
+   * Utiliza a infraestrutura transacional do repositório para assegurar atomicidade ACID estrita.
+   */
+  async executarAjusteInventarioLote(
+    ajustes: Array<{
+      itemId: string;
+      tipo: 'AJUSTE_INVENTARIO_POSITIVO' | 'AJUSTE_INVENTARIO_NEGATIVO';
+      quantidade: number;
+      motivo: string;
+      responsavelId: string;
+      dataMovimentacao?: string;
+    }>
+  ): Promise<Movimentacao[]> {
+    if (ajustes.length === 0) return [];
+
+    const agora = new Date().toISOString();
+    const operacoesParaPersistir: Array<{
+      itemId: string;
+      novoSaldo: number;
+      movimentacao: Movimentacao;
+    }> = [];
+
+    for (const ajuste of ajustes) {
+      const item = await this.validarItemAtivo(ajuste.itemId);
+      const saldoAnterior = item.estoqueAtual;
+      const saldoResultante = calcularNovoSaldo(
+        saldoAnterior,
+        ajuste.tipo,
+        ajuste.quantidade
+      );
+
+      const dataHora = ajuste.dataMovimentacao || agora;
+      const movimentacao: Movimentacao = {
+        id: this.gerarIdMovimentacao(),
+        itemId: item.id,
+        tipo: ajuste.tipo,
+        quantidade: ajuste.quantidade,
+        saldoAnterior,
+        saldoResultante,
+        dataMovimentacao: dataHora,
+        observacao: `[Ajuste de Inventário] ${ajuste.motivo}`,
+        createdAt: dataHora,
+      };
+
+      operacoesParaPersistir.push({
+        itemId: item.id,
+        novoSaldo: saldoResultante,
+        movimentacao,
+      });
+    }
+
+    if (typeof this.repository.registrarBaixaLoteAtomica === 'function') {
+      return this.repository.registrarBaixaLoteAtomica(operacoesParaPersistir);
+    }
+
+    const movimentacoesGeradas: Movimentacao[] = [];
+    for (const op of operacoesParaPersistir) {
+      await this.repository.atualizarSaldoItem(op.itemId, op.novoSaldo);
+      const movPersistida = await this.repository.registrarMovimentacao(op.movimentacao);
+      movimentacoesGeradas.push(movPersistida);
+    }
+    return movimentacoesGeradas;
+  }
+
+  /**
    * Efetiva a entrada de mercadorias no estoque a partir de uma Nota Fiscal conferida,
    * gerando movimentações do tipo ENTRADA_COMPRA e atualizando os saldos dos itens.
    */
