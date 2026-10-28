@@ -7,8 +7,7 @@ import {
   Calendar,
   Bell,
   ChevronRight,
-  ArrowDownToLine,
-  ArrowUpFromLine,
+  ShoppingCart,
 } from 'lucide-react';
 import { type TelaOuAba, METADADOS_ABAS } from '@/web/data/mock-almoxarifado';
 import { GlobalSearchInput } from './GlobalSearchInput';
@@ -18,7 +17,6 @@ import { useAuthStore } from '@/core/store/useAuthStore';
 import { usePeriodoGlobal } from '@/web/hooks/usePeriodoGlobal';
 import { podeExecutar, ROTULO_PAPEL } from '@/core/domain/permissions';
 import { useBaixaRapidaStore } from '@/core/store/useBaixaRapidaStore';
-import { ShoppingCart } from 'lucide-react';
 
 export interface AppTopHeaderProps {
   telaAtiva: TelaOuAba;
@@ -114,48 +112,20 @@ export function AppTopHeader({
 
       {/* 2. Lado Direito: Ações Rápidas (3.0), Data Operacional, Alertas, Tema e Perfil */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Botões de Ação Rápida no Topo (3.0) */}
-        {podeMover && (
-          <div className="hidden sm:flex items-center gap-1.5">
-            {onRegistrarEntrada && (
-              <button
-                type="button"
-                onClick={onRegistrarEntrada}
-                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200/50 dark:border-emerald-800/40 transition-colors cursor-pointer shadow-2xs"
-                title="Registrar entrada rápida de material (+ Entrada)"
-              >
-                <ArrowDownToLine className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">+ Entrada</span>
-              </button>
-            )}
-            {onRegistrarSaida && (
-              <button
-                type="button"
-                onClick={onRegistrarSaida}
-                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 border border-rose-200/50 dark:border-rose-800/40 transition-colors cursor-pointer shadow-2xs"
-                title="Registrar saída rápida de material (- Saída)"
-              >
-                <ArrowUpFromLine className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">- Saída</span>
-              </button>
-            )}
-            {onAbrirBaixaRapida && (
-              <button
-                type="button"
-                onClick={onAbrirBaixaRapida}
-                className="relative inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-amber-800 dark:text-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200/50 dark:border-amber-800/40 transition-colors cursor-pointer shadow-2xs"
-                title="Abrir carrinho de retirada em lote para o chão de fábrica"
-              >
-                <ShoppingCart className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">Baixa em Lote</span>
-                {totalItensCarrinho > 0 && (
-                  <span className="inline-flex items-center justify-center px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-600 text-white leading-none">
-                    {totalItensCarrinho}
-                  </span>
-                )}
-              </button>
-            )}
-          </div>
+        {/* Carrinho de Baixa em Lote Discreto (se houver itens pendentes) */}
+        {podeMover && onAbrirBaixaRapida && totalItensCarrinho > 0 && (
+          <button
+            type="button"
+            onClick={onAbrirBaixaRapida}
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-on-surface bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 transition-colors cursor-pointer"
+            title="Abrir carrinho de retirada em lote"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 text-secondary" />
+            <span className="hidden md:inline">Lote</span>
+            <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary text-on-primary leading-none">
+              {totalItensCarrinho}
+            </span>
+          </button>
         )}
 
         {/* Data Operacional */}

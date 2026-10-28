@@ -89,7 +89,7 @@ interface ItemNavegacao {
     role?: import('@/core/domain/user.schema').UserRole;
   }) => number;
   getBadgeTitle?: (count: number) => string;
-  badgeVariant?: 'error' | 'secondary' | 'primary';
+  badgeVariant?: 'error' | 'secondary' | 'primary' | 'neutral';
 }
 
 interface GrupoNavegacao {
@@ -118,8 +118,8 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
         icon: Layers,
         moduloPai: 'estoque',
         getBadgeCount: ({ contagemCriticos }) => contagemCriticos.mp || 0,
-        getBadgeTitle: (count) => `${count} item(ns) crítico(s) em MP`,
-        badgeVariant: 'error',
+        getBadgeTitle: (count) => `${count} item(ns) em atenção em MP`,
+        badgeVariant: 'neutral',
       },
       {
         tela: 'imp',
@@ -127,8 +127,8 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
         icon: Wrench,
         moduloPai: 'estoque',
         getBadgeCount: ({ contagemCriticos }) => contagemCriticos.imp || 0,
-        getBadgeTitle: (count) => `${count} item(ns) crítico(s) em Improdutivos`,
-        badgeVariant: 'error',
+        getBadgeTitle: (count) => `${count} item(ns) em atenção em Improdutivos`,
+        badgeVariant: 'neutral',
       },
       {
         tela: 'motos',
@@ -136,8 +136,8 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
         icon: Bike,
         moduloPai: 'estoque',
         getBadgeCount: ({ contagemCriticos }) => contagemCriticos.motos || 0,
-        getBadgeTitle: (count) => `${count} item(ns) crítico(s) em Peças`,
-        badgeVariant: 'error',
+        getBadgeTitle: (count) => `${count} item(ns) em atenção em Peças`,
+        badgeVariant: 'neutral',
       },
       {
         tela: 'terc',
@@ -312,7 +312,7 @@ export function AppSidebar({
         >
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Logo Badge */}
-            <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm font-bold text-xs shrink-0 shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-100 font-headline-sm font-bold text-xs shrink-0 shadow-xs">
               R
             </div>
 
@@ -405,8 +405,8 @@ export function AppSidebar({
                       ? 'justify-center py-2 px-1'
                       : 'justify-between px-2.5 py-2'
                       } ${isCurrent
-                        ? 'bg-primary-container text-on-primary font-semibold shadow-xs'
-                        : 'text-inverse-on-surface/80 hover:bg-white/10 hover:text-white font-medium'
+                        ? 'bg-zinc-800 text-white font-semibold shadow-xs'
+                        : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200 font-medium'
                       }`}
                   >
                     <div
@@ -414,7 +414,7 @@ export function AppSidebar({
                         }`}
                     >
                       <Icon
-                        className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-on-primary' : 'text-outline-variant'
+                        className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-white' : 'text-zinc-500'
                           }`}
                       />
                       {!isMini && <span className="truncate text-xs">{item.nome}</span>}
@@ -425,24 +425,24 @@ export function AppSidebar({
                       <>
                         {!isMini ? (
                           <span
-                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${item.badgeVariant === 'error'
-                              ? 'bg-error text-on-error'
-                              : item.badgeVariant === 'primary'
-                                ? 'bg-primary-fixed text-on-primary-fixed'
-                                : 'bg-secondary-container text-on-secondary-fixed'
-                              }`}
+                            className={`px-1.5 py-0.5 rounded font-mono text-[11px] tabular-nums shrink-0 ${
+                              item.badgeVariant === 'error'
+                                ? 'bg-red-500/15 text-red-300 border border-red-500/30 font-semibold'
+                                : item.badgeVariant === 'primary'
+                                ? 'bg-zinc-800 text-zinc-300 border border-zinc-700/50'
+                                : 'text-zinc-400 font-normal'
+                            }`}
                             title={badgeTitle}
                           >
                             {badgeCount}
                           </span>
                         ) : (
                           <span
-                            className={`absolute top-1 right-1 w-2 h-2 rounded-full ${item.badgeVariant === 'error'
-                              ? 'bg-error'
-                              : item.badgeVariant === 'primary'
-                                ? 'bg-primary-fixed'
-                                : 'bg-secondary-container'
-                              } ring-2 ring-inverse-surface`}
+                            className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
+                              item.badgeVariant === 'error'
+                                ? 'bg-red-500'
+                                : 'bg-zinc-500'
+                            } ring-2 ring-inverse-surface`}
                             title={badgeTitle}
                           />
                         )}
