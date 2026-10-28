@@ -6,6 +6,8 @@ import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado
 import { api } from '@/core/api/client';
 import { useToast } from '@/web/hooks/useToast';
 import { useQueryClient } from '@tanstack/react-query';
+import { ColaboradorSelect } from '@/web/components/common/ColaboradorSelect';
+import type { Colaborador } from '@/core/domain/colaborador.schema';
 
 export interface MovementFormDrawerProps {
   item: DashboardItem | null;
@@ -32,7 +34,7 @@ export function MovementFormDrawer({
   const [quantidade, setQuantidade] = useState<number>(1);
   const [lote, setLote] = useState('');
   const [valorUnitario, setValorUnitario] = useState<number>(0);
-  const [quem, setQuem] = useState('Produção');
+  const [colaboradorSelecionado, setColaboradorSelecionado] = useState<Colaborador | null>(null);
   const [observacao, setObservacao] = useState('');
   const [camposInfo, setCamposInfo] = useState<Record<string, string>>({});
   const [erro, setErro] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export function MovementFormDrawer({
       setQuantidade(1);
       setLote('');
       setValorUnitario(item.custoUnitario || 0);
-      setQuem('Produção');
+      setColaboradorSelecionado(null);
       setObservacao('');
       setErro(null);
       setIsSubmitting(false);
@@ -153,8 +155,8 @@ export function MovementFormDrawer({
       return;
     }
 
-    if (!isEntrada && !quem.trim()) {
-      setErro('Informe quem retirou ou o setor responsável.');
+    if (!isEntrada && !colaboradorSelecionado) {
+      setErro('Selecione o colaborador responsável pela retirada do material.');
       return;
     }
 
@@ -185,10 +187,15 @@ export function MovementFormDrawer({
         );
       } else {
         // Saída / Retirada
+        if (!colaboradorSelecionado) {
+          throw new Error('Colaborador não selecionado.');
+        }
+
         await api.post('/movimentacoes/baixa-interna', {
           itemId: item.id,
           quantidade,
-          colaboradorId: quem.trim() || 'PRODUCAO',
+          colaboradorId: colaboradorSelecionado.id,
+          setor: colaboradorSelecionado.setor,
           lote: loteFinal,
           observacao: observacao.trim() || undefined,
           dataMovimentacao: new Date(dataMov + 'T12:00:00Z').toISOString(),
@@ -337,20 +344,20 @@ export function MovementFormDrawer({
             </label>
           </div>
 
-          {/* Lote e Custo Médio Unitário */}
-          <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
-              <span>{isEntrada ? 'Número do Lote' : 'Lote (FIFO Sugerido)'}</span>
-              <input
-                type="text"
-                value={lote}
-                onChange={(e) => setLote(e.target.value)}
-                placeholder={isEntrada ? 'Ex: LOTE-2026-A' : 'Padrão: Mais antigo'}
-                className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
-              />
-            </label>
+          {/* Entrada: Lote e Custo Médio Unitário | Saída: Lote e Seleção de Colaborador */}
+          {isEntrada ? (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
+                <span>Número do Lote</span>
+                <input
+                  type="text"
+                  value={lote}
+                  onChange={(e) => setLote(e.target.value)}
+                  placeholder="Ex: LOTE-2026-A"
+                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+                />
+              </label>
 
-            {isEntrada ? (
               <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
                 <span>Custo Unitário (R$)</span>
                 <input
@@ -363,20 +370,29 @@ export function MovementFormDrawer({
                   className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
                 />
               </label>
-            ) : (
+            </div>
+          ) : (
+            <div className="space-y-3">
               <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
-                <span>Retirado por / Setor *</span>
+                <span>Lote (FIFO Sugerido)</span>
                 <input
                   type="text"
-                  required
-                  value={quem}
-                  onChange={(e) => setQuem(e.target.value)}
-                  placeholder="Ex: Produção, Serralheria"
-                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={lote}
+                  onChange={(e) => setLote(e.target.value)}
+                  placeholder="Padrão: Mais antigo"
+                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
                 />
               </label>
-            )}
-          </div>
+
+              <ColaboradorSelect
+                value={colaboradorSelecionado?.id}
+                onChange={(colab) => setColaboradorSelecionado(colab)}
+                required
+                label="Retirado por / Colaborador Solicitante"
+                placeholder="Selecione ou busque por nome/matrícula..."
+              />
+            </div>
+          )}
 
           {/* Campos específicos da Entrada */}
           {isEntrada && (
@@ -399,21 +415,6 @@ export function MovementFormDrawer({
                 </label>
               ))}
             </div>
-          )}
-
-          {/* Campo de Retirada (Saída) */}
-          {!isEntrada && (
-            <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
-              <span>Retirado por / setor *</span>
-              <input
-                type="text"
-                required
-                value={quem}
-                onChange={(e) => setQuem(e.target.value)}
-                placeholder="Ex: Produção, Serralheria, Oficina, Manutenção"
-                className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-            </label>
           )}
 
           {/* Observações Gerais */}
