@@ -6,7 +6,11 @@ import {
   type CreateUserCommand,
   type User,
 } from '../../core/domain/user.schema';
-import { UserAuditLogSchema, type PublicUserProfile } from '../../core/domain/user-audit.schema';
+import {
+  UserAuditLogSchema,
+  toPublicUserProfile,
+  type PublicUserProfile,
+} from '../../core/domain/user-audit.schema';
 import { canCreateUserWithRole } from '../../core/domain/user-authorization';
 import { adminAuth, adminDb } from '../firebase-admin';
 import type { AuthenticatedIdentity } from '../auth/identity';
@@ -71,16 +75,7 @@ class UserCreationConflictError extends Error {
 }
 
 function publicProfile(user: User): PublicUserProfile {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    ativo: user.ativo,
-    mustChangePassword: user.mustChangePassword,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  };
+  return toPublicUserProfile(user);
 }
 
 export type UserReconciliationResult =
@@ -149,7 +144,7 @@ function publicProfileFromSnapshot(
   if (!snapshot.exists) {
     throw new UserCreationConflictError('Perfil idempotente não foi encontrado.');
   }
-  return publicProfile(UserSchema.parse({ id: snapshot.id, ...snapshot.data() }));
+  return toPublicUserProfile({ id: snapshot.id, ...snapshot.data() });
 }
 
 function buildUserProfile(

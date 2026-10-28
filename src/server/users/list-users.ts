@@ -5,7 +5,10 @@ import type {
   QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { PublicUserProfileSchema, type PublicUserProfile } from '../../core/domain/user-audit.schema';
+import {
+  toPublicUserProfile,
+  type PublicUserProfile,
+} from '../../core/domain/user-audit.schema';
 import { UserRoleSchema } from '../../core/domain/user.schema';
 import { hasUserPermission } from '../../core/domain/user-authorization';
 import { adminDb } from '../firebase-admin';
@@ -51,7 +54,7 @@ function parseBoolean(value: unknown): unknown {
 }
 
 function toPublicProfile(document: QueryDocumentSnapshot): PublicUserProfile {
-  return PublicUserProfileSchema.parse({
+  return toPublicUserProfile({
     id: document.id,
     ...document.data(),
   });

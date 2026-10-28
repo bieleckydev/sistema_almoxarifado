@@ -6,8 +6,8 @@ import {
   type User,
 } from '../../core/domain/user.schema';
 import {
-  PublicUserProfileSchema,
   UserAuditLogSchema,
+  toPublicUserProfile,
   type PublicUserProfile,
 } from '../../core/domain/user-audit.schema';
 import { adminAuth, adminDb } from '../firebase-admin';
@@ -48,16 +48,7 @@ const defaultDependencies: UserStatusDependencies = {
 };
 
 function publicProfile(user: User): PublicUserProfile {
-  return PublicUserProfileSchema.parse({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    ativo: user.ativo,
-    mustChangePassword: user.mustChangePassword,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  });
+  return toPublicUserProfile(user);
 }
 
 export async function setManagedUserStatus(
