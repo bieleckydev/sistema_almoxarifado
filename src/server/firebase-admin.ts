@@ -14,35 +14,105 @@ function createAdminApp(): App {
 
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID?.trim() || DEFAULT_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const rawPrivateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.trim();
+
+  let privateKey = rawPrivateKey;
+  if (privateKey) {
+    // Remove aspas envolventes caso o usuário tenha colado com aspas duplas ou simples no painel
+    if (
+      (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+      (privateKey.startsWith("'") && privateKey.endsWith("'"))
+    ) {
+      privateKey = privateKey.slice(1, -1);
+    }
+    // Converte literais \n em quebras de linha reais
+    privateKey = privateKey.replace(/\\n/g, '\n');
+  }
 
   if (clientEmail && privateKey) {
-    return initializeApp({
-      credential: cert({
+    try {
+      return initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
         projectId,
-        clientEmail,
-        privateKey,
-      }),
-      projectId,
-    });
+      });
+    } catch (certError) {
+      console.error(
+        'Aviso: Falha ao inicializar credenciais da conta de serviço Firebase Admin via cert(). Continuando com fallback de projectId:',
+        certError instanceof Error ? certError.message : certError
+      );
+    }
   }
 
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()) {
-    return initializeApp({
-      projectId,
-    });
+    try {
+      return initializeApp({
+        projectId,
+      });
+    } catch (gacError) {
+      console.error(
+        'Aviso: Falha ao inicializar via GOOGLE_APPLICATION_CREDENTIALS:',
+        gacError instanceof Error ? gacError.message : gacError
+      );
+    }
   }
 
-  // Keep module loading safe during framework build/generation. Firebase
-  // Admin will report the missing credential when a request uses a service.
+  // Mantém o carregamento do módulo seguro durante build e inicialização serverless.
+  // O Firebase Admin reportará ausência de credenciais somente quando um serviço for acionado.
   return initializeApp({ projectId });
 }
 
-const adminApp = createAdminApp();
+let _adminApp: App | null = null;
+export function getAdminApp(): App {
+  if (!_adminApp) {
+    _adminApp = createAdminApp();
+  }
+  return _adminApp;
+}
 
-export const adminAuth: Auth = getAuth(adminApp);
-export const adminDb: Firestore = getFirestore(adminApp);
-export { adminApp };
+let _adminAuth: Auth | null = null;
+export function getAdminAuth(): Auth {
+  if (!_adminAuth) {
+    _adminAuth = getAuth(getAdminApp());
+  }
+  return _adminAuth;
+}
+
+let _adminDb: Firestore | null = null;
+export function getAdminDb(): Firestore {
+  if (!_adminDb) {
+    _adminDb = getFirestore(getAdminApp());
+  }
+  return _adminDb;
+}
+
+// Proxies com resolução preguiçosa para compatibilidade direta com `import { adminAuth, adminDb, adminApp }`
+export const adminApp = new Proxy({} as App, {
+  get(_target, prop) {
+    const instance = getAdminApp();
+    const value = Reflect.get(instance, prop);
+    return typeof value === 'function' ? value.bind(instance) : value;
+  },
+});
+
+export const adminAuth = new Proxy({} as Auth, {
+  get(_target, prop) {
+    const instance = getAdminAuth();
+    const value = Reflect.get(instance, prop);
+    return typeof value === 'function' ? value.bind(instance) : value;
+  },
+});
+
+export const adminDb = new Proxy({} as Firestore, {
+  get(_target, prop) {
+    const instance = getAdminDb();
+    const value = Reflect.get(instance, prop);
+    return typeof value === 'function' ? value.bind(instance) : value;
+  },
+});
 
 export function getAdminProjectId(): string {
   return process.env.FIREBASE_ADMIN_PROJECT_ID?.trim() || DEFAULT_PROJECT_ID;
