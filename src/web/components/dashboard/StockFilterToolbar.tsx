@@ -27,7 +27,7 @@ export function StockFilterToolbar({
 }: StockFilterToolbarProps) {
   return (
     <div
-      className={`rounded-xl bg-surface-container-lowest p-3 border border-outline-variant/30 shadow-xs flex flex-col gap-3 mb-4 ${className}`}
+      className={`rounded-xl bg-surface-container-lowest p-3 border border-outline-variant/30 flex flex-col gap-3 mb-4 ${className}`}
     >
       {/* Linha Superior: Campo de Busca com Lupa e Atalho */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -44,7 +44,7 @@ export function StockFilterToolbar({
             }}
             placeholder={placeholder}
             aria-label="Buscar material no almoxarifado"
-            className="w-full pl-9 pr-12 py-2 text-sm rounded-lg border border-outline-variant/20 bg-surface-container-low text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:border-primary/50 transition-colors shadow-xs"
+            className="w-full pl-9 pr-12 py-2 text-sm rounded-lg border border-outline-variant/20 bg-surface-container-low text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:border-primary/50 transition-colors"
           />
           {busca ? (
             <button
@@ -65,35 +65,35 @@ export function StockFilterToolbar({
         {totalFiltrados !== undefined && (
           <div className="flex items-center gap-1.5 text-xs text-secondary shrink-0 font-medium self-end sm:self-center">
             <span>Exibindo:</span>
-            <span className="font-data-tabular font-bold text-on-surface px-2 py-0.5 rounded-md bg-surface-container">
+            <span className="font-data-tabular font-bold text-on-surface px-2 py-0.5 rounded-md bg-surface-container tabular-nums">
               {totalFiltrados.toLocaleString('pt-BR')} {totalFiltrados === 1 ? 'registro' : 'registros'}
             </span>
           </div>
         )}
       </div>
 
-      {/* Linha Inferior: Pílulas de Situação Operacional (Filtros Rápidos) */}
+      {/* Linha Inferior: Segmentação de Situação Operacional */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-outline-variant/20">
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filtro de situação do estoque">
-          <span className="font-label-sm text-label-sm text-secondary uppercase tracking-wider mr-1 hidden sm:inline-flex items-center gap-1">
+          <span className="text-xs text-secondary font-medium mr-1 hidden sm:inline-flex items-center gap-1">
             <Filter className="w-3 h-3" /> Situação:
           </span>
 
-          {/* Pill: Todos */}
+          {/* Segment: Todos */}
           <button
             type="button"
             onClick={() => onFiltroSituacaoChange('todos')}
             aria-pressed={filtroSituacao === 'todos'}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'todos'
-                ? 'bg-primary text-on-primary shadow-xs'
+                ? 'bg-primary text-on-primary'
                 : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
             }`}
           >
             <span>Todos</span>
             {contagemPorSituacao?.todos !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                className={`text-[10px] px-1.5 py-0.2 rounded font-mono tabular-nums ${
                   filtroSituacao === 'todos'
                     ? 'bg-on-primary/20 text-on-primary'
                     : 'bg-surface-container text-secondary'
@@ -104,7 +104,7 @@ export function StockFilterToolbar({
             )}
           </button>
 
-          {/* Pill: Normal (Seguro) */}
+          {/* Segment: Normal */}
           <button
             type="button"
             onClick={() => {
@@ -115,9 +115,9 @@ export function StockFilterToolbar({
               }
             }}
             aria-pressed={filtroSituacao === 'ok'}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'ok'
-                ? 'bg-tertiary text-on-tertiary shadow-xs'
+                ? 'bg-tertiary text-on-tertiary'
                 : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
             }`}
           >
@@ -125,7 +125,7 @@ export function StockFilterToolbar({
             <span>Normal</span>
             {contagemPorSituacao?.ok !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                className={`text-[10px] px-1.5 py-0.2 rounded font-mono tabular-nums ${
                   filtroSituacao === 'ok'
                     ? 'bg-on-tertiary/20 text-on-tertiary'
                     : 'bg-surface-container text-secondary'
@@ -136,7 +136,7 @@ export function StockFilterToolbar({
             )}
           </button>
 
-          {/* Pill: Abaixo do Mínimo */}
+          {/* Segment: Abaixo do Mínimo */}
           <button
             type="button"
             onClick={() => {
@@ -147,9 +147,9 @@ export function StockFilterToolbar({
               }
             }}
             aria-pressed={filtroSituacao === 'low'}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'low'
-                ? 'bg-amber-600 dark:bg-amber-500 text-white shadow-xs'
+                ? 'bg-amber-600 dark:bg-amber-500 text-white'
                 : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
             }`}
           >
@@ -157,7 +157,7 @@ export function StockFilterToolbar({
             <span>Abaixo do Mínimo</span>
             {contagemPorSituacao?.low !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                className={`text-[10px] px-1.5 py-0.2 rounded font-mono tabular-nums ${
                   filtroSituacao === 'low'
                     ? 'bg-white/20 text-white'
                     : 'bg-surface-container text-secondary'
@@ -168,7 +168,7 @@ export function StockFilterToolbar({
             )}
           </button>
 
-          {/* Pill: Crítico / Ruptura */}
+          {/* Segment: Crítico / Ruptura */}
           <button
             type="button"
             onClick={() => {
@@ -179,9 +179,9 @@ export function StockFilterToolbar({
               }
             }}
             aria-pressed={filtroSituacao === 'crit'}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'crit'
-                ? 'bg-error text-on-primary shadow-xs'
+                ? 'bg-error text-on-primary'
                 : 'bg-surface-container-low hover:bg-surface-container text-error'
             }`}
           >
@@ -189,7 +189,7 @@ export function StockFilterToolbar({
             <span>Crítico / Ruptura</span>
             {contagemPorSituacao?.crit !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold tabular-nums ${
                   filtroSituacao === 'crit'
                     ? 'bg-on-primary/20 text-on-primary'
                     : 'bg-error-container text-on-error-container'

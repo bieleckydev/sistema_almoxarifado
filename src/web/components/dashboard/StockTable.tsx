@@ -17,7 +17,6 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
-import { formatarTextoFalta } from '@/web/utils/pluralization';
 import { calcularRazaoEstoque } from '@/core/domain/quantidade';
 import { calcularValorTotalItem, formatarMoedaBrl } from '@/core/services/custo-medio';
 import { StockStatusBadge } from './StockStatusBadge';
@@ -175,13 +174,13 @@ export function StockTable({
       : 0;
 
   return (
-    <div className={`flex flex-col bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-xs transition-colors ${className}`}>
+    <div className={`flex flex-col bg-surface-container-lowest border border-outline-variant/30 rounded-xl transition-colors ${className}`}>
       <div
         ref={tableContainerRef}
         className="overflow-auto max-h-[calc(100vh-320px)] min-h-[360px]"
       >
         <table className="w-full text-left border-collapse min-w-[920px]">
-          <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/20 shadow-xs">
+          <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/20">
             <tr className="text-xs font-medium text-secondary select-none">
               {/* Código SKU */}
               <th className="py-3 px-4 w-32 bg-surface-container-low">
@@ -355,10 +354,10 @@ export function StockTable({
 
                   {/* Saldo Unificado e Medidor de Cobertura */}
                   <td className="py-3 px-4">
-                    <div className="w-full max-w-[190px]">
+                    <div className="w-full max-w-[170px]">
                       <div className="flex justify-between items-baseline font-data-tabular text-xs mb-1 leading-none">
                         <span
-                          className={`font-bold ${
+                          className={`font-bold tabular-nums ${
                             deficit > 0 && item.estoqueAtual === 0
                               ? 'text-error'
                               : deficit > 0
@@ -368,28 +367,26 @@ export function StockTable({
                         >
                           {item.estoqueAtual.toLocaleString('pt-BR')} {unidadeFormatada}
                         </span>
-                        <span className="text-secondary text-[11px]">
+                        <span className="text-secondary text-[11px] tabular-nums">
                           Mín: {item.estoqueSeguranca.toLocaleString('pt-BR')}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${barTrackColor}`}>
+                        <div className={`flex-1 h-1 rounded-full overflow-hidden ${barTrackColor}`}>
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${barBgColor}`}
                             style={{ width: `${percentualCap}%` }}
                           />
                         </div>
                         <span
-                          className={`text-[11px] tabular-nums font-semibold shrink-0 ${
+                          className={`text-[10.5px] tabular-nums font-semibold shrink-0 ${
                             deficit > 0
                               ? 'text-error'
                               : 'text-secondary'
                           }`}
                         >
-                          {deficit > 0
-                            ? formatarTextoFalta(deficit, item.unidade, { sufixo: '' })
-                            : `${percentualCap}%`}
+                          {deficit > 0 ? `-${deficit}` : `${percentualCap}%`}
                         </span>
                       </div>
                     </div>
@@ -397,11 +394,11 @@ export function StockTable({
 
                   {/* Valor Total em Estoque (3.0) */}
                   <td className="py-3 px-4 text-right whitespace-nowrap">
-                    <div className="font-mono text-xs font-bold text-on-surface">
+                    <div className="font-mono text-xs font-bold text-on-surface tabular-nums">
                       {formatarMoedaBrl(valorTotalItem)}
                     </div>
                     {item.custoUnitario !== undefined && item.custoUnitario > 0 && (
-                      <div className="text-[10px] text-secondary">
+                      <div className="text-[10px] text-secondary tabular-nums">
                         {formatarMoedaBrl(item.custoUnitario)}/{unidadeFormatada}
                       </div>
                     )}
@@ -433,7 +430,7 @@ export function StockTable({
                         type="button"
                         onClick={() => (onRegistrarEntrada ? onRegistrarEntrada(item) : onSelectItem(item))}
                         title="Adicionar entrada de material"
-                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-semibold text-on-primary-container bg-primary-container hover:bg-primary hover:text-on-primary transition-colors cursor-pointer shadow-2xs"
+                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-semibold text-on-primary-container bg-primary-container hover:bg-primary hover:text-on-primary transition-colors cursor-pointer"
                       >
                         <ArrowUpRight className="w-3 h-3 shrink-0" />
                         <span>+ Entrada</span>
