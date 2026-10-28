@@ -7,6 +7,7 @@ import {
   PackageCheck,
   ShoppingBag,
   PackagePlus,
+  UserPlus,
 } from 'lucide-react';
 
 export interface QuickActionsBarProps {
@@ -14,7 +15,9 @@ export interface QuickActionsBarProps {
   onRegistrarSaida: () => void;
   onReceberTerceiro?: () => void;
   onNovoPedido: () => void;
-  onNovoCadastro: () => void;
+  onNovoMaterial?: () => void;
+  onNovoUsuario?: () => void;
+  onNovoCadastro?: () => void;
   className?: string;
 }
 
@@ -23,9 +26,13 @@ export function QuickActionsBar({
   onRegistrarSaida,
   onReceberTerceiro,
   onNovoPedido,
+  onNovoMaterial,
+  onNovoUsuario,
   onNovoCadastro,
   className = '',
 }: QuickActionsBarProps) {
+  const handleMaterial = onNovoMaterial || onNovoCadastro;
+
   return (
     <div
       aria-label="Ações rápidas de chão de fábrica"
@@ -75,15 +82,29 @@ export function QuickActionsBar({
         <span>Novo Pedido</span>
       </button>
 
-      <button
-        type="button"
-        onClick={onNovoCadastro}
-        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-surface-container-lowest text-on-surface hover:bg-surface-container text-xs font-medium border border-outline-variant/40 transition-colors cursor-pointer"
-        title="Cadastrar novo SKU no catálogo"
-      >
-        <PackagePlus className="w-3.5 h-3.5 text-zinc-500" />
-        <span>Cadastrar Material</span>
-      </button>
+      {handleMaterial && (
+        <button
+          type="button"
+          onClick={handleMaterial}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-surface-container-lowest text-on-surface hover:bg-surface-container text-xs font-medium border border-outline-variant/40 transition-colors cursor-pointer"
+          title="Cadastrar novo SKU no catálogo de materiais"
+        >
+          <PackagePlus className="w-3.5 h-3.5 text-zinc-500" />
+          <span>Cadastrar Material</span>
+        </button>
+      )}
+
+      {onNovoUsuario && (
+        <button
+          type="button"
+          onClick={onNovoUsuario}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-surface-container-lowest text-on-surface hover:bg-surface-container text-xs font-medium border border-outline-variant/40 transition-colors cursor-pointer"
+          title="Cadastrar novo usuário no sistema (Administrador Mestre)"
+        >
+          <UserPlus className="w-3.5 h-3.5 text-zinc-500" />
+          <span>Novo Usuário</span>
+        </button>
+      )}
     </div>
   );
 }

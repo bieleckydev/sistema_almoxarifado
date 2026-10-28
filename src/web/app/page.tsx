@@ -45,6 +45,8 @@ import { ReceberTerceiroDrawer } from '@/web/components/gestao/terceiros/Receber
 import { InventarioView } from '@/web/components/gestao/inventario/InventarioView';
 import { RequisicoesView } from '@/web/components/gestao/requisicoes/RequisicoesView';
 import { AuditoriaView } from '@/web/components/gestao/auditoria/AuditoriaView';
+import { UsuariosView } from '@/web/components/gestao/usuarios/UsuariosView';
+import { UserCreateDrawer } from '@/web/components/gestao/usuarios/UserCreateDrawer';
 import { useFaturamento } from '@/web/hooks/useFaturamento';
 import { useMaterialTerceiros } from '@/web/hooks/useMaterialTerceiros';
 import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
@@ -71,6 +73,7 @@ export default function AlmoxarifadoDashboardPage() {
 
   // Estados dos Drawers e Modais Operacionais
   const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
+  const [isUserCreateOpen, setIsUserCreateOpen] = useState(false);
   const [itemParaEditar, setItemParaEditar] = useState<DashboardItem | null>(null);
   const [itemParaEtiqueta, setItemParaEtiqueta] = useState<DashboardItem | null>(null);
   const [isOrderCreateOpen, setIsOrderCreateOpen] = useState(false);
@@ -400,7 +403,9 @@ export default function AlmoxarifadoDashboardPage() {
                 onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
                 onReceberTerceiro={() => setIsReceberTerceiroOpen(true)}
                 onNovoPedido={() => setIsOrderCreateOpen(true)}
-                onNovoCadastro={() => handleOpenClientCreate()}
+                onNovoMaterial={() => setIsItemCreateOpen(true)}
+                onNovoUsuario={user?.role === 'mestre' ? () => setIsUserCreateOpen(true) : undefined}
+                onNovoCadastro={() => setIsItemCreateOpen(true)}
                 onSelectItem={async (itemAtencao) => {
                   setTelaAtiva(itemAtencao.aba);
                   await handleSelectSearchResult({
@@ -587,6 +592,9 @@ export default function AlmoxarifadoDashboardPage() {
             ) : telaAtiva === 'aud' ? (
               /* 8. Módulo de Auditoria Operacional & Compliance (3.0) */
               <AuditoriaView />
+            ) : telaAtiva === 'usuarios' ? (
+              /* 9. Módulo de Gestão de Usuários & Acessos (Mestre) */
+              <UsuariosView onNovoUsuario={() => setIsUserCreateOpen(true)} />
             ) : (
               /* 9. Fallback / Telas Desconhecidas */
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-fade-in">
@@ -668,6 +676,12 @@ export default function AlmoxarifadoDashboardPage() {
             setClientCreateTipoInicial(undefined);
           }}
           tipoInicial={clientCreateTipoInicial}
+        />
+
+        {/* Gaveta de Criação de Usuário (Mestre) */}
+        <UserCreateDrawer
+          isOpen={isUserCreateOpen}
+          onClose={() => setIsUserCreateOpen(false)}
         />
 
         {/* Gaveta de Criação de Item */}

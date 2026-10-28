@@ -16,6 +16,8 @@ export interface InicioDashboardViewProps {
   onRegistrarSaida?: () => void;
   onReceberTerceiro?: () => void;
   onNovoPedido?: () => void;
+  onNovoMaterial?: () => void;
+  onNovoUsuario?: () => void;
   onNovoCadastro?: () => void;
   onSelectItem?: (item: ItemAtencaoResumo) => void;
   onAdicionarEntrada?: (item: ItemAtencaoResumo) => void;
@@ -27,6 +29,8 @@ export function InicioDashboardView({
   onRegistrarSaida,
   onReceberTerceiro,
   onNovoPedido,
+  onNovoMaterial,
+  onNovoUsuario,
   onNovoCadastro,
   onSelectItem,
   onAdicionarEntrada,
@@ -131,9 +135,11 @@ export function InicioDashboardView({
         onNovoPedido={() =>
           onNovoPedido ? onNovoPedido() : onNavegar('vendas')
         }
-        onNovoCadastro={() =>
-          onNovoCadastro ? onNovoCadastro() : onNavegar('clientes')
+        onNovoMaterial={() =>
+          onNovoMaterial ? onNovoMaterial() : onNovoCadastro ? onNovoCadastro() : onNavegar('mp')
         }
+        onNovoUsuario={onNovoUsuario}
+        onNovoCadastro={onNovoCadastro}
       />
 
       {/* 3. Banner de Alerta Prioritário (quando houver itens críticos ou pedidos atrasados) */}

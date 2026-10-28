@@ -31,10 +31,11 @@ export interface AppTopHeaderProps {
   className?: string;
 }
 
-const GESTAO_TITULOS: Record<'vendas' | 'clientes' | 'saida', string> = {
+const GESTAO_TITULOS: Record<'vendas' | 'clientes' | 'saida' | 'usuarios', string> = {
   vendas: 'Pedidos & Vendas',
   clientes: 'Clientes & Parceiros',
   saida: 'Movimentações & Saídas',
+  usuarios: 'Gestão de Usuários',
 };
 
 export function AppTopHeader({
@@ -54,7 +55,11 @@ export function AppTopHeader({
 
   const podeMover = podeExecutar(user?.role, 'mover');
   const isAbaEstoque = telaAtiva === 'mp' || telaAtiva === 'imp' || telaAtiva === 'motos';
-  const isGestao = telaAtiva === 'vendas' || telaAtiva === 'clientes' || telaAtiva === 'saida';
+  const isGestao =
+    telaAtiva === 'vendas' ||
+    telaAtiva === 'clientes' ||
+    telaAtiva === 'saida' ||
+    telaAtiva === 'usuarios';
 
   // Iniciais do usuário logado
   const userInitials = user?.name
