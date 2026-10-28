@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 
 export interface PriorityAlertBannerProps {
   totalAlertas: number;
@@ -26,49 +26,46 @@ export function PriorityAlertBanner({
 
   return (
     <div
-      className={`relative overflow-hidden bg-error-container/20 border border-error/30 p-4 sm:p-5 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 ${className}`}
+      className={`bg-surface-container-lowest border border-outline-variant/40 border-l-4 border-l-red-600 px-4 py-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 shadow-2xs ${className}`}
     >
-      <div className="flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-lg bg-error text-on-error flex items-center justify-center shrink-0">
-          <AlertCircle className="w-5 h-5" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-headline-sm text-sm sm:text-base text-on-error-container font-bold">
-              Atenção Imediata Necessária
-            </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full font-label-sm text-[11px] bg-error text-on-error font-bold">
-              {totalAlertas + pedidosAtrasados}{' '}
-              {totalAlertas + pedidosAtrasados === 1 ? 'alerta pendente' : 'alertas pendentes'}
-            </span>
-          </div>
-          <p className="font-body-sm text-xs sm:text-sm text-on-surface-variant mt-0.5">
-            Há <strong className="text-on-surface font-semibold">{itensZerados} {itensZerados === 1 ? 'item crítico' : 'itens críticos'}</strong> com risco de ruptura no chão de fábrica
-            {pedidosAtrasados > 0 && (
+      <div className="flex items-center gap-2.5 min-w-0">
+        <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          <span className="font-semibold text-on-surface">
+            Atenção operacional:
+          </span>
+          <span className="text-on-surface-variant">
+            {itensZerados > 0 ? (
               <>
-                {' '}e <strong className="text-error font-semibold">{pedidosAtrasados} {pedidosAtrasados === 1 ? 'pedido em atraso' : 'pedidos em atraso'} com clientes</strong> aguardando matéria-prima.
+                <strong className="font-semibold text-on-surface font-mono">{itensZerados}</strong> {itensZerados === 1 ? 'item crítico' : 'itens críticos'} em risco de ruptura
               </>
-            )}
-            .
-          </p>
+            ) : null}
+            {itensZerados > 0 && pedidosAtrasados > 0 && ' • '}
+            {pedidosAtrasados > 0 ? (
+              <>
+                <strong className="font-semibold text-red-600 dark:text-red-400 font-mono">{pedidosAtrasados}</strong> {pedidosAtrasados === 1 ? 'pedido atrasado' : 'pedidos atrasados'}
+              </>
+            ) : null}
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5 self-end md:self-auto shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         <button
           type="button"
           onClick={onResolverCriticos}
-          className="px-3.5 py-2 rounded-lg bg-error text-on-error font-label-md text-xs font-semibold hover:bg-on-error-container transition-colors shadow-sm cursor-pointer active:scale-95"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-xs font-semibold transition-colors cursor-pointer"
         >
-          Resolver Críticos
+          <span>Resolver Críticos</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
         {pedidosAtrasados > 0 && (
           <button
             type="button"
             onClick={onVerPedidosAtrasados}
-            className="px-3.5 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 hover:bg-surface-container transition-colors cursor-pointer active:scale-95"
+            className="px-2.5 py-1.5 rounded-md text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
           >
-            Ver {pedidosAtrasados} {pedidosAtrasados === 1 ? 'Pedido Atrasado' : 'Pedidos Atrasados'}
+            Ver {pedidosAtrasados} Atrasado{pedidosAtrasados > 1 ? 's' : ''}
           </button>
         )}
       </div>

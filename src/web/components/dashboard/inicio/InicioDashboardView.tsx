@@ -60,20 +60,20 @@ export function InicioDashboardView({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 animate-fade-in pb-10">
+    <div className="flex-1 flex flex-col min-w-0 pb-10">
       {/* 1. Barra de Informação Operacional Superior */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-5 sm:p-6 rounded-xl border border-outline-variant/30 mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/40 mb-6 shadow-2xs">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 font-body-sm text-xs text-on-surface-variant">
-            <span className="font-semibold text-primary">Controle operacional</span>
-            <span className="text-outline-variant">•</span>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-on-surface-variant">
+            <span>Almoxarifado Matriz</span>
+            <span>•</span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-primary/70" />
-              Terminal conectado
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Terminal RF Online
             </span>
           </div>
 
-          <h1 className="font-headline-lg text-xl sm:text-2xl text-on-surface font-bold tracking-tight">
+          <h1 className="font-headline-lg text-xl sm:text-2xl text-on-surface font-semibold tracking-tight">
             Almoxarifado & Visão Geral
           </h1>
           <p className="font-body-md text-xs sm:text-sm text-on-surface-variant max-w-2xl">
@@ -82,12 +82,12 @@ export function InicioDashboardView({
         </div>
 
         {/* Controles de Turno e Atualização */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface font-body-md text-xs">
-            <Clock className="w-4 h-4 text-secondary" />
-            <span className="font-data-tabular font-semibold">Hoje</span>
-            <span className="text-outline text-label-sm text-[11px] hidden sm:inline">
-              Turno Operacional (06h - 15h)
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-surface-container text-on-surface font-mono text-xs border border-outline-variant/20">
+            <Clock className="w-3.5 h-3.5 text-zinc-500" />
+            <span className="font-semibold">Hoje</span>
+            <span className="text-on-surface-variant text-[11px] hidden sm:inline">
+              (06h - 15h)
             </span>
           </div>
 
@@ -95,11 +95,11 @@ export function InicioDashboardView({
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface-container-lowest hover:bg-surface-container text-on-surface text-xs font-medium border border-outline-variant/40 transition-colors cursor-pointer disabled:opacity-50"
             title="Atualizar dados do estoque"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 text-secondary ${
+              className={`w-3.5 h-3.5 text-zinc-500 ${
                 isFetching ? 'animate-spin' : ''
               }`}
             />
@@ -109,7 +109,7 @@ export function InicioDashboardView({
           <button
             type="button"
             onClick={() => onNavegar('saida')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-on-primary font-label-md text-xs font-semibold shadow-sm hover:bg-primary-container transition-colors cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:bg-zinc-800 dark:hover:bg-white transition-colors cursor-pointer shadow-2xs"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Relatório de Turno</span>
@@ -160,7 +160,7 @@ export function InicioDashboardView({
           <button
             type="button"
             onClick={() => onNavegar('mp')}
-            className="font-label-sm text-xs font-semibold text-primary hover:underline cursor-pointer"
+            className="font-mono text-xs font-medium text-on-surface-variant hover:text-on-surface hover:underline cursor-pointer transition-colors"
           >
             Ver Catálogo Completo →
           </button>

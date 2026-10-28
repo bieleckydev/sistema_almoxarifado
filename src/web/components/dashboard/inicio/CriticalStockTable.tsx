@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
-import { FilterPill } from '@/web/components/ui/FilterPill';
 import type { ItemAtencaoResumo } from '@/web/hooks/useDashboardResumo';
 import type { AbaEstoque } from '@/web/data/mock-almoxarifado';
 
@@ -40,53 +39,68 @@ export function CriticalStockTable({
   return (
     <div
       id="tabela-criticos"
-      className={`bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden flex flex-col justify-between ${className}`}
+      className={`bg-surface-container-lowest rounded-lg border border-outline-variant/40 overflow-hidden flex flex-col justify-between shadow-2xs ${className}`}
     >
-      {/* Cabeçalho com Filtros de Categoria */}
-      <div className="p-4 sm:p-5 bg-surface-container-low/60 border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-error shrink-0" />
-          <div>
-            <h2 className="font-headline-sm text-sm sm:text-base text-on-surface font-bold">
-              Itens em Ruptura Imediata no Almoxarifado
+      {/* Cabeçalho com Filtros de Categoria em Segmented Control */}
+      <div className="p-4 bg-surface-container-low/50 border-b border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+            <h2 className="font-headline-sm text-sm text-on-surface font-semibold tracking-tight">
+              Itens em Ruptura Imediata
             </h2>
-            <span className="font-label-sm text-xs text-on-surface-variant">
-              Itens com saldo zerado ou abaixo da reserva técnica de segurança
-            </span>
           </div>
+          <span className="font-body-sm text-xs text-on-surface-variant block mt-0.5">
+            Materiais com saldo zerado ou abaixo do estoque de segurança
+          </span>
         </div>
 
-        {/* Chips de Filtro por Categoria */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <FilterPill
-            label="Todos"
-            count={contagemPorAba.todas}
-            countVariant="error"
-            size="sm"
-            isActive={filtroAba === 'todas'}
+        {/* Segmented Control Limpo e Monocromático */}
+        <div className="flex items-center p-0.5 rounded-lg bg-surface-container border border-outline-variant/30 text-xs">
+          <button
+            type="button"
             onClick={() => setFiltroAba('todas')}
-          />
-          <FilterPill
-            label="Matéria-Prima"
-            count={contagemPorAba.mp}
-            size="sm"
-            isActive={filtroAba === 'mp'}
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              filtroAba === 'todas'
+                ? 'bg-surface-container-lowest text-on-surface shadow-2xs'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Todos ({contagemPorAba.todas})
+          </button>
+          <button
+            type="button"
             onClick={() => setFiltroAba('mp')}
-          />
-          <FilterPill
-            label="Improdutivos"
-            count={contagemPorAba.imp}
-            size="sm"
-            isActive={filtroAba === 'imp'}
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              filtroAba === 'mp'
+                ? 'bg-surface-container-lowest text-on-surface shadow-2xs'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Matéria-Prima ({contagemPorAba.mp})
+          </button>
+          <button
+            type="button"
             onClick={() => setFiltroAba('imp')}
-          />
-          <FilterPill
-            label="Peças"
-            count={contagemPorAba.motos}
-            size="sm"
-            isActive={filtroAba === 'motos'}
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              filtroAba === 'imp'
+                ? 'bg-surface-container-lowest text-on-surface shadow-2xs'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Improdutivos ({contagemPorAba.imp})
+          </button>
+          <button
+            type="button"
             onClick={() => setFiltroAba('motos')}
-          />
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              filtroAba === 'motos'
+                ? 'bg-surface-container-lowest text-on-surface shadow-2xs'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Peças ({contagemPorAba.motos})
+          </button>
         </div>
       </div>
 
@@ -94,25 +108,25 @@ export function CriticalStockTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-surface-container-lowest font-label-sm text-[11px] uppercase tracking-wider text-outline border-b border-outline-variant/20">
-              <th className="py-2.5 px-4 sm:px-5">SKU / Item de Produção</th>
-              <th className="py-2.5 px-3">Categoria</th>
-              <th className="py-2.5 px-3">Saldo Real</th>
-              <th className="py-2.5 px-3">Mín. Req.</th>
-              <th className="py-2.5 px-3">Status</th>
-              <th className="py-2.5 px-4 sm:px-5 text-right">Ação Direta</th>
+            <tr className="bg-surface-container-low/30 font-mono text-[11px] uppercase tracking-wider text-on-surface-variant border-b border-outline-variant/30">
+              <th className="py-2.5 px-4 font-medium">SKU / Material</th>
+              <th className="py-2.5 px-3 font-medium">Família</th>
+              <th className="py-2.5 px-3 font-medium text-right">Saldo Real</th>
+              <th className="py-2.5 px-3 font-medium text-right">Est. Mín.</th>
+              <th className="py-2.5 px-3 font-medium text-center">Status</th>
+              <th className="py-2.5 px-4 text-right font-medium">Ação</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-outline-variant/15 text-on-surface text-xs font-body-md">
+          <tbody className="divide-y divide-outline-variant/20 text-on-surface text-xs">
             {itensFiltrados.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-8 text-center text-on-surface-variant">
                   <div className="flex flex-col items-center justify-center gap-1.5">
-                    <CheckCircle2 className="w-6 h-6 text-tertiary" />
-                    <span className="font-semibold text-on-surface">
-                      Nenhum item nesta categoria está em nível crítico!
+                    <CheckCircle2 className="w-5 h-5 text-zinc-400" />
+                    <span className="font-medium text-on-surface text-xs">
+                      Nenhum item em nível crítico nesta seleção.
                     </span>
-                    <span className="text-xs text-on-surface-variant">
+                    <span className="text-[11px] text-on-surface-variant">
                       O estoque de segurança está regularizado.
                     </span>
                   </div>
@@ -126,29 +140,29 @@ export function CriticalStockTable({
                 return (
                   <tr
                     key={item.id}
-                    className="hover:bg-surface-container-low transition-colors group"
+                    className="hover:bg-surface-container-low/50 transition-colors group"
                   >
                     {/* Descrição e SKU */}
-                    <td className="py-3 px-4 sm:px-5">
+                    <td className="py-2.5 px-4">
                       <button
                         type="button"
                         onClick={() => onSelectItem(item)}
                         className="text-left group-hover:text-primary transition-colors cursor-pointer"
                       >
-                        <div className="font-headline-sm text-xs font-bold text-on-surface group-hover:text-primary">
+                        <div className="font-medium text-xs text-on-surface">
                           {item.nome}
                         </div>
-                        <div className="font-data-tabular text-[11px] text-outline mt-0.5 font-mono">
+                        <div className="font-mono text-[10.5px] text-on-surface-variant mt-0.5">
                           {item.codigo || `ID: ${item.id.slice(0, 8)}`}
                         </div>
                       </button>
                     </td>
 
                     {/* Categoria */}
-                    <td className="py-3 px-3">
-                      <span className="font-label-sm text-[11px] text-on-surface-variant uppercase font-medium">
+                    <td className="py-2.5 px-3">
+                      <span className="font-mono text-[11px] text-on-surface-variant">
                         {item.aba === 'mp'
-                          ? 'Matéria-Prima'
+                          ? 'MP'
                           : item.aba === 'imp'
                           ? 'Improdutivos'
                           : 'Peças'}
@@ -156,13 +170,13 @@ export function CriticalStockTable({
                     </td>
 
                     {/* Saldo Real */}
-                    <td className="py-3 px-3">
+                    <td className="py-2.5 px-3 text-right">
                       <span
-                        className={`font-data-tabular text-xs font-bold ${
+                        className={`font-mono text-xs font-semibold tabular-nums ${
                           isZerado
-                            ? 'text-error font-extrabold'
+                            ? 'text-red-600 dark:text-red-400'
                             : isCritico
-                            ? 'text-error'
+                            ? 'text-red-500'
                             : 'text-amber-600 dark:text-amber-400'
                         }`}
                       >
@@ -171,38 +185,41 @@ export function CriticalStockTable({
                     </td>
 
                     {/* Mínimo Requerido */}
-                    <td className="py-3 px-3">
-                      <span className="font-data-tabular text-xs text-on-surface-variant">
+                    <td className="py-2.5 px-3 text-right">
+                      <span className="font-mono text-xs text-on-surface-variant tabular-nums">
                         {item.estoqueSeguranca.toLocaleString('pt-BR')} {item.unidade}
                       </span>
                     </td>
 
-                    {/* Status Badge */}
-                    <td className="py-3 px-3">
+                    {/* Status Indicador */}
+                    <td className="py-2.5 px-3 text-center">
                       {isZerado ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-[10.5px] bg-error text-on-error font-bold">
+                        <span className="inline-flex items-center gap-1 font-mono text-[11px] text-red-600 dark:text-red-400 font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0" />
                           Esgotado
                         </span>
                       ) : isCritico ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-[10.5px] bg-error-container text-on-error-container font-semibold">
+                        <span className="inline-flex items-center gap-1 font-mono text-[11px] text-red-500 font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                           Crítico
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-sm text-[10.5px] bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-medium">
-                          Abaixo Mín.
+                        <span className="inline-flex items-center gap-1 font-mono text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                          Abaixo mín.
                         </span>
                       )}
                     </td>
 
                     {/* Ação Direta */}
-                    <td className="py-3 px-4 sm:px-5 text-right">
+                    <td className="py-2.5 px-4 text-right">
                       <button
                         type="button"
                         onClick={() => onAdicionarEntrada(item)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface font-label-md text-xs font-semibold transition-all cursor-pointer active:scale-95 shadow-sm"
-                        title={`Registrar entrada expressa de ${item.nome}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container-lowest hover:bg-surface-container text-on-surface border border-outline-variant/40 text-xs font-medium transition-colors cursor-pointer"
+                        title={`Registrar entrada de ${item.nome}`}
                       >
-                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500" />
                         <span>+ Entrada Rápida</span>
                       </button>
                     </td>

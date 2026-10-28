@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { ProgressBarBiColor } from '@/web/components/ui/ProgressBarBiColor';
 
 export interface CategoryBalanceCardProps {
@@ -37,10 +37,10 @@ export function CategoryBalanceCard({
   const regulares = Math.max(0, totalItens - totalAtencao);
   const alertProgressColor =
     variant === 'error'
-      ? 'bg-error'
+      ? 'bg-red-500'
       : variant === 'warning'
       ? 'bg-amber-500'
-      : 'bg-primary';
+      : 'bg-zinc-600';
 
   return (
     <div
@@ -57,56 +57,34 @@ export function CategoryBalanceCard({
             }
           : undefined
       }
-      className={`bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/25 flex flex-col justify-between transition-colors ${
+      className={`bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/40 flex flex-col justify-between transition-colors shadow-2xs ${
         onClick
-          ? 'cursor-pointer hover:border-outline-variant/50 hover:bg-surface-container-low/40'
+          ? 'cursor-pointer hover:border-outline-variant hover:bg-surface-container-low/50'
           : ''
       } ${className}`}
     >
       <div>
         {/* Cabeçalho da Categoria com Chip e Status */}
-        <div className="flex items-center justify-between mb-2">
-          {categoryNumber ? (
-            <span className="text-xs text-secondary font-medium">
-              {categoryNumber}
-            </span>
-          ) : (
-            <span className="text-xs text-secondary font-medium">
-              Família fabril
-            </span>
-          )}
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="font-mono text-[11px] text-on-surface-variant font-medium">
+            {categoryNumber || 'Família fabril'}
+          </span>
 
           {percentRuptura > 0 ? (
-            <span
-              className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md font-medium ${
-                variant === 'error'
-                  ? 'text-error bg-error-container/40'
-                  : variant === 'warning'
-                  ? 'text-amber-800 bg-amber-100 dark:text-amber-300 dark:bg-amber-950/60'
-                  : 'text-primary bg-secondary-container'
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  variant === 'error'
-                    ? 'bg-error'
-                    : variant === 'warning'
-                    ? 'bg-amber-500'
-                    : 'bg-primary'
-                }`}
-              />
-              {percentRuptura}% em atenção
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-on-surface-variant">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              {percentRuptura}% atenção
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs text-tertiary bg-tertiary-fixed/20 px-2 py-0.5 rounded-md font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
-              Regular
+            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-500">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+              100% regular
             </span>
           )}
         </div>
 
         {/* Nome da Categoria e Descrição */}
-        <h3 className="font-headline-md text-base sm:text-lg text-on-surface font-bold tracking-tight">
+        <h3 className="font-headline-md text-base text-on-surface font-semibold tracking-tight">
           {title}
         </h3>
         <p className="font-body-sm text-xs text-on-surface-variant mb-3 line-clamp-1">
@@ -115,7 +93,7 @@ export function CategoryBalanceCard({
 
         {/* Numeral Tabular Grande de Itens Cadastrados */}
         <div className="flex items-baseline gap-1.5 mb-2.5">
-          <span className="font-kpi-value text-2xl sm:text-[28px] text-on-surface font-extrabold tracking-tight">
+          <span className="font-kpi-value text-2xl text-on-surface font-bold tracking-tight">
             {totalItens}
           </span>
           <span className="font-body-sm text-xs text-on-surface-variant">
@@ -123,51 +101,43 @@ export function CategoryBalanceCard({
           </span>
         </div>
 
-        {/* Barra de Progresso Bi-Tonal (Alerta vs Regular) */}
+        {/* Barra de Progresso Fina e Discreta (2px) */}
         <ProgressBarBiColor
           percentAlert={percentRuptura}
           alertColor={alertProgressColor}
-          regularColor="bg-tertiary"
-          heightClass="h-2"
+          regularColor="bg-zinc-300 dark:bg-zinc-700"
+          heightClass="h-1.5"
           className="mb-2"
         />
 
         {/* Submétricas de Ruptura vs Regular */}
-        <div className="flex items-center justify-between font-label-sm text-[11px] text-on-surface-variant">
+        <div className="flex items-center justify-between font-mono text-[11px] text-on-surface-variant">
           {totalAtencao > 0 ? (
-            <span
-              className={`flex items-center gap-1 font-bold ${
-                variant === 'error'
-                  ? 'text-error'
-                  : variant === 'warning'
-                  ? 'text-amber-700 dark:text-amber-400'
-                  : 'text-primary'
-              }`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
+              <AlertCircle className="w-3 h-3" />
               {totalCriticos > 0
-                ? `${totalCriticos} em nível crítico`
-                : `${totalAbaixoMinimo} abaixo do mínimo`}
+                ? `${totalCriticos} críticos`
+                : `${totalAbaixoMinimo} abaixo do mín.`}
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-tertiary font-bold">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1 text-zinc-500 font-normal">
+              <CheckCircle2 className="w-3 h-3" />
               Sem rupturas
             </span>
           )}
 
-          <span className="text-tertiary font-semibold">
+          <span className="text-on-surface-variant font-normal">
             {regulares} regulares
           </span>
         </div>
       </div>
 
-      {/* Caixa de Métrica de Rodapé */}
-      <div className="mt-4 pt-2.5 bg-surface-container-low px-3 py-2 rounded-lg flex items-center justify-between border border-outline-variant/20">
-        <span className="font-label-sm text-[11px] text-on-surface-variant">
+      {/* Métrica de Rodapé em Linha Limpa (sem caixa aninhada) */}
+      <div className="mt-3.5 pt-2.5 border-t border-outline-variant/30 flex items-center justify-between text-xs">
+        <span className="text-on-surface-variant font-medium">
           {footerLabel}
         </span>
-        <span className="font-data-tabular text-xs font-bold text-on-surface">
+        <span className="font-mono font-semibold text-on-surface">
           {footerValue}
         </span>
       </div>
