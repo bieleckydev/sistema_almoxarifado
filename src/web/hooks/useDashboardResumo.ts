@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/core/services/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { isPedidoAtrasado, type StatusPedido } from '@/core/domain/pedido.schema';
 import { type AbaEstoque } from '../data/mock-almoxarifado';
 
@@ -134,15 +134,14 @@ export function useDashboardResumo() {
         const d = new Date();
         const offset = d.getTimezoneOffset() * 60000;
         const hojeISO = new Date(d.getTime() - offset).toISOString().slice(0, 10);
+        const inicioHoje = `${hojeISO}T00:00:00.000Z`;
 
-        const movsSnap = await getDocs(collection(db, 'movements'));
-        movsSnap.forEach((doc) => {
-          const data = doc.data();
-          const dataMov = String(data.dataMovimentacao || '');
-          if (dataMov.startsWith(hojeISO)) {
-            totalMovsHoje += 1;
-          }
-        });
+        const qMovs = query(
+          collection(db, 'movements'),
+          where('dataMovimentacao', '>=', inicioHoje)
+        );
+        const movsSnap = await getDocs(qMovs);
+        totalMovsHoje = movsSnap.size;
       } catch (err) {
         console.warn('Erro ao carregar movimentações de hoje:', err);
       }

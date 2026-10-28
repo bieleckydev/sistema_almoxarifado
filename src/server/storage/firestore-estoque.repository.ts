@@ -347,18 +347,17 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       if (filtros?.tipo) {
         query = query.where('tipo', '==', filtros.tipo);
       }
+      if (filtros?.dataInicio) {
+        query = query.where('dataMovimentacao', '>=', filtros.dataInicio);
+      }
+      if (filtros?.dataFim) {
+        query = query.where('dataMovimentacao', '<=', filtros.dataFim);
+      }
 
       const snap = await query.get();
       let lista: Movimentacao[] = snap.docs.map((d) =>
         movimentacaoFromFirestore(d.id, d.data())
       );
-
-      if (filtros?.dataInicio) {
-        lista = lista.filter((m) => m.dataMovimentacao >= filtros.dataInicio!);
-      }
-      if (filtros?.dataFim) {
-        lista = lista.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
-      }
 
       lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
 
