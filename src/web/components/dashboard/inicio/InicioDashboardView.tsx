@@ -61,17 +61,15 @@ export function InicioDashboardView({
 
   return (
     <div className="flex-1 flex flex-col min-w-0 animate-fade-in pb-10">
-      {/* 1. Barra de Comando e Status Superior estilo Stitch */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-5 sm:p-6 rounded-xl shadow-sm border border-outline-variant/30 mb-6">
+      {/* 1. Barra de Informação Operacional Superior */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-5 sm:p-6 rounded-xl border border-outline-variant/30 mb-6">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded font-label-sm text-[11px] bg-primary/10 text-primary font-bold uppercase tracking-wider">
-              WMS Shopfloor Control
-            </span>
-            <span className="text-outline-variant font-label-sm text-xs">•</span>
-            <span className="text-on-surface-variant font-body-sm text-xs flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-tertiary-fixed" />
-              Terminal Sincronizado
+          <div className="flex items-center gap-2 font-body-sm text-xs text-on-surface-variant">
+            <span className="font-semibold text-primary">Controle operacional</span>
+            <span className="text-outline-variant">•</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-primary/70" />
+              Terminal conectado
             </span>
           </div>
 
@@ -169,43 +167,40 @@ export function InicioDashboardView({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Categoria 01: Matéria-Prima */}
+          {/* Matéria-Prima */}
           <CategoryBalanceCard
-            categoryNumber="Categoria 01"
             title={METADADOS_ABAS.mp.titulo}
             subtitle={METADADOS_ABAS.mp.subtitulo}
             totalItens={resumo?.estoque.mp.totalItens ?? 0}
             totalCriticos={resumo?.estoque.mp.criticos ?? 0}
             totalAbaixoMinimo={resumo?.estoque.mp.abaixoMinimo ?? 0}
-            footerLabel="Lead-time médio reposição:"
-            footerValue="4.2 dias"
+            footerLabel="Itens com saldo regular:"
+            footerValue={`${Math.max(0, (resumo?.estoque.mp.totalItens ?? 0) - (resumo?.estoque.mp.abaixoMinimo ?? 0))} itens`}
             variant="error"
             onClick={() => onNavegar('mp')}
           />
 
-          {/* Categoria 02: Materiais Improdutivos */}
+          {/* Materiais Improdutivos */}
           <CategoryBalanceCard
-            categoryNumber="Categoria 02"
             title={METADADOS_ABAS.imp.titulo}
             subtitle={METADADOS_ABAS.imp.subtitulo}
             totalItens={resumo?.estoque.imp.totalItens ?? 0}
             totalCriticos={resumo?.estoque.imp.criticos ?? 0}
             totalAbaixoMinimo={resumo?.estoque.imp.abaixoMinimo ?? 0}
-            footerLabel="Valor estimado em catálogo:"
-            footerValue="R$ 42.500,00"
+            footerLabel="Itens com saldo regular:"
+            footerValue={`${Math.max(0, (resumo?.estoque.imp.totalItens ?? 0) - (resumo?.estoque.imp.abaixoMinimo ?? 0))} itens`}
             variant="warning"
             onClick={() => onNavegar('imp')}
           />
 
-          {/* Categoria 03: Peças & Componentes */}
+          {/* Peças & Componentes */}
           <CategoryBalanceCard
-            categoryNumber="Categoria 03"
             title={METADADOS_ABAS.motos.titulo}
             subtitle={METADADOS_ABAS.motos.subtitulo}
             totalItens={resumo?.estoque.motos.totalItens ?? 0}
             totalCriticos={resumo?.estoque.motos.criticos ?? 0}
             totalAbaixoMinimo={resumo?.estoque.motos.abaixoMinimo ?? 0}
-            footerLabel="Aguardando faturamento:"
+            footerLabel="Pedidos a entregar:"
             footerValue={`${resumo?.vendas.totalAEntregar ?? 0} pedidos`}
             variant="primary"
             onClick={() => onNavegar('motos')}

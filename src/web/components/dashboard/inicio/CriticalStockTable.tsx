@@ -40,15 +40,12 @@ export function CriticalStockTable({
   return (
     <div
       id="tabela-criticos"
-      className={`bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col justify-between ${className}`}
+      className={`bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden flex flex-col justify-between ${className}`}
     >
       {/* Cabeçalho com Filtros de Categoria */}
       <div className="p-4 sm:p-5 bg-surface-container-low/60 border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75" />
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-error" />
-          </span>
+          <span className="w-2.5 h-2.5 rounded-full bg-error shrink-0" />
           <div>
             <h2 className="font-headline-sm text-sm sm:text-base text-on-surface font-bold">
               Itens em Ruptura Imediata no Almoxarifado

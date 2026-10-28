@@ -20,7 +20,7 @@ export function RecentActivityFeed({
 
   return (
     <div
-      className={`bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-4 sm:p-5 flex flex-col justify-between ${className}`}
+      className={`bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-4 sm:p-5 flex flex-col justify-between ${className}`}
     >
       <div>
         {/* Cabeçalho do Feed */}

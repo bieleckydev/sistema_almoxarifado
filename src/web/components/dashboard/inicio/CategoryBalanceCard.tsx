@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { ProgressBarBiColor } from '@/web/components/ui/ProgressBarBiColor';
 
 export interface CategoryBalanceCardProps {
-  categoryNumber: string;
+  categoryNumber?: string;
   title: string;
   subtitle: string;
   totalItens: number;
@@ -35,14 +35,6 @@ export function CategoryBalanceCard({
   const percentRuptura =
     totalItens > 0 ? Math.round((totalAtencao / totalItens) * 100) : 0;
   const regulares = Math.max(0, totalItens - totalAtencao);
-
-  const topBorderColor =
-    variant === 'error'
-      ? 'bg-error'
-      : variant === 'warning'
-      ? 'bg-amber-500'
-      : 'bg-primary';
-
   const alertProgressColor =
     variant === 'error'
       ? 'bg-error'
@@ -65,27 +57,30 @@ export function CategoryBalanceCard({
             }
           : undefined
       }
-      className={`bg-surface-container-lowest p-4 sm:p-5 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between relative overflow-hidden transition-all ${
+      className={`bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/25 flex flex-col justify-between transition-colors ${
         onClick
-          ? 'cursor-pointer hover:border-outline hover:shadow-md active:scale-[0.99]'
+          ? 'cursor-pointer hover:border-outline-variant/50 hover:bg-surface-container-low/40'
           : ''
       } ${className}`}
     >
-      {/* Barra de destaque superior estilo Stitch MD3 */}
-      <div className={`absolute top-0 left-0 right-0 h-1 ${topBorderColor}`} />
-
       <div>
         {/* Cabeçalho da Categoria com Chip e Status */}
         <div className="flex items-center justify-between mb-2">
-          <span className="font-label-sm uppercase tracking-wider text-outline font-bold text-[10.5px]">
-            {categoryNumber}
-          </span>
+          {categoryNumber ? (
+            <span className="text-xs text-secondary font-medium">
+              {categoryNumber}
+            </span>
+          ) : (
+            <span className="text-xs text-secondary font-medium">
+              Família fabril
+            </span>
+          )}
 
           {percentRuptura > 0 ? (
             <span
-              className={`inline-flex items-center gap-1.5 font-label-sm text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+              className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md font-medium ${
                 variant === 'error'
-                  ? 'text-error bg-error-container/60'
+                  ? 'text-error bg-error-container/40'
                   : variant === 'warning'
                   ? 'text-amber-800 bg-amber-100 dark:text-amber-300 dark:bg-amber-950/60'
                   : 'text-primary bg-secondary-container'
@@ -100,12 +95,12 @@ export function CategoryBalanceCard({
                     : 'bg-primary'
                 }`}
               />
-              {percentRuptura}% em Alerta
+              {percentRuptura}% em atenção
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 font-label-sm text-[11px] text-tertiary bg-tertiary-fixed/30 px-2 py-0.5 rounded-full font-semibold">
+            <span className="inline-flex items-center gap-1 text-xs text-tertiary bg-tertiary-fixed/20 px-2 py-0.5 rounded-md font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
-              100% Em Dia
+              Regular
             </span>
           )}
         </div>
