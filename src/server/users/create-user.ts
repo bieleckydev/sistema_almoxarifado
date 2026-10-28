@@ -235,6 +235,17 @@ export async function createManagedUser(
   try {
     authUser = await dependencies.auth.createUser(buildAuthenticationUser(command));
   } catch (error) {
+    const isEmailAlreadyExists =
+      (error instanceof Error && 'code' in error && error.code === 'auth/email-already-exists') ||
+      (error instanceof Error && error.message.includes('email-already-exists'));
+
+    const isCredentialsError =
+      error instanceof Error &&
+      (error.message.includes('Could not load the default credentials') ||
+        error.message.includes('The default Firebase app does not have credentials') ||
+        error.message.includes('credential') ||
+        error.message.includes('metadata server'));
+
     try {
       await operationReference.update({
         status: 'FAILED',
@@ -248,8 +259,21 @@ export async function createManagedUser(
         { cause: operationError }
       );
     }
+
+    if (isEmailAlreadyExists) {
+      throw new UserCreationConflictError('O e-mail informado já está cadastrado no sistema.');
+    }
+
+    if (isCredentialsError) {
+      throw new UserCreationError(
+        'Credenciais de serviço do Firebase Admin (FIREBASE_ADMIN_CLIENT_EMAIL / FIREBASE_ADMIN_PRIVATE_KEY) não estão configuradas nas variáveis de ambiente do servidor.',
+        undefined,
+        { cause: error }
+      );
+    }
+
     throw new UserCreationError(
-      'Não foi possível criar o usuário no Authentication.',
+      `Não foi possível criar o usuário no Authentication: ${error instanceof Error ? error.message : String(error)}`,
       undefined,
       { cause: error }
     );

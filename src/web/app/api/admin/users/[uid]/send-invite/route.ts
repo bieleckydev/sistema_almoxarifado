@@ -16,7 +16,7 @@ export async function POST(request: Request, context: UserRouteContext) {
       async sendInvite(input: {
         recipientEmail: string;
         recipientName: string;
-        inviteLink: string;
+        resetLink: string;
       }) {
         const endpoint = process.env.USER_EMAIL_DELIVERY_URL?.trim();
         if (!endpoint) {

@@ -218,19 +218,29 @@ export function toErrorResponse(error: unknown): NextResponse {
     return NextResponse.json({ error: (error as Error).message }, { status: 403 });
   }
 
-  // Erro com statusCode explícito (ex: 401 de autenticação)
+  // Erro com statusCode explícito (ex: 401 de autenticação, 409 de conflito)
   if (error instanceof Error && 'statusCode' in error) {
     const statusCode = (error as any).statusCode;
     if (typeof statusCode === 'number' && statusCode >= 400 && statusCode < 600) {
-      return NextResponse.json({ error: error.message }, { status: statusCode });
+      return NextResponse.json(
+        { error: error.message, message: error.message },
+        { status: statusCode }
+      );
     }
   }
 
   // Erro interno não tratado (500 Internal Server Error)
-  // Detalhes ficam só no log do servidor; nunca expor mensagens internas ao cliente.
   console.error('Erro interno na API:', error);
+  const mensagemAmigavel =
+    error instanceof Error &&
+    (error.message.includes('credential') ||
+      error.message.includes('Firebase') ||
+      error.message.includes('credenciais'))
+      ? error.message
+      : 'Erro interno ao processar a solicitação.';
+
   return NextResponse.json(
-    { error: 'Erro interno ao processar a solicitação.' },
+    { error: mensagemAmigavel, message: mensagemAmigavel },
     { status: 500 }
   );
 }

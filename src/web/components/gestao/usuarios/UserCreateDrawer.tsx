@@ -109,7 +109,9 @@ export function UserCreateDrawer({
       onClose();
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : 'Falha ao cadastrar novo usuário no sistema.';
+        (err as any)?.response?.data?.error ||
+        (err as any)?.response?.data?.message ||
+        (err instanceof Error ? err.message : 'Falha ao cadastrar novo usuário no sistema.');
       setErroValidacao(errorMsg);
       toast(errorMsg, { type: 'error' });
     }

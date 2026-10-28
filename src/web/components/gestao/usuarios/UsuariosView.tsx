@@ -109,7 +109,10 @@ export function UsuariosView({ onNovoUsuario }: UsuariosViewProps) {
       }
       refetch();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao alterar status do usuário.';
+      const msg =
+        (err as any)?.response?.data?.error ||
+        (err as any)?.response?.data?.message ||
+        (err instanceof Error ? err.message : 'Erro ao alterar status do usuário.');
       toast(msg, { type: 'error' });
     }
   };
@@ -119,7 +122,10 @@ export function UsuariosView({ onNovoUsuario }: UsuariosViewProps) {
       await enviarConvite(u.id);
       toast(`Convite reenviado com sucesso para ${u.email}!`, { type: 'success' });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha ao reenviar convite.';
+      const msg =
+        (err as any)?.response?.data?.error ||
+        (err as any)?.response?.data?.message ||
+        (err instanceof Error ? err.message : 'Falha ao reenviar convite.');
       toast(msg, { type: 'error' });
     }
   };
@@ -129,7 +135,10 @@ export function UsuariosView({ onNovoUsuario }: UsuariosViewProps) {
       await redefinirSenha(u.id);
       toast(`E-mail de redefinição de senha enviado para ${u.email}!`, { type: 'success' });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha ao solicitar redefinição de senha.';
+      const msg =
+        (err as any)?.response?.data?.error ||
+        (err as any)?.response?.data?.message ||
+        (err instanceof Error ? err.message : 'Falha ao solicitar redefinição de senha.');
       toast(msg, { type: 'error' });
     }
   };
@@ -150,7 +159,10 @@ export function UsuariosView({ onNovoUsuario }: UsuariosViewProps) {
       setMotivoMudancaPapel('');
       refetch();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao alterar papel.';
+      const msg =
+        (err as any)?.response?.data?.error ||
+        (err as any)?.response?.data?.message ||
+        (err instanceof Error ? err.message : 'Erro ao alterar papel.');
       toast(msg, { type: 'error' });
     } finally {
       setIsProcessandoPapel(false);
