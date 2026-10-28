@@ -2,6 +2,7 @@ import { NotaFiscal, ItemNotaFiscal } from '../domain/nfe.schema';
 import { Movimentacao } from '../domain/movimentacao.schema';
 import { IEstoqueRepository } from '../storage/estoque.repository.interface';
 import { calcularNovoSaldo } from './estoque-calculator';
+import { calcularCustoMedioPonderado } from './custo-medio';
 import { normalizarCodigoItem } from '../utils/formatters';
 
 export class NotaFiscalJaEfetivadaError extends Error {
@@ -215,8 +216,18 @@ export class NFeEntradaService {
         createdAt: dataHora,
       };
 
-      // Atualiza saldo do produto e persiste movimentação na auditoria
-      await this.repository.atualizarSaldoItem(itemEstoque.id, novoSaldo);
+      // Atualiza saldo e custo médio ponderado do produto e persiste movimentação na auditoria
+      if (itemNota.valorUnitario && itemNota.valorUnitario > 0) {
+        const novoCusto = calcularCustoMedioPonderado(
+          saldoAnterior,
+          itemEstoque.custoUnitario || 0,
+          quantidadeEntrada,
+          itemNota.valorUnitario
+        );
+        await this.repository.atualizarSaldoECustoItem(itemEstoque.id, novoSaldo, novoCusto);
+      } else {
+        await this.repository.atualizarSaldoItem(itemEstoque.id, novoSaldo);
+      }
       const movPersistida = await this.repository.registrarMovimentacao(movimentacao);
 
       movimentacoesCriadas.push(movPersistida);

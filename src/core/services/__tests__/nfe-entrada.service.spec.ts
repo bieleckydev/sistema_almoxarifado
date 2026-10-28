@@ -124,6 +124,23 @@ describe('4.3 — Workflow de Efetivação de Entrada por NFe (NFeEntradaService
     assert.equal(extratoTubo[0].documentoFiscalId, notaFiscalAprovada.chaveAcesso);
   });
 
+  it('deve recalcular o custo unitário médio do produto com base no valor unitário faturado na NF-e', async () => {
+    // Tubo inicial: 100 un a R$ 5,00
+    await repository.salvarItem({
+      ...itemTubo,
+      estoqueAtual: 100,
+      custoUnitario: 5.0,
+    });
+
+    // NF com 1000 un a R$ 10,00
+    // Custo médio esperado: ((100 * 5) + (1000 * 10)) / 1100 = 10500 / 1100 = R$ 9,55
+    await service.efetivarEntrada(notaFiscalAprovada);
+
+    const tuboAtualizado = await repository.buscarItemPorId(itemTubo.id);
+    assert.equal(tuboAtualizado?.estoqueAtual, 1100);
+    assert.equal(tuboAtualizado?.custoUnitario, 9.55);
+  });
+
   it('deve impedir efetivação de Nota Fiscal já arquivada', async () => {
     const notaArquivada: NotaFiscal = {
       ...notaFiscalAprovada,

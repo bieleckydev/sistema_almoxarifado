@@ -95,6 +95,31 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       assert.equal(itemAtualizado?.estoqueAtual, 150);
     });
 
+    it('deve recalcular e persistir o custo médio ponderado quando valorUnitario for informado', async () => {
+      // Configura item inicial com 10 un a R$ 50,00
+      const itemInicial = await repo.buscarItemPorId('item-2');
+      assert.ok(itemInicial);
+      await repo.salvarItem({
+        ...itemInicial,
+        estoqueAtual: 10,
+        custoUnitario: 50,
+      });
+
+      // Entrada de 10 un a R$ 100,00
+      // Custo médio esperado: ((10 * 50) + (10 * 100)) / 20 = 1500 / 20 = R$ 75,00
+      await service.executarEntrada({
+        itemId: 'item-2',
+        tipo: 'ENTRADA_COMPRA',
+        quantidade: 10,
+        valorUnitario: 100,
+        fornecedor: 'Fornecedor Aço Nobre',
+      });
+
+      const itemAtualizado = await repo.buscarItemPorId('item-2');
+      assert.equal(itemAtualizado?.estoqueAtual, 20);
+      assert.equal(itemAtualizado?.custoUnitario, 75);
+    });
+
     it('deve rejeitar entrada para item inexistente', async () => {
       await assert.rejects(
         () =>

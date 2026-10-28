@@ -20,6 +20,7 @@ import {
   SaldoInsuficienteError,
 } from './estoque-calculator';
 import { IEstoqueRepository } from '../storage/estoque.repository.interface';
+import { calcularCustoMedioPonderado } from './custo-medio';
 import { NotaFiscal } from '../domain/nfe.schema';
 import {
   NFeEntradaService,
@@ -203,6 +204,17 @@ export class MovimentacaoService {
       observacao: validado.observacoes,
       createdAt: agora,
     };
+
+    if (validado.valorUnitario !== undefined && validado.valorUnitario > 0) {
+      const novoCusto = calcularCustoMedioPonderado(
+        saldoAnterior,
+        item.custoUnitario || 0,
+        validado.quantidade,
+        validado.valorUnitario
+      );
+      await this.repository.atualizarSaldoECustoItem(item.id, saldoResultante, novoCusto);
+      return this.repository.registrarMovimentacao(movimentacao);
+    }
 
     if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
       return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao);
