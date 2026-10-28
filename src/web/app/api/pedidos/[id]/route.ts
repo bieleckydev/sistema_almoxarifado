@@ -83,7 +83,18 @@ export async function PATCH(request: Request, context: RouteContext) {
         }
         const itemIds = [...quantidadePorItem.keys()];
         const itemRefs = itemIds.map((itemId) => db.collection('items').doc(itemId));
-        const itemSnaps = await Promise.all(itemRefs.map((ref) => tx.get(ref)));
+        const clientRef = db.collection('clients').doc(pedido.clienteId);
+        const [itemSnaps, clientSnap] = await Promise.all([
+          Promise.all(itemRefs.map((ref) => tx.get(ref))),
+          tx.get(clientRef),
+        ]);
+
+        const clientData = (clientSnap.data() || {}) as Record<string, unknown>;
+        const clienteNome =
+          (typeof clientData.nome === 'string' && clientData.nome.trim()) ||
+          (typeof clientData.razaoSocial === 'string' && clientData.razaoSocial.trim()) ||
+          (typeof clientData.nomeFantasia === 'string' && clientData.nomeFantasia.trim()) ||
+          pedido.clienteId;
 
         // 1. Valida todos os itens antes de qualquer escrita.
         const operacoes = itemIds.map((itemId, i) => {
@@ -116,9 +127,9 @@ export async function PATCH(request: Request, context: RouteContext) {
             saldoAnterior: op.saldoAnterior,
             saldoResultante: op.saldoResultante,
             dataMovimentacao: now,
-            destinatario: pedido.clienteId,
+            destinatario: clienteNome,
             status: 'ENTREGUE',
-            observacao: `Expedição automática para Pedido #${numero}`,
+            observacao: `Expedição automática para Pedido #${numero} (${clienteNome})`,
             createdAt: now,
           };
           tx.create(db.collection('movements').doc(movimentacao.id), movimentacaoToFirestore(movimentacao));

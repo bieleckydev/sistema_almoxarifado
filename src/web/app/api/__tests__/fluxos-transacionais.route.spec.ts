@@ -95,6 +95,7 @@ describe('Fluxos transacionais das rotas (pedidos, faturamento, requisições)',
       const lista = corpo.dados ?? corpo.movimentacoes ?? corpo;
       assert.ok(Array.isArray(lista) && lista.length === 1, 'extrato deve conter a expedição');
       assert.equal(lista[0].saldoResultante, 85);
+      assert.equal(lista[0].destinatario, 'Metalúrgica Horizonte');
     });
 
     it('não entrega pedido cancelado', async () => {
