@@ -19,7 +19,10 @@
     "migration:validate-resolutions": "tsx src/migration/validate-resolution-decisions.ts",
     "migration:duplicate-resolution": "tsx src/migration/duplicate-resolution-report.ts",
     "test:integration:admin-api": "node scripts/integration-admin-api.mjs",
-    "test:rules": "firebase emulators:exec --only firestore \"node scripts/test-firestore-rules.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore \"node scripts/test-firestore-rules.mjs\"",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "npx playwright install chromium --with-deps",
+    "test:e2e:chrome": "playwright test --project=chrome"
   },
   "repository": {
     "type": "git",
