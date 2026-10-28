@@ -4,6 +4,7 @@ import {
   UnidadeMedidaSchema,
   StatusEstoqueSchema,
 } from './types';
+import { arredondar3 } from './quantidade';
 
 /**
  * Regex para validação de códigos padronizados do almoxarifado:
@@ -151,7 +152,7 @@ export function converterEmbalagemParaUnidade(
   if (fatorConversao <= 0) {
     throw new Error('O fator de conversão deve ser maior que zero');
   }
-  return quantidadeEmbalagens * fatorConversao;
+  return arredondar3(quantidadeEmbalagens * fatorConversao);
 }
 
 /**
@@ -170,7 +171,13 @@ export function converterUnidadeParaEmbalagem(
   if (fatorConversao <= 0) {
     throw new Error('O fator de conversão deve ser maior que zero');
   }
-  const embalagensFechadas = Math.floor(quantidadeUnidades / fatorConversao);
-  const sobraAvulsa = quantidadeUnidades % fatorConversao;
-  return { embalagensFechadas, sobraAvulsa };
+  // Protege contra resíduos decimais e imprecisão de ponto flutuante IEEE 754
+  const ratio = quantidadeUnidades / fatorConversao;
+  const embalagensFechadas = Math.floor(arredondar3(ratio));
+  const sobraCalculada = arredondar3(quantidadeUnidades - embalagensFechadas * fatorConversao);
+  const sobraAvulsa = Math.abs(sobraCalculada) < 1e-9 ? 0 : sobraCalculada;
+  return {
+    embalagensFechadas,
+    sobraAvulsa,
+  };
 }

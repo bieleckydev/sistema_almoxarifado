@@ -436,6 +436,15 @@ describe('1.2 — ItemSchema e Regras de Negócio de Itens', () => {
     assert.equal(divisao.embalagensFechadas, 4);
     assert.equal(divisao.sobraAvulsa, 5);
 
+    // Proteção contra imprecisão de ponto flutuante IEEE 754 (BUG-11)
+    const divisaoFlutuante = converterUnidadeParaEmbalagem(0.3, 0.1);
+    assert.equal(divisaoFlutuante.embalagensFechadas, 3);
+    assert.equal(divisaoFlutuante.sobraAvulsa, 0);
+
+    const divisaoFracionada = converterUnidadeParaEmbalagem(10.25, 5);
+    assert.equal(divisaoFracionada.embalagensFechadas, 2);
+    assert.equal(divisaoFracionada.sobraAvulsa, 0.25);
+
     // Rejeição de valores negativos
     assert.throws(() => converterEmbalagemParaUnidade(-1, 10));
     assert.throws(() => converterUnidadeParaEmbalagem(10, 0));
