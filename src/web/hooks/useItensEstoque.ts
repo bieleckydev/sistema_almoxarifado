@@ -37,6 +37,23 @@ export interface UseItensEstoqueResult {
 /**
  * Converte um Item retornado da API para a estrutura enriquecida DashboardItem da UI.
  */
+function sanitizarTimestamp(val: unknown): string | undefined {
+  if (!val) return undefined;
+  if (typeof val === 'string') return val;
+  if (val instanceof Date) return val.toISOString();
+  if (typeof val === 'object' && val !== null) {
+    const obj = val as { seconds?: number; nanoseconds?: number; toDate?: () => Date };
+    if (typeof obj.toDate === 'function') {
+      return obj.toDate().toISOString();
+    }
+    if (typeof obj.seconds === 'number') {
+      const ns = typeof obj.nanoseconds === 'number' ? obj.nanoseconds : 0;
+      return new Date(obj.seconds * 1000 + ns / 1000000).toISOString();
+    }
+  }
+  return undefined;
+}
+
 function itemToDashboardItem(item: Item): DashboardItem {
   let aba: AbaEstoque = 'mp';
   if (item.tipo === 'IMPRODUTIVO_CONSUMIVEL') {
@@ -63,8 +80,13 @@ function itemToDashboardItem(item: Item): DashboardItem {
         ? { Observações: item.observacoes }
         : {};
 
+  const createdAt = sanitizarTimestamp(item.createdAt);
+  const updatedAt = sanitizarTimestamp(item.updatedAt);
+
   return {
     ...item,
+    createdAt,
+    updatedAt,
     aba,
     categoria,
     capacidadeMaxima,
