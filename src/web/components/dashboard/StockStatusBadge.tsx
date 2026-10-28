@@ -25,18 +25,18 @@ const STATUS_CONFIG: Record<
 > = {
   ok: {
     rotulo: 'Normal',
-    dotColor: 'bg-tertiary',
-    badgeStyle: 'text-secondary bg-surface-container border-transparent font-medium',
+    dotColor: 'bg-zinc-400',
+    badgeStyle: 'text-on-surface-variant bg-surface-container/50 border-outline-variant/30 font-normal',
   },
   low: {
     rotulo: 'Abaixo do Mínimo',
     dotColor: 'bg-amber-500',
-    badgeStyle: 'text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/80 border-amber-300/40 font-semibold',
+    badgeStyle: 'text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20 font-medium',
   },
   crit: {
     rotulo: 'Crítico / Ruptura',
-    dotColor: 'bg-error',
-    badgeStyle: 'text-on-error-container bg-error-container border-transparent font-bold',
+    dotColor: 'bg-red-500',
+    badgeStyle: 'text-red-700 dark:text-red-400 bg-red-500/10 border-red-500/20 font-medium',
   },
 };
 

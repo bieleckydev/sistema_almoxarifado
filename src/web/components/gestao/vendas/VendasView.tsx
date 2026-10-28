@@ -284,16 +284,16 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
       {alertaEstoque && (
         <div
           role="alert"
-          className="p-3.5 rounded-xl bg-error-container text-on-error-container text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in fade-in"
+          className="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 border-l-4 border-l-red-600 text-on-surface text-xs font-medium flex items-center justify-between gap-3 shadow-2xs animate-in fade-in"
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-error" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
             <span>{alertaEstoque}</span>
           </div>
           <button
             type="button"
             onClick={() => setAlertaEstoque(null)}
-            className="p-1 rounded-md hover:bg-black/10 cursor-pointer"
+            className="p-1 rounded-md text-zinc-500 hover:text-on-surface hover:bg-surface-container cursor-pointer transition-colors"
             aria-label="Fechar alerta"
           >
             <X className="w-3.5 h-3.5" />

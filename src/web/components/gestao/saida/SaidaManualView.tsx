@@ -502,21 +502,21 @@ export function SaidaManualView({
                 </label>
                 {itemSelecionado && (
                   <span
-                    className={`font-label-sm text-[11px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${
+                    className={`font-mono text-[11px] px-2 py-0.5 rounded-md font-medium flex items-center gap-1.5 border ${
                       itemSelecionado.estoqueAtual <= 0
-                        ? 'bg-error-container text-on-error-container'
+                        ? 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20'
                         : itemSelecionado.estoqueAtual <= itemSelecionado.estoqueSeguranca
-                        ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-                        : 'bg-tertiary/10 text-tertiary'
+                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20'
+                        : 'bg-surface-container/60 text-on-surface-variant border-outline-variant/30'
                     }`}
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
                         itemSelecionado.estoqueAtual <= 0
-                          ? 'bg-error'
+                          ? 'bg-red-500'
                           : itemSelecionado.estoqueAtual <= itemSelecionado.estoqueSeguranca
                           ? 'bg-amber-500'
-                          : 'bg-tertiary'
+                          : 'bg-zinc-400'
                       }`}
                     />
                     Saldo Atual:{' '}

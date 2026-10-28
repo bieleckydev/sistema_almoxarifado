@@ -27,12 +27,12 @@ export function StockFilterToolbar({
 }: StockFilterToolbarProps) {
   return (
     <div
-      className={`rounded-xl bg-surface-container-lowest p-3 border border-outline-variant/30 flex flex-col gap-3 mb-4 ${className}`}
+      className={`rounded-lg bg-surface-container-lowest p-3 border border-outline-variant/40 flex flex-col gap-2.5 mb-4 shadow-2xs ${className}`}
     >
       {/* Linha Superior: Campo de Busca com Lupa e Atalho */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
           <input
             type="search"
             value={busca}
@@ -44,39 +44,39 @@ export function StockFilterToolbar({
             }}
             placeholder={placeholder}
             aria-label="Buscar material no almoxarifado"
-            className="w-full pl-9 pr-12 py-2 text-sm rounded-lg border border-outline-variant/20 bg-surface-container-low text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:border-primary/50 transition-colors"
+            className="w-full pl-8 pr-12 py-1.5 text-xs rounded-md border border-outline-variant/40 bg-surface-container-low/40 text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:bg-surface-container-lowest focus:border-outline transition-colors"
           />
           {busca ? (
             <button
               type="button"
               onClick={() => onBuscaChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-outline hover:text-on-surface hover:bg-surface-container cursor-pointer transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-zinc-500 hover:text-on-surface hover:bg-surface-container cursor-pointer transition-colors"
               aria-label="Limpar termo de busca"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <span className="hidden md:inline absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-outline-variant bg-surface-container px-1.5 py-0.5 rounded pointer-events-none">
+            <span className="hidden md:inline absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-on-surface-variant/70 bg-surface-container px-1 py-0.5 rounded pointer-events-none">
               ESC
             </span>
           )}
         </div>
 
         {totalFiltrados !== undefined && (
-          <div className="flex items-center gap-1.5 text-xs text-secondary shrink-0 font-medium self-end sm:self-center">
+          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0 font-mono self-end sm:self-center">
             <span>Exibindo:</span>
-            <span className="font-data-tabular font-bold text-on-surface px-2 py-0.5 rounded-md bg-surface-container tabular-nums">
-              {totalFiltrados.toLocaleString('pt-BR')} {totalFiltrados === 1 ? 'registro' : 'registros'}
+            <span className="font-semibold text-on-surface px-1.5 py-0.5 rounded bg-surface-container tabular-nums">
+              {totalFiltrados.toLocaleString('pt-BR')} {totalFiltrados === 1 ? 'item' : 'itens'}
             </span>
           </div>
         )}
       </div>
 
       {/* Linha Inferior: Segmentação de Situação Operacional */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-outline-variant/20">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-outline-variant/20">
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filtro de situação do estoque">
-          <span className="text-xs text-secondary font-medium mr-1 hidden sm:inline-flex items-center gap-1">
-            <Filter className="w-3 h-3" /> Situação:
+          <span className="text-xs text-on-surface-variant font-medium mr-1 hidden sm:inline-flex items-center gap-1">
+            <Filter className="w-3 h-3 text-zinc-500" /> Situação:
           </span>
 
           {/* Segment: Todos */}
@@ -84,19 +84,19 @@ export function StockFilterToolbar({
             type="button"
             onClick={() => onFiltroSituacaoChange('todos')}
             aria-pressed={filtroSituacao === 'todos'}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'todos'
-                ? 'bg-primary text-on-primary'
-                : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs'
+                : 'bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
             }`}
           >
             <span>Todos</span>
             {contagemPorSituacao?.todos !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded font-mono tabular-nums ${
+                className={`text-[10.5px] px-1 py-0.2 rounded font-mono tabular-nums ${
                   filtroSituacao === 'todos'
-                    ? 'bg-on-primary/20 text-on-primary'
-                    : 'bg-surface-container text-secondary'
+                    ? 'bg-white/20 text-white dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-on-surface-variant'
                 }`}
               >
                 {contagemPorSituacao.todos}
@@ -115,20 +115,20 @@ export function StockFilterToolbar({
               }
             }}
             aria-pressed={filtroSituacao === 'ok'}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'ok'
-                ? 'bg-tertiary text-on-tertiary'
-                : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs'
+                : 'bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-tertiary shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
             <span>Normal</span>
             {contagemPorSituacao?.ok !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded font-mono tabular-nums ${
+                className={`text-[10.5px] px-1 py-0.2 rounded font-mono tabular-nums ${
                   filtroSituacao === 'ok'
-                    ? 'bg-on-tertiary/20 text-on-tertiary'
-                    : 'bg-surface-container text-secondary'
+                    ? 'bg-white/20 text-white dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-on-surface-variant'
                 }`}
               >
                 {contagemPorSituacao.ok}
@@ -147,20 +147,20 @@ export function StockFilterToolbar({
               }
             }}
             aria-pressed={filtroSituacao === 'low'}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'low'
-                ? 'bg-amber-600 dark:bg-amber-500 text-white'
-                : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs'
+                : 'bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
             <span>Abaixo do Mínimo</span>
             {contagemPorSituacao?.low !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded font-mono tabular-nums ${
+                className={`text-[10.5px] px-1 py-0.2 rounded font-mono tabular-nums ${
                   filtroSituacao === 'low'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-surface-container text-secondary'
+                    ? 'bg-white/20 text-white dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-amber-600 dark:text-amber-400 font-semibold'
                 }`}
               >
                 {contagemPorSituacao.low}
@@ -179,20 +179,20 @@ export function StockFilterToolbar({
               }
             }}
             aria-pressed={filtroSituacao === 'crit'}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
               filtroSituacao === 'crit'
-                ? 'bg-error text-on-primary'
-                : 'bg-surface-container-low hover:bg-surface-container text-error'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs'
+                : 'bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-error shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
             <span>Crítico / Ruptura</span>
             {contagemPorSituacao?.crit !== undefined && (
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold tabular-nums ${
+                className={`text-[10.5px] px-1 py-0.2 rounded font-mono tabular-nums ${
                   filtroSituacao === 'crit'
-                    ? 'bg-on-primary/20 text-on-primary'
-                    : 'bg-error-container text-on-error-container'
+                    ? 'bg-white/20 text-white dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-red-600 dark:text-red-400 font-semibold'
                 }`}
               >
                 {contagemPorSituacao.crit}

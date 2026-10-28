@@ -430,9 +430,9 @@ export function StockTable({
                         type="button"
                         onClick={() => (onRegistrarEntrada ? onRegistrarEntrada(item) : onSelectItem(item))}
                         title="Adicionar entrada de material"
-                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-semibold text-on-primary-container bg-primary-container hover:bg-primary hover:text-on-primary transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs font-medium text-on-surface bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 transition-colors cursor-pointer"
                       >
-                        <ArrowUpRight className="w-3 h-3 shrink-0" />
+                        <ArrowUpRight className="w-3 h-3 text-zinc-500 shrink-0" />
                         <span>+ Entrada</span>
                       </button>
 
@@ -441,13 +441,13 @@ export function StockTable({
                         disabled={item.estoqueAtual <= 0}
                         onClick={() => (onRegistrarSaida ? onRegistrarSaida(item) : onSelectItem(item))}
                         title={item.estoqueAtual <= 0 ? 'Sem saldo disponível para baixa' : 'Retirar / Baixa para produção'}
-                        className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-medium transition-colors ${
+                        className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs font-medium transition-colors border border-outline-variant/30 ${
                           item.estoqueAtual <= 0
-                            ? 'bg-surface-container text-outline opacity-50 cursor-not-allowed'
+                            ? 'bg-surface-container text-on-surface-variant/40 opacity-50 cursor-not-allowed'
                             : 'bg-surface-container hover:bg-surface-container-high text-on-surface cursor-pointer'
                         }`}
                       >
-                        <ArrowDownRight className="w-3 h-3 shrink-0" />
+                        <ArrowDownRight className="w-3 h-3 text-zinc-500 shrink-0" />
                         <span>Retirar</span>
                       </button>
 
@@ -457,13 +457,13 @@ export function StockTable({
                           disabled={item.estoqueAtual <= 0}
                           onClick={() => onRegistrarBaixaRapida(item)}
                           title={item.estoqueAtual <= 0 ? 'Sem saldo disponível' : 'Adicionar ao carrinho de retirada em lote'}
-                          className={`inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
+                          className={`inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors border border-outline-variant/30 ${
                             item.estoqueAtual <= 0
-                              ? 'bg-surface-container text-outline opacity-50 cursor-not-allowed'
-                              : 'text-amber-800 dark:text-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200/50 dark:border-amber-800/40 cursor-pointer'
+                              ? 'bg-surface-container text-on-surface-variant/40 opacity-50 cursor-not-allowed'
+                              : 'text-on-surface bg-surface-container hover:bg-surface-container-high cursor-pointer'
                           }`}
                         >
-                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <ShoppingCart className="w-3.5 h-3.5 text-zinc-500" />
                         </button>
                       )}
                     </div>
