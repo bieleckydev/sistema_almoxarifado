@@ -123,6 +123,9 @@ export function podeExecutar(role: UserRole | undefined | null, acao: AcaoPermis
  * Telas não listadas em TELAS_PERMISSAO (como 'inicio', 'mp', 'imp', 'motos') são acessíveis por padrão.
  */
 export function podeAcessarTela(role: UserRole | undefined | null, tela: string): boolean {
+  if (tela === 'usuarios') {
+    return role === 'mestre';
+  }
   const permExigida = TELAS_PERMISSAO[tela];
   if (!permExigida) return true;
   // Na tela de requisições, quem pode aprovar ou entregar também deve conseguir acessar para gerenciar

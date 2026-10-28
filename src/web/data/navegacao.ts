@@ -11,6 +11,7 @@ import {
   Receipt,
   Users,
   ShieldCheck,
+  UserCog,
   type LucideIcon,
 } from 'lucide-react';
 import type { AbaEstoque } from './mock-almoxarifado';
@@ -31,6 +32,7 @@ import type { UserRole } from '@/core/domain/user.schema';
  * - fat: Faturamento e emissão de notas
  * - clientes: Cadastro de clientes, fornecedores e parceiros
  * - aud: Auditoria e log operacional
+ * - usuarios: Gestão administrativa de usuários e acessos
  */
 export type TelaOuAba3 =
   | 'inicio'
@@ -44,7 +46,8 @@ export type TelaOuAba3 =
   | 'vendas'
   | 'fat'
   | 'clientes'
-  | 'aud';
+  | 'aud'
+  | 'usuarios';
 
 export interface ItemMenuDef {
   chave: TelaOuAba3;
@@ -161,6 +164,11 @@ export const MENU_ESTRUTURA_3_0: GrupoMenuDef[] = [
         nome: 'Auditoria',
         icon: ShieldCheck,
         permissao: 'auditar',
+      },
+      {
+        chave: 'usuarios',
+        nome: 'Usuários do Sistema',
+        icon: UserCog,
       },
     ],
   },

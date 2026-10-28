@@ -115,7 +115,8 @@ export type TelaOuAba =
   | 'terc'
   | 'req'
   | 'inv'
-  | 'aud';
+  | 'aud'
+  | 'usuarios';
 
 /**
  * Módulos corporativos introduzidos na V5 (Ribbon / Sidebar de Módulos).
@@ -297,6 +298,7 @@ export function obterModuloDeTela(
   if (view === 'vendas' || view === 'fat') return 'vendas';
   if (view === 'saida') return moduloAtual === 'compras' ? 'compras' : 'estoque';
   if (view === 'clientes') return moduloAtual === 'compras' ? 'compras' : 'vendas';
+  if (view === 'usuarios') return 'inicio';
   return 'estoque';
 }
 

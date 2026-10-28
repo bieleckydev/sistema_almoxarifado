@@ -105,6 +105,13 @@ describe('Permissões Operacionais do Protótipo 3.0 (permissions.ts)', () => {
     assert.equal(podeAcessarTela('requisitante', 'req'), true);
     assert.equal(podeAcessarTela('operador', 'req'), true);
     assert.equal(podeAcessarTela('admin', 'req'), true);
+
+    // Gestão de Usuários (exclusivo para mestre)
+    assert.equal(podeAcessarTela('mestre', 'usuarios'), true);
+    assert.equal(podeAcessarTela('admin', 'usuarios'), false);
+    assert.equal(podeAcessarTela('operador', 'usuarios'), false);
+    assert.equal(podeAcessarTela('requisitante', 'usuarios'), false);
+    assert.equal(podeAcessarTela(null, 'usuarios'), false);
   });
 
   it('ROTULO_PAPEL deve fornecer os nomes exatos do Protótipo 3.0', () => {
