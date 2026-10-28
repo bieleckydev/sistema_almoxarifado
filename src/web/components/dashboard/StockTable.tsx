@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Printer,
   DollarSign,
+  ShoppingCart,
 } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { formatarTextoFalta } from '@/web/utils/pluralization';
@@ -452,6 +453,22 @@ export function StockTable({
                         <ArrowDownRight className="w-3 h-3 shrink-0" />
                         <span>Retirar</span>
                       </button>
+
+                      {onRegistrarBaixaRapida && (
+                        <button
+                          type="button"
+                          disabled={item.estoqueAtual <= 0}
+                          onClick={() => onRegistrarBaixaRapida(item)}
+                          title={item.estoqueAtual <= 0 ? 'Sem saldo disponível' : 'Adicionar ao carrinho de retirada em lote'}
+                          className={`inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
+                            item.estoqueAtual <= 0
+                              ? 'bg-surface-container text-outline opacity-50 cursor-not-allowed'
+                              : 'text-amber-800 dark:text-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200/50 dark:border-amber-800/40 cursor-pointer'
+                          }`}
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

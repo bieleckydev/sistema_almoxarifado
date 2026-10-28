@@ -18,6 +18,17 @@ export interface ItemCarrinhoBaixa {
 }
 
 /**
+ * Representação mínima de um item aceito para inserção no carrinho.
+ */
+export type ItemParaCarrinho = {
+  id: string;
+  codigo: string;
+  descricao: string;
+  unidade: UnidadeMedida;
+  estoqueAtual: number;
+};
+
+/**
  * Estado e ações da Store de Baixa Rápida / Carrinho de Retirada.
  */
 export interface BaixaRapidaState {
@@ -34,7 +45,7 @@ export interface BaixaRapidaState {
   definirObservacaoGeral: (observacao: string) => void;
 
   // Ações do Carrinho
-  adicionarItem: (item: Item, quantidade?: number) => void;
+  adicionarItem: (item: Item | ItemParaCarrinho, quantidade?: number) => void;
   removerItem: (itemId: string) => void;
   atualizarQuantidade: (itemId: string, quantidade: number) => void;
   incrementarItem: (itemId: string, incremento?: number) => void;
@@ -89,7 +100,7 @@ export const useBaixaRapidaStore = create<BaixaRapidaState>((set, get) => ({
     set({ observacaoGeral });
   },
 
-  adicionarItem: (item: Item, quantidade = 1) => {
+  adicionarItem: (item: Item | ItemParaCarrinho, quantidade = 1) => {
     const qtdAdicionar = Math.max(1, quantidade);
     set((state) => {
       const itemExistenteIndex = state.itens.findIndex((i) => i.itemId === item.id);

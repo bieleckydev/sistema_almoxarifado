@@ -17,6 +17,8 @@ import type { GlobalSearchResult } from '@/web/hooks/useGlobalSearch';
 import { useAuthStore } from '@/core/store/useAuthStore';
 import { usePeriodoGlobal } from '@/web/hooks/usePeriodoGlobal';
 import { podeExecutar, ROTULO_PAPEL } from '@/core/domain/permissions';
+import { useBaixaRapidaStore } from '@/core/store/useBaixaRapidaStore';
+import { ShoppingCart } from 'lucide-react';
 
 export interface AppTopHeaderProps {
   telaAtiva: TelaOuAba;
@@ -24,6 +26,7 @@ export interface AppTopHeaderProps {
   onSelectSearchResult: (result: GlobalSearchResult) => void;
   onRegistrarEntrada?: () => void;
   onRegistrarSaida?: () => void;
+  onAbrirBaixaRapida?: () => void;
   totalAlertas?: number;
   className?: string;
 }
@@ -40,11 +43,13 @@ export function AppTopHeader({
   onSelectSearchResult,
   onRegistrarEntrada,
   onRegistrarSaida,
+  onAbrirBaixaRapida,
   totalAlertas = 0,
   className = '',
 }: AppTopHeaderProps) {
   const { user } = useAuthStore();
   const { periodo, textoIntervalo } = usePeriodoGlobal();
+  const totalItensCarrinho = useBaixaRapidaStore((s) => s.itens.length);
 
   const podeMover = podeExecutar(user?.role, 'mover');
   const isAbaEstoque = telaAtiva === 'mp' || telaAtiva === 'imp' || telaAtiva === 'motos';
@@ -132,6 +137,22 @@ export function AppTopHeader({
               >
                 <ArrowUpFromLine className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">- Saída</span>
+              </button>
+            )}
+            {onAbrirBaixaRapida && (
+              <button
+                type="button"
+                onClick={onAbrirBaixaRapida}
+                className="relative inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-amber-800 dark:text-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200/50 dark:border-amber-800/40 transition-colors cursor-pointer shadow-2xs"
+                title="Abrir carrinho de retirada em lote para o chão de fábrica"
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                <span className="hidden lg:inline">Baixa em Lote</span>
+                {totalItensCarrinho > 0 && (
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-600 text-white leading-none">
+                    {totalItensCarrinho}
+                  </span>
+                )}
               </button>
             )}
           </div>
