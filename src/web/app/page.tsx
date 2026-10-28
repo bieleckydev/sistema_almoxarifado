@@ -21,6 +21,7 @@ import { useAuthStore } from '@/core/store/useAuthStore';
 import { usePermissao } from '@/web/hooks/usePermissao';
 import { AppSidebar } from '@/web/components/layout/AppSidebar';
 import { AppTopHeader } from '@/web/components/layout/AppTopHeader';
+import { MobileBottomNav } from '@/web/components/layout/MobileBottomNav';
 import { StockMetricsCards } from '@/web/components/dashboard/StockMetricsCards';
 import { StockFilterToolbar } from '@/web/components/dashboard/StockFilterToolbar';
 import { StockTable } from '@/web/components/dashboard/StockTable';
@@ -61,6 +62,7 @@ export default function AlmoxarifadoDashboardPage() {
   // Navegação 3.0: Módulo contextual e tela ativa
   const [moduloAtivo, setModuloAtivo] = useState<ModuloCorporativo>('inicio');
   const [telaAtiva, setTelaAtiva] = useState<TelaOuAba>('inicio');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [termoBusca, setTermoBusca] = useState('');
   const [filtroSituacao, setFiltroSituacao] = useState<'todos' | StatusCriticidade>('todos');
   const [itemSelecionado, setItemSelecionado] = useState<DashboardItem | null>(null);
@@ -365,6 +367,8 @@ export default function AlmoxarifadoDashboardPage() {
           telaAtiva={telaAtiva}
           onSelectModulo={handleSelectModulo}
           onSelectTela={handleSelectTela}
+          isMobileOpen={isMobileMenuOpen}
+          onCloseMobile={() => setIsMobileMenuOpen(false)}
           totalCriticos={totalCriticosGerais}
           contagemCriticos={contagemCriticosPorAba}
           pedidosAtrasadosCount={resumoGeral?.vendas.atrasados ?? 0}
@@ -382,11 +386,12 @@ export default function AlmoxarifadoDashboardPage() {
             onRegistrarEntrada={() => setPickerDrawerState({ isOpen: true, tipo: 'Entrada' })}
             onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
             onAbrirBaixaRapida={() => setIsBaixaRapidaOpen(true)}
+            onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
             totalAlertas={totalCriticosGerais}
           />
 
           {/* Conteúdo Principal Full-Width de Alta Densidade */}
-          <main className="flex-1 w-full px-4 py-4 md:px-7 md:py-6 flex flex-col min-w-0">
+          <main className="flex-1 w-full px-3 py-3 sm:px-4 sm:py-4 md:px-7 md:py-6 pb-24 md:pb-6 flex flex-col min-w-0">
             {telaAtiva === 'inicio' ? (
               /* 1. Hub Executivo / Dashboard Inicial */
               <InicioDashboardView
@@ -736,6 +741,13 @@ export default function AlmoxarifadoDashboardPage() {
           onSuccess={() => {
             refetch();
           }}
+        />
+
+        {/* Barra de Navegação Inferior Móvel para Tablets e Celulares */}
+        <MobileBottomNav
+          telaAtiva={telaAtiva}
+          onSelectTela={handleSelectTela}
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
         {/* Notificações Toast Operacionais Flutuantes */}

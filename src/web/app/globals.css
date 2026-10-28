@@ -186,9 +186,28 @@ body {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+  overflow-x: hidden;
+}
+
+/* Previne auto-zoom indesejado no iOS Safari ao tocar em campos de formulário */
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="search"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Utilitário para dispositivos móveis com home indicator (iOS / Android) */
+.safe-area-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 /* Tipografia Stitch Enterprise */

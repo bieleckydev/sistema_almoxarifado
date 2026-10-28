@@ -8,6 +8,7 @@ import {
   Bell,
   ChevronRight,
   ShoppingCart,
+  Menu,
 } from 'lucide-react';
 import { type TelaOuAba, METADADOS_ABAS } from '@/web/data/mock-almoxarifado';
 import { GlobalSearchInput } from './GlobalSearchInput';
@@ -25,6 +26,7 @@ export interface AppTopHeaderProps {
   onRegistrarEntrada?: () => void;
   onRegistrarSaida?: () => void;
   onAbrirBaixaRapida?: () => void;
+  onToggleMobileMenu?: () => void;
   totalAlertas?: number;
   className?: string;
 }
@@ -42,6 +44,7 @@ export function AppTopHeader({
   onRegistrarEntrada,
   onRegistrarSaida,
   onAbrirBaixaRapida,
+  onToggleMobileMenu,
   totalAlertas = 0,
   className = '',
 }: AppTopHeaderProps) {
@@ -65,10 +68,20 @@ export function AppTopHeader({
 
   return (
     <header
-      className={`sticky top-0 z-20 w-full h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between px-4 sm:px-6 gap-3 transition-colors shadow-[0_1px_8px_rgba(0,0,0,0.03)] ${className}`}
+      className={`sticky top-0 z-20 w-full h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-3 transition-colors shadow-[0_1px_8px_rgba(0,0,0,0.03)] ${className}`}
     >
-      {/* 1. Lado Esquerdo: Seletor de Galpão & Campo de Busca Unificada */}
-      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+      {/* 1. Lado Esquerdo: Botão Menu Mobile, Seletor de Galpão & Campo de Busca Unificada */}
+      <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+        {/* Botão de Menu para Mobile / Tablets */}
+        <button
+          type="button"
+          onClick={onToggleMobileMenu}
+          className="flex md:hidden p-2 rounded-lg text-on-surface hover:bg-surface-container transition-colors cursor-pointer shrink-0"
+          aria-label="Abrir menu de navegação"
+        >
+          <Menu className="w-5 h-5 text-on-surface" />
+        </button>
+
         {/* Seletor de Galpão / Unidade Operacional */}
         <div
           className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface select-none shrink-0 border border-outline-variant/20 hover:bg-surface-container transition-colors cursor-pointer"

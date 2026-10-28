@@ -19,6 +19,7 @@ import {
   ChevronRight,
   LogOut,
   Radio,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -72,6 +73,8 @@ export interface AppSidebarProps {
    */
   isMini?: boolean;
   onToggleMini?: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
   className?: string;
 }
 
@@ -232,6 +235,8 @@ export function AppSidebar({
   requisicoesPendentesCount = 0,
   isMini: isMiniProp,
   onToggleMini: onToggleMiniProp,
+  isMobileOpen = false,
+  onCloseMobile,
   className = '',
 }: AppSidebarProps) {
   const router = useRouter();
@@ -299,25 +304,39 @@ export function AppSidebar({
   })).filter((grupo) => grupo.itens.length > 0);
 
   return (
-    <aside
-      className={`bg-inverse-surface text-inverse-on-surface flex flex-col justify-between shrink-0 transition-all duration-200 border-r border-white/5 md:min-h-screen z-30 shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${isMini ? 'w-full md:w-[68px] p-2' : 'w-full md:w-64 p-3.5'
-        } ${className}`}
-      aria-label="Menu Operacional WMS"
-    >
-      <div className="flex flex-col gap-4">
-        {/* Cabeçalho da Marca estilo Stitch MD3 (AL Apex Log / WMS Enterprise) */}
+    <>
+      {/* Backdrop overlay para mobile */}
+      {isMobileOpen && (
         <div
-          className={`flex items-center pb-3 border-b border-white/10 ${isMini ? 'justify-center' : 'justify-between px-1'
-            }`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* Logo Badge */}
-            <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-100 font-headline-sm font-bold text-xs shrink-0 shadow-xs">
-              R
-            </div>
+          role="presentation"
+          onClick={onCloseMobile}
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-xs transition-opacity"
+          aria-hidden="true"
+        />
+      )}
 
-            {!isMini && (
-              <div className="flex flex-col min-w-0">
+      <aside
+        className={`bg-inverse-surface text-inverse-on-surface flex flex-col justify-between shrink-0 transition-transform md:transition-all duration-200 border-r border-white/5 h-[100dvh] md:h-auto md:min-h-screen fixed md:sticky top-0 left-0 bottom-0 z-50 md:z-30 shadow-2xl md:shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        } ${
+          isMini ? 'w-72 md:w-[68px] p-3 md:p-2' : 'w-72 md:w-64 p-3.5'
+        } ${className}`}
+        aria-label="Menu Operacional WMS"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Cabeçalho da Marca estilo Stitch MD3 (AL Apex Log / WMS Enterprise) */}
+          <div
+            className={`flex items-center pb-3 border-b border-white/10 ${
+              isMini ? 'justify-between md:justify-center' : 'justify-between px-1'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              {/* Logo Badge */}
+              <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-100 font-headline-sm font-bold text-xs shrink-0 shadow-xs">
+                R
+              </div>
+
+              <div className={`flex flex-col min-w-0 ${isMini ? 'flex md:hidden' : 'flex'}`}>
                 <span className="font-headline-sm text-sm tracking-tight text-inverse-on-surface font-bold leading-none truncate">
                   Rhowert
                 </span>
@@ -325,24 +344,37 @@ export function AppSidebar({
                   Almoxarifado
                 </span>
               </div>
-            )}
-          </div>
+            </div>
 
-          <button
-            type="button"
-            id="modtog"
-            onClick={handleToggleMini}
-            title={isMini ? 'Expandir barra lateral' : 'Recolher barra lateral'}
-            aria-label={isMini ? 'Expandir barra lateral' : 'Recolher barra lateral'}
-            className="p-1 rounded-lg text-outline-variant hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
-          >
-            {isMini ? (
-              <ChevronRight className="w-4 h-4 text-primary-fixed" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
-            )}
-          </button>
-        </div>
+            <div className="flex items-center gap-1">
+              {/* Botão fechar drawer no mobile */}
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                title="Fechar menu lateral"
+                aria-label="Fechar menu lateral"
+                className="flex md:hidden p-1.5 rounded-lg text-outline-variant hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Botão expandir/recolher no desktop */}
+              <button
+                type="button"
+                id="modtog"
+                onClick={handleToggleMini}
+                title={isMini ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+                aria-label={isMini ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+                className="hidden md:flex p-1 rounded-lg text-outline-variant hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+              >
+                {isMini ? (
+                  <ChevronRight className="w-4 h-4 text-primary-fixed" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
 
         {/* Título de Seção */}
         {!isMini && (
@@ -386,6 +418,9 @@ export function AppSidebar({
                     type="button"
                     data-tela={item.tela}
                     onClick={() => {
+                      if (onCloseMobile) {
+                        onCloseMobile();
+                      }
                       if (onSelectModulo) {
                         onSelectModulo(item.moduloPai);
                       }
@@ -533,5 +568,6 @@ export function AppSidebar({
         )}
       </div>
     </aside>
+    </>
   );
 }

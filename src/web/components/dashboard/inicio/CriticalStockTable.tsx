@@ -106,7 +106,7 @@ export function CriticalStockTable({
 
       {/* Tabela de Alta Densidade Industrial */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left">
+        <table className="w-full text-left min-w-[540px]">
           <thead>
             <tr className="bg-surface-container-low/30 font-mono text-[11px] uppercase tracking-wider text-on-surface-variant border-b border-outline-variant/30">
               <th className="py-2.5 px-4 font-medium">SKU / Material</th>
