@@ -232,7 +232,7 @@ export function MovementFormDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Scrim / Backdrop */}
       <div
-        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -242,10 +242,10 @@ export function MovementFormDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={isEntrada ? 'Registrar entrada de material' : 'Registrar retirada para produção'}
-        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-200 shadow-2xl"
+        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-200"
       >
         {/* Cabeçalho */}
-        <div className="sticky top-0 bg-surface-container-lowest/95 backdrop-blur-md z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+        <div className="sticky top-0 bg-surface-container-lowest z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span
               className={`p-1.5 rounded-xl ${
@@ -433,7 +433,7 @@ export function MovementFormDrawer({
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`mt-4 w-full h-10 px-4 rounded-xl text-xs font-semibold text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 ${
+            className={`mt-4 w-full h-10 px-4 rounded-xl text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
               isEntrada
                 ? 'bg-tertiary hover:bg-tertiary/90 text-on-tertiary'
                 : 'bg-error hover:bg-error/90 text-on-error'

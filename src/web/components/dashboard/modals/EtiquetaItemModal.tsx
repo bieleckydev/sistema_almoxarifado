@@ -52,7 +52,7 @@ export function EtiquetaItemModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-inverse-surface/60 transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -62,7 +62,7 @@ export function EtiquetaItemModal({
         role="dialog"
         aria-modal="true"
         aria-label={`Etiqueta de identificação ${item.codigo}`}
-        className="relative w-full max-w-lg bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-2xl z-10 overflow-hidden flex flex-col"
+        className="relative w-full max-w-lg bg-surface-container-lowest border border-outline-variant/30 rounded-2xl z-10 overflow-hidden flex flex-col"
       >
         {/* Cabeçalho */}
         <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low">

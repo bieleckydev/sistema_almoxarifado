@@ -467,10 +467,10 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
       {notaParaCancelar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-inverse-surface/60"
             onClick={() => setNotaParaCancelar(null)}
           />
-          <div className="relative w-full max-w-sm bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-2xl z-10 animate-fade-in">
+          <div className="relative w-full max-w-sm bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 z-10 animate-fade-in">
             <div className="flex items-center gap-2.5 text-error mb-3">
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <h4 className="font-bold text-sm text-on-surface">Cancelar Nota Fiscal</h4>

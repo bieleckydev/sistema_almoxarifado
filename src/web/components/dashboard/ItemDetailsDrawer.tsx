@@ -116,9 +116,9 @@ export function ItemDetailsDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Scrim / Backdrop escurecido com blur sutil */}
+      {/* Scrim / Backdrop escurecido */}
       <div
-        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -128,10 +128,10 @@ export function ItemDetailsDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={`Detalhes do produto ${item.descricao}`}
-        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250 shadow-2xl"
+        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
       >
         {/* Cabeçalho do Drawer */}
-        <div className="sticky top-0 bg-surface-container-lowest/95 backdrop-blur-md z-20 px-6 py-4 border-b border-outline-variant/20 flex items-start justify-between gap-4">
+        <div className="sticky top-0 bg-surface-container-lowest z-20 px-6 py-4 border-b border-outline-variant/20 flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1.5">
             <StockStatusBadge
               estoqueAtual={item.estoqueAtual}
@@ -388,10 +388,10 @@ export function ItemDetailsDrawer({
       {estornoModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-inverse-surface/60"
             onClick={() => setEstornoModal(null)}
           />
-          <div className="relative w-full max-w-sm bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-2xl z-10">
+          <div className="relative w-full max-w-sm bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 z-10">
             <div className="flex items-center gap-2.5 text-error mb-3">
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <h4 className="font-bold text-sm text-on-surface">Confirmar Estorno</h4>

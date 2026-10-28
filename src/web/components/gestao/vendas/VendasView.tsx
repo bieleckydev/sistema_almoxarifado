@@ -327,14 +327,14 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
           )}
         </div>
 
-        {/* Pílulas de Filtro de Situação */}
+        {/* Filtros Segmentados de Situação */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0" role="group" aria-label="Filtro de pedidos">
           <button
             type="button"
             onClick={() => setFiltroStatus('todos')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               filtroStatus === 'todos'
-                ? 'bg-primary text-on-primary shadow-xs'
+                ? 'bg-primary text-on-primary'
                 : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
             }`}
           >
@@ -344,9 +344,9 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
           <button
             type="button"
             onClick={() => setFiltroStatus('pendente')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               filtroStatus === 'pendente'
-                ? 'bg-primary-container text-on-primary-container shadow-xs'
+                ? 'bg-primary-container text-on-primary-container'
                 : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
             }`}
           >
@@ -356,9 +356,9 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
           <button
             type="button"
             onClick={() => setFiltroStatus('separado')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               filtroStatus === 'separado'
-                ? 'bg-tertiary text-on-tertiary shadow-xs'
+                ? 'bg-tertiary text-on-tertiary'
                 : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
             }`}
           >
@@ -368,9 +368,9 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
           <button
             type="button"
             onClick={() => setFiltroStatus('entregue')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               filtroStatus === 'entregue'
-                ? 'bg-surface-container-high text-on-surface shadow-xs'
+                ? 'bg-surface-container-high text-on-surface'
                 : 'bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface'
             }`}
           >
@@ -381,9 +381,9 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
             <button
               type="button"
               onClick={() => setFiltroStatus('atrasado')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1 ${
                 filtroStatus === 'atrasado'
-                  ? 'bg-error text-on-primary shadow-xs'
+                  ? 'bg-error text-on-primary'
                   : 'bg-error-container text-on-error-container'
               }`}
             >
@@ -396,9 +396,9 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
             <button
               type="button"
               onClick={() => setFiltroStatus('deficit')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1 ${
                 filtroStatus === 'deficit'
-                  ? 'bg-amber-600 text-white shadow-xs'
+                  ? 'bg-amber-600 text-white'
                   : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
               }`}
             >

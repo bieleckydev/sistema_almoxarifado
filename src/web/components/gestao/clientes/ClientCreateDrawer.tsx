@@ -258,7 +258,7 @@ export function ClientCreateDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Scrim / Backdrop escurecido */}
       <div
-        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -268,12 +268,12 @@ export function ClientCreateDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Novo cadastro comercial"
-        className="relative w-full max-w-2xl bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250 shadow-2xl"
+        className="relative w-full max-w-2xl bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
       >
         {/* 1. Cabeçalho Principal */}
-        <div className="sticky top-0 bg-surface-container-lowest/95 backdrop-blur-md z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between gap-4">
+        <div className="sticky top-0 bg-surface-container-lowest z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -281,9 +281,6 @@ export function ClientCreateDrawer({
                 <h2 className="font-headline text-lg font-bold text-on-surface leading-tight">
                   Novo Cadastro Comercial
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary-container/20 text-primary uppercase tracking-tight">
-                  WMS v4
-                </span>
               </div>
               <p className="text-xs text-on-surface-variant mt-0.5 font-normal">
                 Clientes, fornecedores e transportadoras homologadas no WMS

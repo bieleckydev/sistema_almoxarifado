@@ -110,7 +110,7 @@ export function QuickItemPickerDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Scrim / Backdrop */}
       <div
-        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -120,7 +120,7 @@ export function QuickItemPickerDrawer({
         role="dialog"
         aria-modal="true"
         aria-label={isEntrada ? 'Escolha o item para entrada' : 'Escolha o item para saída'}
-        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 animate-in slide-in-from-right duration-200 shadow-2xl"
+        className="relative w-full max-w-md bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 animate-in slide-in-from-right duration-200"
       >
         {/* Cabeçalho */}
         <div className="p-6 pb-4 border-b border-outline-variant/20 flex items-start justify-between gap-3 shrink-0">

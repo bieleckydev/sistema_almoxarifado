@@ -61,9 +61,9 @@ export function DetalhesTerceiroDrawer({
   if (!isOpen || !material) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex justify-end animate-fade-in">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 flex justify-end animate-fade-in">
       <div
-        className="w-full max-w-2xl bg-surface-container-lowest dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-outline-variant/30 animate-slide-left"
+        className="w-full max-w-2xl bg-surface-container-lowest dark:bg-slate-900 h-full flex flex-col border-l border-outline-variant/30 animate-slide-left"
         role="dialog"
         aria-modal="true"
       >
@@ -78,7 +78,7 @@ export function DetalhesTerceiroDrawer({
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   Ficha do Material sob Custódia
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                   Terceiros
                 </span>
               </div>

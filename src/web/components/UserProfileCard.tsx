@@ -19,7 +19,7 @@ export const UserProfileCard = ({ userId }: { userId: string }) => {
   if (!user) return null;
 
   return (
-    <div className="p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-sm max-w-md w-full">
+    <div className="p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/30 max-w-md w-full">
       <div className="flex items-center space-x-3 mb-3">
         <div className="w-9 h-9 rounded-xl bg-primary-container/10 border border-primary/20 text-primary flex items-center justify-center">
           <UserIcon className="w-4 h-4" />
@@ -36,7 +36,7 @@ export const UserProfileCard = ({ userId }: { userId: string }) => {
         type="button"
         onClick={() => updateName('Novo Nome Web')}
         disabled={isUpdating}
-        className="mt-3 flex items-center justify-center gap-2 w-full h-9 px-3 bg-primary hover:bg-primary/90 text-on-primary text-xs font-semibold rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
+        className="mt-3 flex items-center justify-center gap-2 w-full h-9 px-3 bg-primary hover:bg-primary/90 text-on-primary text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
       >
         <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
         <span>{isUpdating ? 'Atualizando...' : 'Atualizar Nome'}</span>

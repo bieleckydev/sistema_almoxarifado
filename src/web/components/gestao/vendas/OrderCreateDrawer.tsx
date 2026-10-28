@@ -305,7 +305,7 @@ export function OrderCreateDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Scrim / Backdrop escurecido */}
       <div
-        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-inverse-surface/60 transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -315,12 +315,12 @@ export function OrderCreateDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Novo pedido de venda"
-        className="relative w-full max-w-2xl bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250 shadow-2xl"
+        className="relative w-full max-w-2xl bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 overflow-y-auto animate-in slide-in-from-right duration-250"
       >
         {/* 1. Cabeçalho */}
-        <div className="sticky top-0 bg-surface-container-lowest/95 backdrop-blur-md z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between gap-4">
+        <div className="sticky top-0 bg-surface-container-lowest z-20 px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0">
               <ShoppingCart className="w-5 h-5" />
             </div>
             <div>
@@ -718,14 +718,14 @@ export function OrderCreateDrawer({
                 type="button"
                 onClick={onClose}
                 disabled={criarPedidoMutation.isPending}
-                className="h-10 px-4 rounded-xl text-xs font-medium text-on-surface hover:bg-surface-container border border-outline-variant/30 transition-all cursor-pointer"
+                className="h-10 px-4 rounded-xl text-xs font-medium text-on-surface hover:bg-surface-container border border-outline-variant/30 transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={criarPedidoMutation.isPending || itens.length === 0}
-                className="h-10 px-5 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-on-primary transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+                className="h-10 px-5 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-on-primary transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {criarPedidoMutation.isPending ? (
                   <>

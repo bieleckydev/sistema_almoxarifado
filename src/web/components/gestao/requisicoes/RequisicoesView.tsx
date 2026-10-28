@@ -387,8 +387,8 @@ export function RequisicoesView() {
 
       {/* Modal de Rejeição de Requisição */}
       {reqParaRejeitar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-2xl overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-surface-container-lowest border border-outline-variant/30 overflow-hidden animate-scale-up">
             <div className="p-4 sm:p-5 border-b border-outline-variant/20 flex items-center justify-between bg-error-container/20">
               <div className="flex items-center gap-2 text-error">
                 <XCircle className="w-5 h-5" />

@@ -204,9 +204,9 @@ export function BaixaRapidaDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop com blur suave */}
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-inverse-surface/60 backdrop-blur-xs transition-opacity animate-in fade-in cursor-pointer"
+        className="fixed inset-0 bg-inverse-surface/60 transition-opacity animate-in fade-in cursor-pointer"
         onClick={() => {
           if (!isSubmitting) onClose();
         }}
@@ -218,7 +218,7 @@ export function BaixaRapidaDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Carrinho de Retirada Rápida de Materiais"
-        className="relative w-full max-w-xl bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 animate-in slide-in-from-right duration-200 shadow-2xl"
+        className="relative w-full max-w-xl bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col h-full z-10 animate-in slide-in-from-right duration-200"
       >
         {/* Cabeçalho */}
         <div className="p-6 pb-4 border-b border-outline-variant/20 flex items-start justify-between gap-3 shrink-0">
@@ -558,7 +558,7 @@ export function BaixaRapidaDrawer({
               type="button"
               onClick={handleSubmeterBaixaLote}
               disabled={!prontoParaConfirmar || isSubmitting}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl text-on-primary bg-primary hover:bg-primary/90 transition-all cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl text-on-primary bg-primary hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

@@ -123,9 +123,9 @@ export function ReceberTerceiroDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex justify-end animate-fade-in">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 flex justify-end animate-fade-in">
       <div
-        className="w-full max-w-xl bg-surface-container-lowest dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-outline-variant/30 animate-slide-left"
+        className="w-full max-w-xl bg-surface-container-lowest dark:bg-slate-900 h-full flex flex-col border-l border-outline-variant/30 animate-slide-left"
         role="dialog"
         aria-modal="true"
       >
