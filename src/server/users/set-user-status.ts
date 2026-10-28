@@ -1,5 +1,3 @@
-import 'server-only';
-
 import type { Auth, UserRecord } from 'firebase-admin/auth';
 import type { Firestore } from 'firebase-admin/firestore';
 import {

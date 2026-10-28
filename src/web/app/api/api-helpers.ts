@@ -231,16 +231,10 @@ export function toErrorResponse(error: unknown): NextResponse {
 
   // Erro interno não tratado (500 Internal Server Error)
   console.error('Erro interno na API:', error);
-  const mensagemAmigavel =
-    error instanceof Error &&
-    (error.message.includes('credential') ||
-      error.message.includes('Firebase') ||
-      error.message.includes('credenciais'))
-      ? error.message
-      : 'Erro interno ao processar a solicitação.';
+  const mensagemErro = error instanceof Error ? error.message : 'Erro interno ao processar a solicitação.';
 
   return NextResponse.json(
-    { error: mensagemAmigavel, message: mensagemAmigavel },
+    { error: mensagemErro, message: mensagemErro },
     { status: 500 }
   );
 }

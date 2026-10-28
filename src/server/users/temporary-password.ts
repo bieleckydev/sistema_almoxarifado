@@ -1,5 +1,3 @@
-import 'server-only';
-
 import { randomBytes } from 'node:crypto';
 import type { Auth } from 'firebase-admin/auth';
 import type { Firestore } from 'firebase-admin/firestore';

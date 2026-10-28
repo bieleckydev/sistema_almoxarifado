@@ -1,5 +1,3 @@
-import 'server-only';
-
 import { FieldPath } from 'firebase-admin/firestore';
 import type {
   Firestore,
