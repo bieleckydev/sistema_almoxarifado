@@ -245,15 +245,12 @@ export function AppRibbonHeader({
         ))}
       </div>
 
-      {/* 3. Faixa Decorativa Tricolor Contínua (.rib::after) */}
-      <div
-        className="h-[3px] w-full"
-        style={{
-          background:
-            'linear-gradient(90deg, #4fa8e0 0%, #4fa8e0 55%, #d9372f 55%, #d9372f 78%, #f2b705 78%, #f2b705 100%)',
-        }}
-        aria-hidden="true"
-      />
+      {/* 3. Faixa Decorativa Tricolor Contínua */}
+      <div className="h-[3px] w-full flex" aria-hidden="true">
+        <span className="h-full bg-[#4fa8e0] w-[55%]" />
+        <span className="h-full bg-[#d9372f] w-[23%]" />
+        <span className="h-full bg-[#f2b705] w-[22%]" />
+      </div>
     </header>
   );
 }

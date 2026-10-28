@@ -154,12 +154,12 @@ export function StockMetricsCards({
           <span className="text-secondary font-medium text-xs">
             {totalAbaixoMinimo > 0 ? `${percentualAbaixo}% requer atenção` : 'Estoque equilibrado'}
           </span>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
             filtroAtivo === 'low'
               ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
               : 'bg-surface-container text-secondary'
           }`}>
-            {filtroAtivo === 'low' ? 'Ativo ✕' : `${percentualAbaixo}%`}
+            {filtroAtivo === 'low' ? 'Filtro ativo' : `${percentualAbaixo}%`}
           </span>
         </div>
       </button>
@@ -188,7 +188,7 @@ export function StockMetricsCards({
                 Ruptura Imediata
               </span>
               {totalCriticos > 0 && (
-                <span className="w-2 h-2 rounded-full bg-error animate-ping" />
+                <span className="w-2 h-2 rounded-full bg-error" />
               )}
             </div>
             <div className="mt-2 flex items-baseline gap-2">
@@ -208,12 +208,12 @@ export function StockMetricsCards({
           <span className="text-error font-semibold flex items-center gap-1 text-xs">
             {percentualCritico}% requer reposição
           </span>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
             filtroAtivo === 'crit'
               ? 'bg-error text-on-primary'
               : 'text-primary hover:underline'
           }`}>
-            {filtroAtivo === 'crit' ? 'Ativo ✕' : 'Filtrar →'}
+            {filtroAtivo === 'crit' ? 'Filtro ativo' : 'Filtrar'}
           </span>
         </div>
       </button>

@@ -26,11 +26,11 @@ export function PriorityAlertBanner({
 
   return (
     <div
-      className={`relative overflow-hidden bg-gradient-to-r from-error-container/40 via-surface-container-lowest to-surface-container-low border border-error/30 p-4 sm:p-5 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 ${className}`}
+      className={`relative overflow-hidden bg-error-container/20 border border-error/30 p-4 sm:p-5 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 ${className}`}
     >
       <div className="flex items-center gap-3.5">
-        <div className="w-12 h-12 rounded-xl bg-error text-on-error flex items-center justify-center shrink-0 shadow-sm">
-          <AlertCircle className="w-6 h-6 animate-pulse" />
+        <div className="w-10 h-10 rounded-lg bg-error text-on-error flex items-center justify-center shrink-0">
+          <AlertCircle className="w-5 h-5" />
         </div>
         <div>
           <div className="flex items-center gap-2 flex-wrap">

@@ -182,7 +182,7 @@ export function StockTable({
       >
         <table className="w-full text-left border-collapse min-w-[920px]">
           <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/20 shadow-xs">
-            <tr className="text-xs font-label-sm uppercase tracking-wider text-secondary select-none">
+            <tr className="text-xs font-medium text-secondary select-none">
               {/* Código SKU */}
               <th className="py-3 px-4 w-32 bg-surface-container-low">
                 <button

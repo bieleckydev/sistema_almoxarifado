@@ -211,7 +211,7 @@ export function StockFilterToolbar({
             }}
             className="text-xs text-primary hover:underline font-semibold cursor-pointer py-1"
           >
-            Limpar filtros ✕
+            Limpar filtros
           </button>
         )}
       </div>

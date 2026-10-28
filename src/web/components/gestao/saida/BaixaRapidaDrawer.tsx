@@ -267,7 +267,7 @@ export function BaixaRapidaDrawer({
           {/* Seção 1: Colaborador e Setor Destino */}
           <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-label-sm text-xs uppercase tracking-wider text-secondary font-semibold flex items-center gap-1.5">
+              <span className="text-xs text-secondary font-semibold flex items-center gap-1.5">
                 <Factory className="w-3.5 h-3.5 text-primary" />
                 1. Responsável pela Retirada
               </span>
@@ -318,7 +318,7 @@ export function BaixaRapidaDrawer({
 
           {/* Seção 2: Adicionar Materiais ao Carrinho */}
           <div className="space-y-2">
-            <span className="font-label-sm text-xs uppercase tracking-wider text-secondary font-semibold flex items-center gap-1.5">
+            <span className="text-xs text-secondary font-semibold flex items-center gap-1.5">
               <Package className="w-3.5 h-3.5 text-primary" />
               2. Adicionar Materiais ao Carrinho
             </span>
@@ -390,7 +390,7 @@ export function BaixaRapidaDrawer({
           {/* Seção 3: Lista de Materiais do Carrinho */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-label-sm text-xs uppercase tracking-wider text-secondary font-semibold">
+              <span className="text-xs text-secondary font-semibold">
                 3. Materiais Selecionados ({totalDiferentes} {totalDiferentes === 1 ? 'item' : 'itens'})
               </span>
               <span className="text-xs font-medium text-secondary">

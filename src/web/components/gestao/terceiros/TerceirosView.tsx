@@ -174,8 +174,8 @@ export function TerceirosView({ onNavegarFaturamento }: TerceirosViewProps) {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-surface-container-lowest dark:bg-slate-900 border border-outline-variant/30 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+        <div className="p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/30 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <ArrowRightLeft className="w-5 h-5" />
           </div>
           <div>

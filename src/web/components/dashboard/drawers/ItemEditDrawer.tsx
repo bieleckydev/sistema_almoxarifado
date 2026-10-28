@@ -305,7 +305,7 @@ export function ItemEditDrawer({
 
             {/* Especificações Técnicas Adicionais */}
             <div className="pt-2 border-t border-outline-variant/20">
-              <h3 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-semibold text-secondary mb-2">
                 Especificações Técnicas
               </h3>
               <div className="space-y-2">

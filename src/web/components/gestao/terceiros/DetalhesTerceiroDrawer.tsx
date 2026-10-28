@@ -140,7 +140,7 @@ export function DetalhesTerceiroDrawer({
 
           {/* Cards de Métricas e Totais Acumulados */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+            <h3 className="text-xs font-semibold text-secondary mb-2.5">
               Extrato Consolidado de Unidades ({material.unidade})
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -194,7 +194,7 @@ export function DetalhesTerceiroDrawer({
           {/* Histórico Cronológico de Movimentações */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <h3 className="text-xs font-semibold text-secondary">
                 Extrato Histórico de Movimentações ({movimentacoesDoMaterial.length})
               </h3>
               <button

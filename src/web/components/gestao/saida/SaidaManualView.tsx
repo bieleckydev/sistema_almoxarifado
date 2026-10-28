@@ -753,7 +753,7 @@ export function SaidaManualView({
         <div className="w-full overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[760px]">
             <thead>
-              <tr className="bg-surface-container-low text-secondary font-label-sm text-xs uppercase tracking-wider border-b border-outline-variant/20 select-none">
+              <tr className="bg-surface-container-low text-secondary text-xs font-medium border-b border-outline-variant/20 select-none">
                 <th className="py-2.5 px-4 font-semibold">Horário &amp; Operador</th>
                 <th className="py-2.5 px-4 font-semibold">Item &amp; Código SKU</th>
                 <th className="py-2.5 px-4 font-semibold">Tipo &amp; Setor</th>
@@ -896,7 +896,7 @@ export function SaidaManualView({
         <div className="p-3.5 bg-surface-container-low/50 border-b border-outline-variant/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="w-4 h-4 text-secondary" />
-            <h3 className="font-headline-sm text-xs font-bold text-on-surface uppercase tracking-wider">
+            <h3 className="font-headline-sm text-xs font-bold text-on-surface">
               Balanço Sintético de Materiais no Período
             </h3>
           </div>
