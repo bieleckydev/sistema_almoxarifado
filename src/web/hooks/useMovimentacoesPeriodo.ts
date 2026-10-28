@@ -88,6 +88,8 @@ export interface RegistrarMovimentacaoParams {
   tipo: 'Entrada' | 'Saída';
   quantidade: number;
   quem: string;
+  colaboradorId?: string;
+  setor?: string;
   observacao?: string;
   data: string; // YYYY-MM-DD
   info?: Record<string, string>;
@@ -278,10 +280,12 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
           dataMovimentacao: dataHoraIso,
         });
       } else {
+        const idColaborador = params.colaboradorId || params.quem.trim();
         return api.post('/movimentacoes/baixa-interna', {
           itemId: params.itemId,
           quantidade: params.quantidade,
-          colaboradorId: params.quem.trim() || 'PRODUCAO',
+          colaboradorId: idColaborador,
+          setor: params.setor,
           observacao: params.observacao?.trim() || undefined,
           dataMovimentacao: dataHoraIso,
         });

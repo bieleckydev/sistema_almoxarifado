@@ -37,6 +37,8 @@ import {
   UNIDADE_LABELS,
   METADADOS_ABAS,
 } from '@/web/data/mock-almoxarifado';
+import { ColaboradorSelect } from '@/web/components/common/ColaboradorSelect';
+import type { Colaborador } from '@/core/domain/colaborador.schema';
 
 export interface SaidaManualViewProps {
   onSelectItem?: (item: DashboardItem) => void;
@@ -73,6 +75,7 @@ export function SaidaManualView({
   const [itemId, setItemId] = useState<string>('');
   const [quantidade, setQuantidade] = useState<number>(1);
   const [quem, setQuem] = useState('Produção');
+  const [colaboradorSelecionado, setColaboradorSelecionado] = useState<Colaborador | null>(null);
   const [documentoOp, setDocumentoOp] = useState('');
   const [observacao, setObservacao] = useState('');
   const [erroForm, setErroForm] = useState<string | null>(null);
@@ -144,9 +147,16 @@ export function SaidaManualView({
       return;
     }
 
-    if (!quem.trim()) {
-      setErroForm('Informe o setor solicitante ou responsável.');
-      return;
+    if (tipoMov === 'Saída') {
+      if (!colaboradorSelecionado) {
+        setErroForm('Selecione o colaborador responsável pela retirada do material.');
+        return;
+      }
+    } else {
+      if (!quem.trim()) {
+        setErroForm('Informe o fornecedor ou procedência de entrada.');
+        return;
+      }
     }
 
     const unidadeFmt =
@@ -169,7 +179,9 @@ export function SaidaManualView({
         itemId: itemSelecionado.id,
         tipo: tipoMov,
         quantidade,
-        quem: quem.trim(),
+        quem: tipoMov === 'Saída' ? colaboradorSelecionado!.nome : quem.trim(),
+        colaboradorId: tipoMov === 'Saída' ? colaboradorSelecionado!.id : undefined,
+        setor: tipoMov === 'Saída' ? colaboradorSelecionado!.setor : undefined,
         observacao: obsFinal || undefined,
         data: dataMov,
       });
@@ -178,6 +190,7 @@ export function SaidaManualView({
       setObservacao('');
       setDocumentoOp('');
       setQuantidade(1);
+      setColaboradorSelecionado(null);
       setErroForm(null);
     } catch (err: unknown) {
       const msg =
@@ -565,20 +578,32 @@ export function SaidaManualView({
               </div>
             </div>
 
-            {/* Campo 6: Retirado por / Setor Solicitante */}
-            <div className="lg:col-span-3 flex flex-col gap-1.5">
-              <label className="font-label-md text-xs font-semibold text-secondary">
-                Setor Solicitante / Operador
-              </label>
-              <input
-                type="text"
-                name="quem"
-                value={quem}
-                onChange={(e) => setQuem(e.target.value)}
-                placeholder="Ex: Linha 02 - Solda, Manutenção"
-                required
-                className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
-              />
+            {/* Campo 6: Retirado por / Colaborador (Saída) ou Fornecedor (Entrada) */}
+            <div className="lg:col-span-3 flex flex-col justify-end">
+              {tipoMov === 'Saída' ? (
+                <ColaboradorSelect
+                  value={colaboradorSelecionado?.id}
+                  onChange={(colab) => setColaboradorSelecionado(colab)}
+                  required
+                  label="Colaborador Solicitante"
+                  placeholder="Selecione o operador..."
+                />
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-label-md text-xs font-semibold text-secondary">
+                    Fornecedor / Procedência *
+                  </label>
+                  <input
+                    type="text"
+                    name="quem"
+                    value={quem}
+                    onChange={(e) => setQuem(e.target.value)}
+                    placeholder="Ex: Fornecedor Gerdau, NF 4482"
+                    required
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Campo 7: Observações Complementares */}
