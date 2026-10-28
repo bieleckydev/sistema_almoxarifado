@@ -101,15 +101,32 @@ export async function POST(request: Request) {
     }
 
     const agora = new Date().toISOString();
+    const estoqueInicial = input.estoqueInicial ?? 0;
     const itemParaSalvar: Item = ItemSchema.parse({
       ...input,
       id,
-      estoqueAtual: input.estoqueInicial ?? 0,
+      estoqueAtual: estoqueInicial,
       createdAt: agora,
       updatedAt: agora,
     });
 
     const itemCriado = await repo.salvarItem(itemParaSalvar);
+
+    // Registra movimentação inaugural de abertura de cadastro caso estoque inicial seja maior que zero
+    if (estoqueInicial > 0) {
+      await repo.registrarMovimentacao({
+        id: crypto.randomUUID(),
+        itemId: itemCriado.id,
+        tipo: 'AJUSTE_INVENTARIO_POSITIVO',
+        quantidade: estoqueInicial,
+        saldoAnterior: 0,
+        saldoResultante: estoqueInicial,
+        dataMovimentacao: agora,
+        observacao: 'Saldo de implantação / abertura de cadastro inicial',
+        createdAt: agora,
+      });
+    }
+
     return NextResponse.json(itemCriado, { status: 201 });
   } catch (error) {
     return toErrorResponse(error);

@@ -134,6 +134,14 @@ describe('Fase 2 — Rotas de API do Catálogo de Itens (/api/itens)', () => {
       const noBanco = await memoryRepo.buscarPorCodigo('100-0501');
       assert.ok(noBanco);
       assert.equal(noBanco.estoqueAtual, 12);
+
+      // Verificar registro da movimentação inaugural de abertura no extrato
+      const extrato = await memoryRepo.consultarExtratoItem(noBanco.id);
+      assert.equal(extrato.length, 1);
+      assert.equal(extrato[0].tipo, 'AJUSTE_INVENTARIO_POSITIVO');
+      assert.equal(extrato[0].quantidade, 12);
+      assert.equal(extrato[0].saldoResultante, 12);
+      assert.ok(extrato[0].observacao?.includes('implantação'));
     });
 
     it('deve impedir criação de item por usuário requisitante (403 Forbidden)', async () => {
