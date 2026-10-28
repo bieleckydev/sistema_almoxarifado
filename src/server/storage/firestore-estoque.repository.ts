@@ -171,6 +171,14 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     });
   }
 
+  async atualizarSaldoECustoItem(itemId: string, novoSaldo: number, novoCusto: number): Promise<void> {
+    await this.db.collection('items').doc(itemId).update({
+      estoqueAtual: novoSaldo,
+      custoUnitario: novoCusto,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
   // ==========================================
   // COLABORADORES & OPERADORES
   // ==========================================

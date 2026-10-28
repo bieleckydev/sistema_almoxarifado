@@ -105,6 +105,16 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     }
   }
 
+  async atualizarSaldoECustoItem(itemId: string, novoSaldo: number, novoCusto: number): Promise<void> {
+    const item = this.itens.get(itemId);
+    if (item) {
+      item.estoqueAtual = novoSaldo;
+      item.custoUnitario = novoCusto;
+      item.updatedAt = new Date().toISOString();
+      this.itens.set(itemId, { ...item });
+    }
+  }
+
   async buscarColaboradorPorId(idOrMatricula: string): Promise<Colaborador | null> {
     const colab = this.colaboradores.get(idOrMatricula);
     if (colab) return { ...colab };

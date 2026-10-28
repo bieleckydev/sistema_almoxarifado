@@ -112,6 +112,13 @@ describe('2.4 — Contrato e Implementação de Repositório de Estoque', () => 
     assert.equal(atualizado?.estoqueAtual, 1550.5);
   });
 
+  it('deve atualizar simultaneamente saldo e custo unitário ponderado', async () => {
+    await repo.atualizarSaldoECustoItem('item-10-3812', 2000, 18.75);
+    const atualizado = await repo.buscarItemPorId('item-10-3812');
+    assert.equal(atualizado?.estoqueAtual, 2000);
+    assert.equal(atualizado?.custoUnitario, 18.75);
+  });
+
   it('deve registrar movimentação e permitir consulta de extrato por item', async () => {
     const mov1: Movimentacao = {
       id: 'mov-1',

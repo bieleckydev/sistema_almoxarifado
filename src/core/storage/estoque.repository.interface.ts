@@ -33,6 +33,11 @@ export interface IEstoqueRepository {
   atualizarSaldoItem(itemId: string, novoSaldo: number): Promise<void>;
 
   /**
+   * Atualiza simultaneamente o saldo físico e o custo unitário ponderado do item.
+   */
+  atualizarSaldoECustoItem(itemId: string, novoSaldo: number, novoCusto: number): Promise<void>;
+
+  /**
    * Busca um colaborador pela matrícula ou ID único.
    */
   buscarColaboradorPorId(id: string): Promise<Colaborador | null>;
