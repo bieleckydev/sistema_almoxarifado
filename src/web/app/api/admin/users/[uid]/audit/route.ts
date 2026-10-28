@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { UserAuditLogSchema } from '@/core/domain/user-audit.schema';
 import { hasUserPermission } from '@/core/domain/user-authorization';
-import { adminDb } from '@/server/firebase-admin';
 import { requireIdentity, toErrorResponse } from '../../api-utils';
 
 interface UserRouteContext {
@@ -15,6 +14,7 @@ export async function GET(request: Request, context: UserRouteContext) {
       return NextResponse.json({ error: 'Permissão insuficiente para: audit:read.' }, { status: 403 });
     }
     const { uid } = await context.params;
+    const { adminDb } = await import('@/server/firebase-admin');
     const snapshot = await adminDb.collection('userAuditLogs')
       .where('targetUserId', '==', uid)
       .orderBy('createdAt', 'desc')

@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { changeManagedUserRole } from '@/server/users/change-user-role';
 import { readJson, requireIdentity, toErrorResponse } from '../../api-utils';
 
 interface UserRouteContext {
@@ -11,6 +10,7 @@ export async function POST(request: Request, context: UserRouteContext) {
     const identity = await requireIdentity(request);
     const { uid } = await context.params;
     const body = await readJson(request);
+    const { changeManagedUserRole } = await import('@/server/users/change-user-role');
     return NextResponse.json(await changeManagedUserRole(identity.user, uid, body));
   } catch (error) {
     return toErrorResponse(error);

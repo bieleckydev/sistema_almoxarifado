@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import { CreateUserCommandSchema } from '@/core/domain/user.schema';
-import { createManagedUser } from '@/server/users/create-user';
-import { listManagedUsers } from '@/server/users/list-users';
 import {
   readJson,
   requireIdentity,
@@ -11,6 +9,7 @@ import {
 export async function GET(request: Request) {
   try {
     const identity = await requireIdentity(request);
+    const { listManagedUsers } = await import('@/server/users/list-users');
     const url = new URL(request.url);
     const query = Object.fromEntries(url.searchParams.entries());
     return NextResponse.json(await listManagedUsers(identity.user, query));
@@ -22,6 +21,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const identity = await requireIdentity(request);
+    const { createManagedUser } = await import('@/server/users/create-user');
     const command = CreateUserCommandSchema.parse(await readJson(request));
     return NextResponse.json(
       await createManagedUser(identity.user, command),
