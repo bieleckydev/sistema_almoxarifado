@@ -13,6 +13,13 @@ export interface UsuariosAdminFiltros {
   pageToken?: string;
 }
 
+export interface UserAuthLinkResult {
+  sent: boolean;
+  resetLink?: string;
+  emailDeliveryConfigured?: boolean;
+  emailSent?: boolean;
+}
+
 export interface UseUsuariosAdminResult {
   usuarios: PublicUserProfile[];
   nextPageToken: string | null;
@@ -29,8 +36,8 @@ export interface UseUsuariosAdminResult {
   ativarUsuario: (uid: string, motivo?: string) => Promise<unknown>;
   desativarUsuario: (uid: string, motivo?: string) => Promise<unknown>;
   alterarPapel: (uid: string, novoPapel: UserRole, motivo?: string) => Promise<unknown>;
-  enviarConvite: (uid: string) => Promise<unknown>;
-  redefinirSenha: (uid: string) => Promise<unknown>;
+  enviarConvite: (uid: string) => Promise<UserAuthLinkResult>;
+  redefinirSenha: (uid: string) => Promise<UserAuthLinkResult>;
   isAlterandoStatus: boolean;
 }
 
@@ -125,7 +132,7 @@ export function useUsuariosAdmin(filtros?: UsuariosAdminFiltros): UseUsuariosAdm
 
   const mutationEnviarConvite = useMutation({
     mutationFn: async (uid: string) => {
-      const res = await api.post(`/admin/users/${uid}/send-invite`, {});
+      const res = await api.post<UserAuthLinkResult>(`/admin/users/${uid}/send-invite`, {});
       return res.data;
     },
     onSuccess: () => {
@@ -135,7 +142,7 @@ export function useUsuariosAdmin(filtros?: UsuariosAdminFiltros): UseUsuariosAdm
 
   const mutationRedefinirSenha = useMutation({
     mutationFn: async (uid: string) => {
-      const res = await api.post(`/admin/users/${uid}/reset-password`, {});
+      const res = await api.post<UserAuthLinkResult>(`/admin/users/${uid}/reset-password`, {});
       return res.data;
     },
     onSuccess: () => {

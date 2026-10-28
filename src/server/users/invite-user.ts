@@ -33,29 +33,48 @@ export interface UserInviteDependencies {
   now: () => Date;
 }
 
+export function resolveContinueUrl(customUrl?: string): string {
+  const envUrl = customUrl?.trim() || process.env.FIREBASE_AUTH_CONTINUE_URL?.trim();
+  if (envUrl) {
+    return envUrl;
+  }
+
+  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelProd) {
+    return `https://${vercelProd.replace(/\/+$/, '')}/login`;
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/\/+$/, '')}/login`;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (appUrl) {
+    return `${appUrl.replace(/\/+$/, '')}/login`;
+  }
+
+  return 'http://localhost:3000/login';
+}
+
 const defaultDependencies: UserInviteDependencies = {
   auth: adminAuth,
   db: adminDb,
-  continueUrl: process.env.FIREBASE_AUTH_CONTINUE_URL?.trim() ?? '',
+  continueUrl: resolveContinueUrl(),
   now: () => new Date(),
 };
 
-function validateContinueUrl(value: string): string {
-  if (!value) {
-    throw new UserInviteError(
-      'FIREBASE_AUTH_CONTINUE_URL não está configurada no ambiente server-side.'
-    );
-  }
-
+export function validateContinueUrl(value?: string): string {
+  const urlToValidate = value?.trim() || resolveContinueUrl();
   let url: URL;
   try {
-    url = new URL(value);
+    url = new URL(urlToValidate);
   } catch (error) {
-    throw new UserInviteError('FIREBASE_AUTH_CONTINUE_URL é inválida.', { cause: error });
+    throw new UserInviteError('A URL de redirecionamento (FIREBASE_AUTH_CONTINUE_URL) é inválida.', { cause: error });
   }
 
   if (url.protocol !== 'https:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
-    throw new UserInviteError('FIREBASE_AUTH_CONTINUE_URL deve usar HTTPS fora do ambiente local.');
+    throw new UserInviteError('A URL de redirecionamento (FIREBASE_AUTH_CONTINUE_URL) deve usar HTTPS fora do ambiente local.');
   }
 
   return url.toString();
@@ -67,7 +86,7 @@ export async function sendUserInvite(
   input: unknown,
   delivery: UserInviteDelivery,
   dependencies: UserInviteDependencies = defaultDependencies
-): Promise<{ sent: true }> {
+): Promise<{ sent: true; resetLink: string }> {
   if (!hasUserPermission(actor, 'users:send-invite')) {
     throw new UserInviteError('Somente um mestre pode enviar convites.');
   }
@@ -119,5 +138,5 @@ export async function sendUserInvite(
   });
   await dependencies.db.collection('userAuditLogs').add(audit);
 
-  return { sent: true };
+  return { sent: true, resetLink };
 }
