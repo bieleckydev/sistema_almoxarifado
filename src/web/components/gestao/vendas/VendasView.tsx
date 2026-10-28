@@ -174,120 +174,108 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
         </div>
       </header>
 
-      {/* 2. Grid de 4 Cards de KPIs de Vendas (Stitch Screen 2) */}
+      {/* 2. Grid de 4 Cards de KPIs de Vendas */}
       <section
         aria-label="Indicadores operacionais de vendas"
-        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"
       >
         {/* Card 1: Pedidos em Aberto */}
-        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">
-                Pedidos em Aberto
-              </span>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-kpi-value text-3xl font-extrabold text-on-surface tabular-nums">
-                  {isLoading ? '—' : pedidosAEntregar}
-                </span>
-                <span className="font-label-md text-label-md text-secondary">
-                  a entregar
-                </span>
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <ShoppingBag className="w-5 h-5" />
-            </div>
+        <div className="rounded-lg bg-surface-container-lowest p-3.5 border border-outline-variant/25 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-secondary">
+              Pedidos em aberto
+            </span>
+            <span className="text-[11px] text-tertiary font-medium">
+              {contagens.separados} prontos
+            </span>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
+          <div className="my-2.5 flex items-baseline gap-2">
+            <span className="font-kpi-value text-2xl sm:text-3xl font-bold text-on-surface tabular-nums tracking-tight">
+              {isLoading ? '—' : pedidosAEntregar}
+            </span>
+            <span className="text-xs text-secondary">
+              a entregar
+            </span>
+          </div>
+          <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
             <span>{contagens.pendentes} pendentes</span>
-            <span className="text-tertiary font-semibold">{contagens.separados} prontos</span>
+            <span>Fluxo ativo</span>
           </div>
         </div>
 
         {/* Card 2: Fora do Prazo / SLA */}
-        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-error" />
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-error font-semibold">
-                Fora do Prazo / SLA
-              </span>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-kpi-value text-3xl font-extrabold text-error tabular-nums">
-                  {isLoading ? '—' : pedidosAtrasados}
-                </span>
-                <span className="font-label-md text-label-md text-error/80">
-                  {pedidosAtrasados === 1 ? 'atrasado' : 'atrasados'}
-                </span>
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-error-container flex items-center justify-center text-error shrink-0">
-              <Clock className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs">
-            <span className="text-error font-semibold flex items-center gap-1">
-              <AlertTriangle className="w-3.5 h-3.5" /> Urgência Alta
+        <div className="rounded-lg bg-surface-container-lowest p-3.5 border border-outline-variant/25 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-error">
+              Fora do prazo / SLA
             </span>
-            <span className="text-secondary">Prazo excedido</span>
+            {pedidosAtrasados > 0 && (
+              <span className="text-[11px] font-semibold text-error">
+                Urgência alta
+              </span>
+            )}
+          </div>
+          <div className="my-2.5 flex items-baseline gap-2">
+            <span className="font-kpi-value text-2xl sm:text-3xl font-bold text-error tabular-nums tracking-tight">
+              {isLoading ? '—' : pedidosAtrasados}
+            </span>
+            <span className="text-xs text-error/80">
+              {pedidosAtrasados === 1 ? 'atrasado' : 'atrasados'}
+            </span>
+          </div>
+          <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
+            <span className="text-error font-medium">Prazo de expedição excedido</span>
+            <span>Prioritário</span>
           </div>
         </div>
 
         {/* Card 3: Bloqueio por Estoque / Déficit */}
-        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">
-                Bloqueio p/ Estoque
+        <div className="rounded-lg bg-surface-container-lowest p-3.5 border border-outline-variant/25 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-secondary">
+              Bloqueio por estoque
+            </span>
+            {pedidosSemEstoque > 0 && (
+              <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                Aguardando compras
               </span>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-kpi-value text-3xl font-extrabold text-amber-600 dark:text-amber-400 tabular-nums">
-                  {isLoading ? '—' : pedidosSemEstoque}
-                </span>
-                <span className="font-label-md text-label-md text-secondary">
-                  com déficit
-                </span>
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-              <PackageX className="w-5 h-5" />
-            </div>
+            )}
           </div>
-          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
+          <div className="my-2.5 flex items-baseline gap-2">
+            <span className="font-kpi-value text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400 tabular-nums tracking-tight">
+              {isLoading ? '—' : pedidosSemEstoque}
+            </span>
+            <span className="text-xs text-secondary">
+              com déficit
+            </span>
+          </div>
+          <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
             <span>Falta matéria-prima</span>
-            <span className="text-amber-700 dark:text-amber-300 font-medium">Aguardando compras</span>
+            <span>Ordem retida</span>
           </div>
         </div>
 
         {/* Card 4: Faturados / Concluídos */}
-        <div className="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/30 shadow-xs flex flex-col justify-between">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-tertiary" />
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">
-                Entregas Concluídas
-              </span>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-kpi-value text-3xl font-extrabold text-tertiary tabular-nums">
-                  {contagens.entregues.toLocaleString('pt-BR')}
-                </span>
-                <span className="font-label-md text-label-md text-secondary">
-                  expedições
-                </span>
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary shrink-0">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
-            <span className="text-tertiary font-semibold flex items-center gap-1">
-              Baixa almoxarifado OK
+        <div className="rounded-lg bg-surface-container-lowest p-3.5 border border-outline-variant/25 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-secondary">
+              Entregas concluídas
             </span>
-            <span className="font-mono">100% integradas</span>
+            <span className="text-[11px] font-medium text-tertiary">
+              Concluídos
+            </span>
+          </div>
+          <div className="my-2.5 flex items-baseline gap-2">
+            <span className="font-kpi-value text-2xl sm:text-3xl font-bold text-tertiary tabular-nums tracking-tight">
+              {contagens.entregues.toLocaleString('pt-BR')}
+            </span>
+            <span className="text-xs text-secondary">
+              expedições
+            </span>
+          </div>
+          <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
+            <span className="text-tertiary font-medium">Baixa almoxarifado OK</span>
+            <span>100% integradas</span>
           </div>
         </div>
       </section>

@@ -88,51 +88,41 @@ export function KpiCard({
             }
           : undefined
       }
-      className={`relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 shadow-sm flex flex-col justify-between transition-all ${
+      className={`rounded-lg bg-surface-container-lowest p-3.5 border border-outline-variant/25 flex flex-col justify-between transition-colors ${
         onClick
-          ? 'cursor-pointer hover:bg-surface-container-low/70 active:scale-[0.99]'
+          ? 'cursor-pointer hover:bg-surface-container-low/70 hover:border-outline-variant/50'
           : ''
       } ${className}`}
     >
-      {/* Barra de destaque superior estilo Stitch MD3 */}
-      <div className={`absolute top-0 left-0 right-0 h-1 ${config.borderTop}`} />
-
       {/* Cabeçalho do Card */}
       <div>
         <div className="flex items-center justify-between gap-2 mb-1.5">
-          <span className="font-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">
-            {title}
-          </span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            {Icon && <Icon className="w-4 h-4 text-secondary shrink-0" />}
+            <span className="text-xs font-medium text-secondary truncate">
+              {title}
+            </span>
+          </div>
           {badge}
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-baseline gap-1.5">
-            <span
-              className={`font-kpi-value text-2xl sm:text-[28px] font-extrabold tracking-tight ${
-                config.valueColor || 'text-on-surface'
-              }`}
-            >
-              {value}
+        <div className="flex items-baseline gap-1.5 my-1">
+          <span
+            className={`font-kpi-value text-2xl sm:text-[28px] font-bold tracking-tight tabular-nums ${
+              config.valueColor || 'text-on-surface'
+            }`}
+          >
+            {value}
+          </span>
+          {unit && (
+            <span className="text-xs text-secondary font-medium">
+              {unit}
             </span>
-            {unit && (
-              <span className="font-label-md text-on-surface-variant font-medium">
-                {unit}
-              </span>
-            )}
-          </div>
-
-          {Icon && (
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${config.iconBg}`}
-            >
-              <Icon className={`w-5 h-5 ${config.iconColor}`} />
-            </div>
           )}
         </div>
 
         {subtitle && (
-          <div className="font-body-sm text-on-surface-variant mt-1">
+          <div className="text-[11px] text-secondary mt-0.5">
             {subtitle}
           </div>
         )}
@@ -140,7 +130,7 @@ export function KpiCard({
 
       {/* Rodapé opcional com métrica complementar */}
       {footer && (
-        <div className="mt-3 pt-2.5 border-t border-outline-variant/30 flex items-center justify-between font-body-sm">
+        <div className="mt-2.5 pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
           {footer}
         </div>
       )}
