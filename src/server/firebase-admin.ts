@@ -51,8 +51,13 @@ export function getAdminProjectId(): string {
 export function getAdminEnvironmentStatus(): {
   configured: boolean;
   projectId: string;
-  credentialSource: 'service-account-environment' | 'application-default-credentials';
+  credentialSource: 'service-account-environment' | 'application-default-credentials' | 'emulator';
+  isEmulator: boolean;
 } {
+  const isEmulator = Boolean(
+    process.env.FIRESTORE_EMULATOR_HOST?.trim() ||
+      process.env.FIREBASE_AUTH_EMULATOR_HOST?.trim()
+  );
   const hasServiceAccountEnvironment = Boolean(
     process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim() &&
       process.env.FIREBASE_ADMIN_PRIVATE_KEY?.trim()
@@ -61,11 +66,21 @@ export function getAdminEnvironmentStatus(): {
     process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()
   );
 
+  let credentialSource:
+    | 'service-account-environment'
+    | 'application-default-credentials'
+    | 'emulator' = 'application-default-credentials';
+
+  if (isEmulator) {
+    credentialSource = 'emulator';
+  } else if (hasServiceAccountEnvironment) {
+    credentialSource = 'service-account-environment';
+  }
+
   return {
-    configured: hasServiceAccountEnvironment || hasApplicationDefaultCredentials,
+    configured: isEmulator || hasServiceAccountEnvironment || hasApplicationDefaultCredentials,
     projectId: getAdminProjectId(),
-    credentialSource: hasServiceAccountEnvironment
-      ? 'service-account-environment'
-      : 'application-default-credentials',
+    credentialSource,
+    isEmulator,
   };
 }
