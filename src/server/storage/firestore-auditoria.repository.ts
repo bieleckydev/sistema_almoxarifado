@@ -7,23 +7,15 @@ import type {
   EventoAuditoriaOperacional,
   RegistrarEventoAuditoriaInput,
 } from '@/core/domain/auditoria-operacional.schema';
+import { adminDb } from '../firebase-admin';
 
 export class FirestoreAuditoriaRepository implements IAuditoriaRepository {
   private readonly db: Firestore;
 
   constructor(db?: Firestore) {
-    if (db) {
-      this.db = db;
-    } else {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const mod = require('../firebase-admin');
-        this.db = mod.adminDb || mod.default?.adminDb;
-      } catch {
-        this.db = undefined as unknown as Firestore;
-      }
-    }
+    this.db = db || adminDb;
   }
+
 
   async registrar(dados: RegistrarEventoAuditoriaInput): Promise<EventoAuditoriaOperacional> {
     const agora = new Date().toISOString();
@@ -33,12 +25,17 @@ export class FirestoreAuditoriaRepository implements IAuditoriaRepository {
     };
 
     if (this.db && typeof this.db.collection === 'function') {
-      const docRef = await this.db.collection('auditoria_operacional').add(docData);
-      return {
-        id: docRef.id,
-        ...docData,
-      };
+      try {
+        const docRef = await this.db.collection('auditoria_operacional').add(docData);
+        return {
+          id: docRef.id,
+          ...docData,
+        };
+      } catch (err) {
+        console.warn('Falha ao persistir auditoria operacional no Firestore:', err instanceof Error ? err.message : err);
+      }
     }
+
 
     return {
       id: `aud-mock-${Date.now()}`,

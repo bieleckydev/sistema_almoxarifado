@@ -23,6 +23,9 @@ import {
 import { SaldoInsuficienteError } from '@/core/services/estoque-calculator';
 import { AuditoriaService } from '@/core/services/auditoria.service';
 import type { IEstoqueRepository } from '@/core/storage/estoque.repository.interface';
+import { adminDb } from '@/server/firebase-admin';
+import { FirestoreEstoqueRepository } from '@/server/storage/firestore-estoque.repository';
+import { FirestoreAuditoriaRepository } from '@/server/storage/firestore-auditoria.repository';
 
 // ==========================================
 // ERROS & EXCEÇÕES DA API
@@ -251,11 +254,9 @@ let globalEstoqueRepo: IEstoqueRepository | null = null;
  */
 export function getEstoqueRepository(): IEstoqueRepository {
   if (!globalEstoqueRepo) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { FirestoreEstoqueRepository } = require('@/server/storage/firestore-estoque.repository');
     globalEstoqueRepo = new FirestoreEstoqueRepository();
   }
-  return globalEstoqueRepo!;
+  return globalEstoqueRepo;
 }
 
 /**
@@ -286,12 +287,11 @@ let globalServerDb: import('firebase-admin/firestore').Firestore | null = null;
  * e as regras do Firestore negariam o acesso.
  */
 export function getServerDb(): import('firebase-admin/firestore').Firestore {
-  if (!globalServerDb) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { adminDb } = require('@/server/firebase-admin');
-    globalServerDb = adminDb;
+  const db = globalServerDb || adminDb;
+  if (!db || typeof db.collection !== 'function') {
+    throw new ApiError('Instância do Firestore não está disponível no servidor.', 500);
   }
-  return globalServerDb!;
+  return db;
 }
 
 /**
@@ -316,11 +316,9 @@ let globalAuditoriaRepo: import('@/core/storage/auditoria.repository.interface')
 
 export function getAuditoriaRepository(): import('@/core/storage/auditoria.repository.interface').IAuditoriaRepository {
   if (!globalAuditoriaRepo) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { FirestoreAuditoriaRepository } = require('@/server/storage/firestore-auditoria.repository');
     globalAuditoriaRepo = new FirestoreAuditoriaRepository();
   }
-  return globalAuditoriaRepo!;
+  return globalAuditoriaRepo;
 }
 
 export function setAuditoriaRepository(
@@ -332,3 +330,4 @@ export function setAuditoriaRepository(
 export function getAuditoriaService(repo = getAuditoriaRepository()): AuditoriaService {
   return new AuditoriaService(repo);
 }
+

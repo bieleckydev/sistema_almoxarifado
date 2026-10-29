@@ -22,6 +22,7 @@ import {
   movimentacaoFromFirestore,
   movimentacaoToFirestore,
 } from './firestore-estoque.mapper';
+import { adminDb } from '../firebase-admin';
 import { fetchFirestoreCollectionRest } from './firestore-rest-client';
 
 /**
@@ -32,18 +33,9 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
   private readonly db: Firestore;
 
   constructor(db?: Firestore) {
-    if (db) {
-      this.db = db;
-    } else {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const mod = require('../firebase-admin');
-        this.db = mod.adminDb || mod.default?.adminDb;
-      } catch {
-        this.db = undefined as unknown as Firestore;
-      }
-    }
+    this.db = db || adminDb;
   }
+
 
   // ==========================================
   // ITENS & CATÁLOGO

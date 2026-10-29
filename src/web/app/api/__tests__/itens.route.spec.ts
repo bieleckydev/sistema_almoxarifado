@@ -1,7 +1,9 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { MemoryEstoqueRepository } from '@/core/storage/memory-estoque.adapter';
+import { MemoryAuditoriaRepository } from '@/core/services/auditoria.service';
 import {
+  setAuditoriaRepository,
   setEstoqueRepository,
   setIdentityAuthenticator,
 } from '../api-helpers';
@@ -41,7 +43,9 @@ describe('Fase 2 — Rotas de API do Catálogo de Itens (/api/itens)', () => {
   beforeEach(async () => {
     memoryRepo = new MemoryEstoqueRepository();
     setEstoqueRepository(memoryRepo);
+    setAuditoriaRepository(new MemoryAuditoriaRepository());
     setIdentityAuthenticator(async () => mockAdminIdentity);
+
 
     // Cadastra itens de teste com os enums oficiais do domínio
     await memoryRepo.salvarItem({

@@ -10,7 +10,11 @@ import {
   getEstoqueRepository,
   setEstoqueRepository,
   getMovimentacaoService,
+  getServerDb,
+  setServerDb,
+  semUndefined,
 } from '../api-helpers';
+
 import {
   ItemNaoEncontradoError,
   LoteEstoqueInsuficienteError,
@@ -143,4 +147,44 @@ describe('Fase 1 — Utilitários e Helpers da API (api-helpers)', () => {
       assert(servico instanceof MovimentacaoService);
     });
   });
+
+  describe('Firestore do Servidor (getServerDb)', () => {
+    beforeEach(() => {
+      setServerDb(null);
+    });
+
+    it('deve retornar instância com método collection definido por padrão', () => {
+      const db = getServerDb();
+      assert(db !== undefined && db !== null, 'getServerDb não pode retornar undefined');
+      assert.equal(typeof db.collection, 'function', 'db.collection deve ser uma função');
+    });
+
+    it('deve permitir substituir o Firestore por mock em testes via setServerDb', () => {
+      const fakeDb = { collection: () => 'fake-collection' };
+      setServerDb(fakeDb);
+
+      const db = getServerDb();
+      assert.equal(db, fakeDb as any);
+      assert.equal(db.collection('test' as any), 'fake-collection');
+
+      setServerDb(null);
+      const restored = getServerDb();
+      assert.equal(typeof restored.collection, 'function');
+    });
+
+    it('deve remover campos undefined com semUndefined', () => {
+      const objetoComUndefined = {
+        id: '123',
+        nome: 'Teste',
+        opcional: undefined,
+        detalhe: { campo: undefined, valor: 42 },
+      };
+
+      const limpo = semUndefined(objetoComUndefined);
+      assert.equal('opcional' in limpo, false);
+      assert.equal('campo' in limpo.detalhe, false);
+      assert.equal(limpo.detalhe.valor, 42);
+    });
+  });
 });
+

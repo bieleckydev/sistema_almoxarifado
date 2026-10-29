@@ -152,3 +152,15 @@ export function getAdminEnvironmentStatus(): {
     isEmulator,
   };
 }
+
+export default {
+  adminApp,
+  adminAuth,
+  adminDb,
+  getAdminApp,
+  getAdminAuth,
+  getAdminDb,
+  getAdminProjectId,
+  getAdminEnvironmentStatus,
+};
+
