@@ -79,11 +79,9 @@ export function MovementFormDrawer({
 
   const unidadeFmt = UNIDADE_LABELS[item.unidade] || item.unidade.toLowerCase();
   const camposEntrada: string[] =
-    item.aba === 'motos'
+    item.aba === 'motos' || item.aba === 'imp'
       ? ['NF-e', 'Fornecedor']
-      : item.aba === 'imp'
-        ? ['NF-e', 'Fornecedor', 'Certificado de aprovação (CA)']
-        : ['NF-e', 'Fornecedor', 'Certificado'];
+      : ['NF-e', 'Fornecedor', 'Certificado'];
 
   const handleImportarXml = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

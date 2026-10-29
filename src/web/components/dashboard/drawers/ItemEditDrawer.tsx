@@ -309,7 +309,7 @@ export function ItemEditDrawer({
                 Especificações Técnicas
               </h3>
               <div className="space-y-2">
-                {['Fornecedor', 'Marca', 'NF-e', 'Lote Padrão'].map((campo) => (
+                {['Fornecedor', 'Marca', 'NF-e'].map((campo) => (
                   <div key={campo} className="flex items-center gap-2">
                     <span className="w-28 text-xs font-medium text-secondary truncate">{campo}:</span>
                     <input

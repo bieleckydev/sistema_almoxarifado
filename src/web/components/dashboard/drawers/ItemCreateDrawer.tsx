@@ -91,9 +91,9 @@ export function ItemCreateDrawer({
 
   const camposEspecificos: string[] =
     aba === 'mp'
-      ? ['Lote', 'Certificado', 'NF-e', 'Fornecedor']
+      ? ['Certificado', 'NF-e', 'Fornecedor']
       : aba === 'imp'
-        ? ['Lote', 'Certificado de aprovação (CA)', 'NF-e', 'Fornecedor']
+        ? ['NF-e', 'Fornecedor']
         : ['Modelo compatível', 'Marca', 'Código original', 'Medida'];
 
   const handleSubmit = async (e: React.FormEvent) => {
