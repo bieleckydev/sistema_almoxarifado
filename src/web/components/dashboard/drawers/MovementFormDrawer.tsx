@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, AlertCircle, Loader2, FileText, Upload, Calendar } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, AlertCircle, Loader2, Calendar } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { api } from '@/core/api/client';
 import { useToast } from '@/web/hooks/useToast';
@@ -27,7 +27,6 @@ export function MovementFormDrawer({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hoje = new Date().toISOString().slice(0, 10);
   const [dataMov, setDataMov] = useState(hoje);
@@ -83,46 +82,6 @@ export function MovementFormDrawer({
       ? ['NF-e', 'Fornecedor']
       : ['NF-e', 'Fornecedor', 'Certificado'];
 
-  const handleImportarXml = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, 'application/xml');
-
-        const parserError = xml.querySelector('parsererror');
-        if (parserError) {
-          throw new Error('Arquivo XML corrompido ou inválido.');
-        }
-
-        const nNF = xml.querySelector('ide > nNF')?.textContent || xml.querySelector('nNF')?.textContent || '';
-        const xNome = xml.querySelector('emit > xNome')?.textContent || '';
-        const qComStr = xml.querySelector('det > prod > qCom')?.textContent || xml.querySelector('qCom')?.textContent;
-        const vUnComStr = xml.querySelector('det > prod > vUnCom')?.textContent || xml.querySelector('vUnCom')?.textContent;
-        if (nNF) {
-          setCamposInfo((prev) => ({ ...prev, 'NF-e': nNF, ...(xNome ? { Fornecedor: xNome } : {}) }));
-        }
-        if (qComStr) {
-          const parsedQtd = Math.round(parseFloat(qComStr));
-          if (parsedQtd > 0) setQuantidade(parsedQtd);
-        }
-        if (vUnComStr) {
-          const parsedVal = parseFloat(vUnComStr);
-          if (parsedVal > 0) setValorUnitario(parsedVal);
-        }
-
-        toast(`NF-e ${nNF || 'importada'}${xNome ? ` de ${xNome}` : ''} lida com sucesso!`, { type: 'success' });
-      } catch {
-        toast('Erro ao processar o arquivo XML da NF-e.', { type: 'error' });
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,33 +234,6 @@ export function MovementFormDrawer({
             </div>
           )}
 
-          {/* Importador Rápido de XML NF-e (3.0) */}
-          {isEntrada && (
-            <div className="p-3 bg-surface-container-low border border-primary/20 rounded-xl flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-primary shrink-0" />
-                <div>
-                  <span className="font-bold text-on-surface block text-[11px]">Importar XML da NF-e</span>
-                  <span className="text-[10px] text-secondary">Preenche número, fornecedor e quantidade</span>
-                </div>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xml"
-                onChange={handleImportarXml}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary hover:text-on-primary transition-colors cursor-pointer shrink-0"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>Carregar XML</span>
-              </button>
-            </div>
-          )}
 
           {/* Data e Quantidade */}
           <div className="grid grid-cols-2 gap-3">

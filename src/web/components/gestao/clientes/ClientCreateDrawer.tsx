@@ -540,10 +540,10 @@ export function ClientCreateDrawer({
                 </div>
               </div>
 
-              {/* E-mail para XML de NF-e & DANFE */}
+              {/* E-mail para NF-e & DANFE */}
               <div className="col-span-12 sm:col-span-7 flex flex-col gap-1">
                 <label className="text-xs font-semibold text-on-surface-variant flex items-center justify-between">
-                  <span>E-mail para XML de NF-e &amp; DANFE</span>
+                  <span>E-mail para NF-e &amp; DANFE</span>
                   <span className="text-[11px] text-primary font-medium">Automação EDI</span>
                 </label>
                 <div className="relative">
