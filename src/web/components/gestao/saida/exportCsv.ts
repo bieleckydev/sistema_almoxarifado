@@ -13,7 +13,6 @@ export interface MovimentacaoParaExportacao {
   unidade: string;
   responsavel: string;
   nfe?: string;
-  lote?: string;
   observacao?: string;
 }
 
@@ -47,7 +46,6 @@ export function gerarMovimentacoesCSV(
     'Unidade',
     'Responsável',
     'NF-e',
-    'Lote',
     'Observação',
   ];
 
@@ -63,7 +61,6 @@ export function gerarMovimentacoesCSV(
       m.unidade || 'un',
       m.responsavel || '',
       m.nfe || '',
-      m.lote || '',
       m.observacao || '',
     ]),
   ];

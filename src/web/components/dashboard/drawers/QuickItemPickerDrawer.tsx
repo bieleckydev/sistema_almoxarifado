@@ -164,7 +164,7 @@ export function QuickItemPickerDrawer({
               type="search"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por nome, código ou lote..."
+              placeholder="Buscar por nome ou código..."
               aria-label="Filtrar materiais"
               className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />

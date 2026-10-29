@@ -452,7 +452,7 @@ export function MovimentarTerceiroDrawer({
               rows={2}
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
-              placeholder="Ex: Corte de peças para o lote 03 ou material com sobras devolvido"
+              placeholder="Ex: Corte de peças ou material com sobras devolvido"
               disabled={isSalvando}
               className="w-full px-3 py-2 text-xs rounded-xl bg-surface-container-low dark:bg-slate-800 border border-outline-variant/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />

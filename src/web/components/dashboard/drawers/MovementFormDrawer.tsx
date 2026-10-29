@@ -32,7 +32,6 @@ export function MovementFormDrawer({
   const hoje = new Date().toISOString().slice(0, 10);
   const [dataMov, setDataMov] = useState(hoje);
   const [quantidade, setQuantidade] = useState<number>(1);
-  const [lote, setLote] = useState('');
   const [valorUnitario, setValorUnitario] = useState<number>(0);
   const [colaboradorSelecionado, setColaboradorSelecionado] = useState<Colaborador | null>(null);
   const [observacao, setObservacao] = useState('');
@@ -46,7 +45,6 @@ export function MovementFormDrawer({
     if (isOpen && item) {
       setDataMov(new Date().toISOString().slice(0, 10));
       setQuantidade(1);
-      setLote('');
       setValorUnitario(item.custoUnitario || 0);
       setColaboradorSelecionado(null);
       setObservacao('');
@@ -84,8 +82,8 @@ export function MovementFormDrawer({
     item.aba === 'motos'
       ? ['NF-e', 'Fornecedor']
       : item.aba === 'imp'
-        ? ['NF-e', 'Fornecedor', 'Lote', 'Certificado de aprovação (CA)']
-        : ['NF-e', 'Fornecedor', 'Lote', 'Certificado'];
+        ? ['NF-e', 'Fornecedor', 'Certificado de aprovação (CA)']
+        : ['NF-e', 'Fornecedor', 'Certificado'];
 
   const handleImportarXml = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,15 +104,8 @@ export function MovementFormDrawer({
         const nNF = xml.querySelector('ide > nNF')?.textContent || xml.querySelector('nNF')?.textContent || '';
         const xNome = xml.querySelector('emit > xNome')?.textContent || '';
         const qComStr = xml.querySelector('det > prod > qCom')?.textContent || xml.querySelector('qCom')?.textContent;
-        const vUnComStr = xml.querySelector('det > prod > vUnCom')?.textContent || xml.querySelector('vUnCom')?.textContent;
-        const nLote = xml.querySelector('rastro > nLote')?.textContent || xml.querySelector('nLote')?.textContent || '';
-
         if (nNF) {
           setCamposInfo((prev) => ({ ...prev, 'NF-e': nNF, ...(xNome ? { Fornecedor: xNome } : {}) }));
-        }
-        if (nLote) {
-          setLote(nLote);
-          setCamposInfo((prev) => ({ ...prev, Lote: nLote }));
         }
         if (qComStr) {
           const parsedQtd = Math.round(parseFloat(qComStr));
@@ -163,8 +154,6 @@ export function MovementFormDrawer({
     setIsSubmitting(true);
 
     try {
-      const loteFinal = lote.trim() || camposInfo['Lote']?.trim() || undefined;
-
       if (isEntrada) {
         const numeroNF = camposInfo['NF-e']?.trim() || undefined;
         const fornecedor = camposInfo['Fornecedor']?.trim() || undefined;
@@ -175,7 +164,6 @@ export function MovementFormDrawer({
           quantidade,
           numeroNF,
           fornecedor,
-          lote: loteFinal,
           valorUnitario: valorUnitario > 0 ? valorUnitario : undefined,
           observacoes: observacao.trim() || undefined,
           dataMovimentacao: new Date(dataMov + 'T12:00:00Z').toISOString(),
@@ -196,7 +184,6 @@ export function MovementFormDrawer({
           quantidade,
           colaboradorId: colaboradorSelecionado.id,
           setor: colaboradorSelecionado.setor,
-          lote: loteFinal,
           observacao: observacao.trim() || undefined,
           dataMovimentacao: new Date(dataMov + 'T12:00:00Z').toISOString(),
         });
@@ -296,7 +283,7 @@ export function MovementFormDrawer({
                 <FileText className="w-4 h-4 text-primary shrink-0" />
                 <div>
                   <span className="font-bold text-on-surface block text-[11px]">Importar XML da NF-e</span>
-                  <span className="text-[10px] text-secondary">Preenche número, fornecedor, quantidade e lote</span>
+                  <span className="text-[10px] text-secondary">Preenche número, fornecedor e quantidade</span>
                 </div>
               </div>
               <input
@@ -344,46 +331,22 @@ export function MovementFormDrawer({
             </label>
           </div>
 
-          {/* Entrada: Lote e Custo Médio Unitário | Saída: Lote e Seleção de Colaborador */}
+          {/* Entrada: Custo Médio Unitário | Saída: Seleção de Colaborador */}
           {isEntrada ? (
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
-                <span>Número do Lote</span>
-                <input
-                  type="text"
-                  value={lote}
-                  onChange={(e) => setLote(e.target.value)}
-                  placeholder="Ex: LOTE-2026-A"
-                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
-                <span>Custo Unitário (R$)</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={valorUnitario}
-                  onChange={(e) => setValorUnitario(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
-                />
-              </label>
-            </div>
+            <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
+              <span>Custo Unitário (R$)</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={valorUnitario}
+                onChange={(e) => setValorUnitario(parseFloat(e.target.value) || 0)}
+                placeholder="0.00"
+                className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+              />
+            </label>
           ) : (
             <div className="space-y-3">
-              <label className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
-                <span>Lote (FIFO Sugerido)</span>
-                <input
-                  type="text"
-                  value={lote}
-                  onChange={(e) => setLote(e.target.value)}
-                  placeholder="Padrão: Mais antigo"
-                  className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
-                />
-              </label>
-
               <ColaboradorSelect
                 value={colaboradorSelecionado?.id}
                 onChange={(colab) => setColaboradorSelecionado(colab)}
@@ -397,7 +360,7 @@ export function MovementFormDrawer({
           {/* Campos específicos da Entrada */}
           {isEntrada && (
             <div className="space-y-3 pt-1">
-              {camposEntrada.filter((c) => c !== 'Lote').map((campo) => (
+              {camposEntrada.map((campo) => (
                 <label key={campo} className="flex flex-col gap-1.5 font-medium text-on-surface-variant">
                   <span>{campo}</span>
                   <input

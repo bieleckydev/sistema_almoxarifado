@@ -74,10 +74,6 @@ export const ItemSchema = z.object({
     .number()
     .min(0.001, 'A capacidade máxima deve ser maior que zero')
     .optional(),
-  loteBase: z
-    .string()
-    .trim()
-    .optional(),
   especificacoes: z
     .record(z.string(), z.string())
     .optional(),

@@ -38,7 +38,6 @@ describe('Fase 6 — Módulo de Saída Manual, Relatórios Analíticos e Exporta
           unidade: 'un',
           responsavel: 'Manutenção',
           nfe: '123456',
-          lote: 'L2409-118',
           observacao: 'Uso na fresadora "A"',
         },
         {
@@ -66,7 +65,7 @@ describe('Fase 6 — Módulo de Saída Manual, Relatórios Analíticos e Exporta
       // Validação do cabeçalho
       assert.equal(
         linhas[0],
-        '"Data";"Hora";"Movimento";"Código";"Item";"Quantidade";"Unidade";"Responsável";"NF-e";"Lote";"Observação"'
+        '"Data";"Hora";"Movimento";"Código";"Item";"Quantidade";"Unidade";"Responsável";"NF-e";"Observação"'
       );
 
       // Validação do escape de aspas e formatação de dados

@@ -28,7 +28,6 @@ export const RegistrarEntradaSchema = z.object({
   documentoFiscalId: z.string().trim().optional(),
   fornecedor: z.string().trim().optional(),
   numeroPedidoRhowert: z.string().trim().optional(),
-  lote: z.string().trim().optional(),
   valorUnitario: z
     .number()
     .min(0, 'O valor unitário não pode ser negativo')
@@ -51,7 +50,6 @@ export const RegistrarBaixaInternaSchema = z.object({
     .positive('A quantidade da baixa deve ser maior que zero'),
   colaboradorId: z.string().min(1, 'ID do colaborador é obrigatório'),
   setor: SetorFabrilSchema.optional(),
-  lote: z.string().trim().optional(),
   observacao: z.string().trim().optional(),
   dataMovimentacao: z.string().datetime().optional(),
 });
@@ -72,7 +70,6 @@ export const RegistrarSaidaExpedicaoSchema = z.object({
     .trim()
     .min(2, 'O cliente ou filial de destino é obrigatório'),
   numeroNF: z.string().trim().optional(),
-  lote: z.string().trim().optional(),
   status: StatusExpedicaoSchema.default('DESPACHADO'),
   observacao: z.string().trim().optional(),
   dataMovimentacao: z.string().datetime().optional(),
@@ -88,7 +85,6 @@ export const ItemBaixaLoteSchema = z.object({
   quantidade: z
     .number()
     .positive('A quantidade deve ser maior que zero'),
-  lote: z.string().trim().optional(),
   observacao: z.string().trim().optional(),
 });
 
@@ -147,7 +143,6 @@ export const MovimentacaoSchema = z.object({
   documentoFiscalId: z.string().optional(),
   numeroPedidoRhowert: z.string().optional(),
   fornecedor: z.string().optional(),
-  lote: z.string().optional(),
   custo: z.number().optional(),
   estorno: z.boolean().optional(),
   estornado: z.boolean().optional(),

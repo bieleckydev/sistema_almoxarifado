@@ -227,7 +227,6 @@ export function SaidaManualView({
         unidade: unidadeFmt,
         responsavel: m.quem,
         nfe: m.info?.['NF-e'] || '',
-        lote: m.info?.['Lote'] || '',
         observacao: m.obs || '',
       };
     });
@@ -488,7 +487,7 @@ export function SaidaManualView({
                   type="text"
                   value={documentoOp}
                   onChange={(e) => setDocumentoOp(e.target.value)}
-                  placeholder="Ex: OP-2026-884, NF-10492 ou Lote L-881"
+                  placeholder="Ex: OP-2026-884 ou NF-10492"
                   className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
                 />
               </div>
@@ -631,7 +630,7 @@ export function SaidaManualView({
                 name="obs"
                 value={observacao}
                 onChange={(e) => setObservacao(e.target.value)}
-                placeholder="Ex: Aplicação no gabarito da torre C ou lote CSN-9982"
+                placeholder="Ex: Aplicação no gabarito da torre C"
                 className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium border border-outline-variant/20 focus:bg-surface-container-lowest focus:border-primary/50 outline-none transition-colors shadow-2xs"
               />
             </div>

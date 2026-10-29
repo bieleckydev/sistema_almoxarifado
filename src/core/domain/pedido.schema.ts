@@ -64,7 +64,6 @@ export const ItemPedidoSchema = z.object({
     .nonnegative('O preço unitário não pode ser negativo')
     .optional()
     .default(0),
-  lote: z.string().trim().optional(),
   observacao: z.string().trim().optional(),
 });
 

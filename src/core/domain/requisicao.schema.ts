@@ -18,7 +18,6 @@ export const ItemRequisicaoSchema = z.object({
   unidade: z.string().default('UNIDADE'),
   quantidadeSolicitada: QuantidadeFracionariaSchema,
   quantidadeAtendida: QuantidadeFracionariaSchema.optional(),
-  lote: z.string().optional(),
 });
 
 export type ItemRequisicao = z.infer<typeof ItemRequisicaoSchema>;

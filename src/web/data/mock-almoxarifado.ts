@@ -12,7 +12,6 @@ export interface DashboardItem extends Omit<Item, 'embalagem' | 'especificacoes'
   categoria: string;
   capacidadeMaxima: number;
   custoUnitario?: number;
-  loteBase?: string;
   especificacoes?: Record<string, string>;
   embalagem?: Item['embalagem'];
 }

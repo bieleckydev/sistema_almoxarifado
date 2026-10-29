@@ -95,7 +95,7 @@ export function GlobalSearchInput({ onSelectResult, className = '' }: GlobalSear
           onFocus={() => {
             if (termo.trim()) setIsOpen(true);
           }}
-          placeholder="Buscar lote, item, SKU ou pedido..."
+          placeholder="Buscar item, SKU ou pedido..."
           autoComplete="off"
           aria-label="Busca geral no almoxarifado"
           className="w-full pl-9 pr-14 py-1.5 text-xs sm:text-sm rounded-lg bg-surface-container text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-1.5 focus:ring-primary transition-all border-0 shadow-inner"
