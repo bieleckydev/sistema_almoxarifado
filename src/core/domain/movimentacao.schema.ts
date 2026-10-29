@@ -78,35 +78,6 @@ export const RegistrarSaidaExpedicaoSchema = z.object({
 export type RegistrarSaidaExpedicaoInput = z.input<typeof RegistrarSaidaExpedicaoSchema>;
 
 /**
- * Item individual no lote de baixa rápida (carrinho de retirada do operador).
- */
-export const ItemBaixaLoteSchema = z.object({
-  itemId: z.string().min(1, 'ID do item é obrigatório'),
-  quantidade: z
-    .number()
-    .positive('A quantidade deve ser maior que zero'),
-  observacao: z.string().trim().optional(),
-});
-
-export type ItemBaixaLote = z.infer<typeof ItemBaixaLoteSchema>;
-
-/**
- * Schema de baixa em lote para operações ágeis no chão de fábrica.
- * Permite ao almoxarife registrar múltiplos itens de uma vez para o mesmo colaborador.
- */
-export const RegistrarBaixaLoteSchema = z.object({
-  colaboradorId: z.string().min(1, 'ID do colaborador é obrigatório'),
-  setor: SetorFabrilSchema.optional(),
-  itens: z
-    .array(ItemBaixaLoteSchema)
-    .min(1, 'O lote deve conter pelo menos um item para baixa'),
-  observacaoGeral: z.string().trim().optional(),
-  dataMovimentacao: z.string().datetime().optional(),
-});
-
-export type RegistrarBaixaLoteInput = z.input<typeof RegistrarBaixaLoteSchema>;
-
-/**
  * Schema de ajuste de inventário (correção por contagem física).
  */
 export const RegistrarAjusteInventarioSchema = z.object({

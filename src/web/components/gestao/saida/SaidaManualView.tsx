@@ -24,7 +24,6 @@ import {
   FileSpreadsheet,
   Tag,
   ArrowUpDown,
-  ShoppingCart,
 } from 'lucide-react';
 import {
   useMovimentacoesPeriodo,
@@ -45,7 +44,6 @@ export interface SaidaManualViewProps {
   onSelectItem?: (item: DashboardItem) => void;
   triggerExportCsv?: boolean;
   onExportCsvDone?: () => void;
-  onAbrirBaixaRapida?: () => void;
 }
 
 const PERIODOS: PeriodoFiltro[] = ['Hoje', 'Ontem', '7 dias', 'Tudo'];
@@ -54,7 +52,6 @@ export function SaidaManualView({
   onSelectItem,
   triggerExportCsv,
   onExportCsvDone,
-  onAbrirBaixaRapida,
 }: SaidaManualViewProps) {
   const { toast } = useToast();
   const {
@@ -257,18 +254,6 @@ export function SaidaManualView({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-          {onAbrirBaixaRapida && (
-            <button
-              type="button"
-              onClick={onAbrirBaixaRapida}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-amber-800 dark:text-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200/50 dark:border-amber-800/40 transition-colors cursor-pointer shadow-xs"
-              title="Abrir carrinho de retirada em lote para o chão de fábrica"
-            >
-              <ShoppingCart className="w-3.5 h-3.5" />
-              <span>Retirada em Lote</span>
-            </button>
-          )}
-
           <button
             type="button"
             onClick={handleExportarCSV}

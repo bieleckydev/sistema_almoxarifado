@@ -22,7 +22,6 @@ describe('5.3 — Interceptadores e Injeção de Dependência (client.ts)', () =
     assert.equal(ENDPOINTS.ITENS.BASE, '/itens');
     assert.equal(ENDPOINTS.ITENS.BUSCA_CODIGO('10-001'), '/itens/codigo/10-001');
     assert.equal(ENDPOINTS.COLABORADORES.BUSCA_MATRICULA('042'), '/colaboradores/matricula/042');
-    assert.equal(ENDPOINTS.MOVIMENTACOES.BAIXA_LOTE, '/movimentacoes/baixa-lote');
     assert.equal(ENDPOINTS.NFE.RECONCILIAR, '/nfe/reconciliar');
     assert.equal(ENDPOINTS.INVENTARIO.SESSOES, '/inventario/sessoes');
   });

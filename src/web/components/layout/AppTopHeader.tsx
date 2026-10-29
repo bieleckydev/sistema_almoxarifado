@@ -7,7 +7,6 @@ import {
   Calendar,
   Bell,
   ChevronRight,
-  ShoppingCart,
   Menu,
 } from 'lucide-react';
 import { type TelaOuAba, METADADOS_ABAS } from '@/web/data/mock-almoxarifado';
@@ -17,7 +16,6 @@ import type { GlobalSearchResult } from '@/web/hooks/useGlobalSearch';
 import { useAuthStore } from '@/core/store/useAuthStore';
 import { usePeriodoGlobal } from '@/web/hooks/usePeriodoGlobal';
 import { podeExecutar, ROTULO_PAPEL } from '@/core/domain/permissions';
-import { useBaixaRapidaStore } from '@/core/store/useBaixaRapidaStore';
 
 export interface AppTopHeaderProps {
   telaAtiva: TelaOuAba;
@@ -25,7 +23,6 @@ export interface AppTopHeaderProps {
   onSelectSearchResult: (result: GlobalSearchResult) => void;
   onRegistrarEntrada?: () => void;
   onRegistrarSaida?: () => void;
-  onAbrirBaixaRapida?: () => void;
   onToggleMobileMenu?: () => void;
   totalAlertas?: number;
   className?: string;
@@ -44,14 +41,12 @@ export function AppTopHeader({
   onSelectSearchResult,
   onRegistrarEntrada,
   onRegistrarSaida,
-  onAbrirBaixaRapida,
   onToggleMobileMenu,
   totalAlertas = 0,
   className = '',
 }: AppTopHeaderProps) {
   const { user } = useAuthStore();
   const { periodo, textoIntervalo } = usePeriodoGlobal();
-  const totalItensCarrinho = useBaixaRapidaStore((s) => s.itens.length);
 
   const podeMover = podeExecutar(user?.role, 'mover');
   const isAbaEstoque = telaAtiva === 'mp' || telaAtiva === 'imp' || telaAtiva === 'motos';
@@ -130,21 +125,6 @@ export function AppTopHeader({
 
       {/* 2. Lado Direito: Ações Rápidas (3.0), Data Operacional, Alertas, Tema e Perfil */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Carrinho de Baixa em Lote Discreto (se houver itens pendentes) */}
-        {podeMover && onAbrirBaixaRapida && totalItensCarrinho > 0 && (
-          <button
-            type="button"
-            onClick={onAbrirBaixaRapida}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-on-surface bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 transition-colors cursor-pointer"
-            title="Abrir carrinho de retirada em lote"
-          >
-            <ShoppingCart className="w-3.5 h-3.5 text-secondary" />
-            <span className="hidden md:inline">Lote</span>
-            <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary text-on-primary leading-none">
-              {totalItensCarrinho}
-            </span>
-          </button>
-        )}
 
         {/* Data Operacional */}
         <div className="hidden xl:flex items-center gap-2 text-on-surface-variant font-body-sm text-xs">

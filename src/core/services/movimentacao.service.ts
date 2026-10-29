@@ -5,8 +5,6 @@ import {
   RegistrarBaixaInternaInput,
   RegistrarSaidaExpedicaoSchema,
   RegistrarSaidaExpedicaoInput,
-  RegistrarBaixaLoteSchema,
-  RegistrarBaixaLoteInput,
   RegistrarAjusteInventarioSchema,
   RegistrarAjusteInventarioInput,
   Movimentacao,
@@ -59,28 +57,6 @@ export class ColaboradorInativoError extends Error {
       `Colaborador "${nome}" (matrícula: ${matricula}) está com cadastro inativo e não pode retirar materiais.`
     );
     this.name = 'ColaboradorInativoError';
-  }
-}
-
-export class LoteEstoqueInsuficienteError extends Error {
-  constructor(
-    public readonly itensComProblema: Array<{
-      itemId: string;
-      codigo: string;
-      descricao: string;
-      saldoAtual: number;
-      quantidadeSolicitada: number;
-      faltante: number;
-    }>
-  ) {
-    const detalhes = itensComProblema
-      .map(
-        (i) =>
-          `[Item: ${i.codigo} - ${i.descricao} | Disponível: ${i.saldoAtual}, Solicitado: ${i.quantidadeSolicitada}]`
-      )
-      .join('; ');
-    super(`A baixa em lote não pôde ser efetuada devido a saldo insuficiente nos itens: ${detalhes}`);
-    this.name = 'LoteEstoqueInsuficienteError';
   }
 }
 
@@ -307,131 +283,6 @@ export class MovimentacaoService {
     return this.repository.registrarMovimentacao(movimentacao);
   }
 
-  /**
-   * Orquestra a baixa rápida de múltiplos itens em lote (carrinho de retirada rápida do operador).
-   * Garante validação transacional prévia: nenhum item é baixado se houver insuficiência em qualquer um deles.
-   */
-  async executarBaixaLote(dados: RegistrarBaixaLoteInput): Promise<Movimentacao[]> {
-    const validado = RegistrarBaixaLoteSchema.parse(dados);
-    const colaborador = await this.validarColaboradorAtivo(validado.colaboradorId);
-
-    // 1. Fase de Verificação e Carregamento de Itens
-    const itensCarregados: Array<{ item: Item; quantidade: number; observacao?: string }> = [];
-    const itensComProblema: Array<{
-      itemId: string;
-      codigo: string;
-      descricao: string;
-      saldoAtual: number;
-      quantidadeSolicitada: number;
-      faltante: number;
-    }> = [];
-
-    // Mesmo objeto por itemId, para que itens repetidos no lote acumulem o débito.
-    const itensPorId = new Map<string, Item>();
-    const quantidadeTotalPorItem = new Map<string, number>();
-    for (const itemSolicitado of validado.itens) {
-      quantidadeTotalPorItem.set(
-        itemSolicitado.itemId,
-        (quantidadeTotalPorItem.get(itemSolicitado.itemId) ?? 0) + itemSolicitado.quantidade
-      );
-    }
-
-    for (const itemSolicitado of validado.itens) {
-      let item = itensPorId.get(itemSolicitado.itemId);
-      if (!item) {
-        item = await this.validarItemAtivo(itemSolicitado.itemId);
-        itensPorId.set(item.id, item);
-      } else {
-        // Item repetido: a disponibilidade já foi avaliada pelo total na primeira ocorrência.
-        itensCarregados.push({
-          item,
-          quantidade: itemSolicitado.quantidade,
-          observacao: itemSolicitado.observacao,
-        });
-        continue;
-      }
-      const quantidadeTotal = quantidadeTotalPorItem.get(item.id) ?? itemSolicitado.quantidade;
-      const disponibilidade = validarDisponibilidadeEstoque(item.estoqueAtual, quantidadeTotal);
-
-      if (!disponibilidade.disponivel) {
-        itensComProblema.push({
-          itemId: item.id,
-          codigo: item.codigo,
-          descricao: item.descricao,
-          saldoAtual: item.estoqueAtual,
-          quantidadeSolicitada: itemSolicitado.quantidade,
-          faltante: disponibilidade.faltante,
-        });
-      }
-
-      itensCarregados.push({
-        item,
-        quantidade: itemSolicitado.quantidade,
-        observacao: itemSolicitado.observacao,
-      });
-    }
-
-    // Se qualquer item tiver saldo insuficiente, aborta todo o lote para proteger o estoque
-    if (itensComProblema.length > 0) {
-      throw new LoteEstoqueInsuficienteError(itensComProblema);
-    }
-
-    // 2. Fase de Aplicação e Persistência
-    const agora = validado.dataMovimentacao || new Date().toISOString();
-    const setorOperacao = validado.setor || colaborador.setor;
-    const operacoesParaPersistir: Array<{
-      itemId: string;
-      novoSaldo: number;
-      movimentacao: Movimentacao;
-    }> = [];
-
-    for (const { item, quantidade, observacao } of itensCarregados) {
-      const saldoAnterior = item.estoqueAtual;
-      const saldoResultante = calcularNovoSaldo(
-        saldoAnterior,
-        'SAIDA_CONSUMO_INTERNO',
-        quantidade
-      );
-
-      const movimentacao: Movimentacao = {
-        id: this.gerarIdMovimentacao(),
-        itemId: item.id,
-        tipo: 'SAIDA_CONSUMO_INTERNO',
-        quantidade,
-        saldoAnterior,
-        saldoResultante,
-        dataMovimentacao: agora,
-        colaboradorId: colaborador.id,
-        colaboradorMatricula: colaborador.matricula,
-        colaboradorNome: colaborador.nome,
-        setor: setorOperacao,
-        observacao: observacao || validado.observacaoGeral,
-        createdAt: agora,
-      };
-
-      operacoesParaPersistir.push({
-        itemId: item.id,
-        novoSaldo: saldoResultante,
-        movimentacao,
-      });
-
-      // Atualiza o saldo local para o caso de itens duplicados no mesmo lote
-      item.estoqueAtual = saldoResultante;
-    }
-
-    if (typeof this.repository.registrarBaixaLoteAtomica === 'function') {
-      return this.repository.registrarBaixaLoteAtomica(operacoesParaPersistir);
-    }
-
-    const movimentacoesGeradas: Movimentacao[] = [];
-    for (const op of operacoesParaPersistir) {
-      await this.repository.atualizarSaldoItem(op.itemId, op.novoSaldo);
-      const movPersistida = await this.repository.registrarMovimentacao(op.movimentacao);
-      movimentacoesGeradas.push(movPersistida);
-    }
-
-    return movimentacoesGeradas;
-  }
 
   /**
    * Executa ajuste de inventário compensatório (contagem física vs sistema).
@@ -521,8 +372,8 @@ export class MovimentacaoService {
       });
     }
 
-    if (typeof this.repository.registrarBaixaLoteAtomica === 'function') {
-      return this.repository.registrarBaixaLoteAtomica(operacoesParaPersistir);
+    if (typeof this.repository.registrarOperacoesAtomicas === 'function') {
+      return this.repository.registrarOperacoesAtomicas(operacoesParaPersistir);
     }
 
     const movimentacoesGeradas: Movimentacao[] = [];
@@ -546,12 +397,6 @@ export class MovimentacaoService {
     return entradaService.efetivarEntrada(notaFiscal, options);
   }
 
-  /**
-   * Alias semântico para executarBaixaLote.
-   */
-  async executarBaixaEmLote(dados: RegistrarBaixaLoteInput): Promise<Movimentacao[]> {
-    return this.executarBaixaLote(dados);
-  }
 
   /**
    * Executa o estorno de uma movimentação anterior com auditoria completa.

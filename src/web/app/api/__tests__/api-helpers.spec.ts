@@ -17,7 +17,6 @@ import {
 
 import {
   ItemNaoEncontradoError,
-  LoteEstoqueInsuficienteError,
   MovimentacaoService,
 } from '@/core/services/movimentacao.service';
 import { SaldoInsuficienteError } from '@/core/services/estoque-calculator';
@@ -97,25 +96,6 @@ describe('Fase 1 — Utilitários e Helpers da API (api-helpers)', () => {
       assert.equal(res.status, 404);
       const json = await res.json();
       assert(json.error.includes('item-999'));
-    });
-
-    it('deve converter LoteEstoqueInsuficienteError para 422 com lista de itens divergentes', async () => {
-      const err = new LoteEstoqueInsuficienteError([
-        {
-          itemId: 'item-1',
-          codigo: '90-1105',
-          descricao: 'Disco Flap',
-          saldoAtual: 5,
-          quantidadeSolicitada: 10,
-          faltante: 5,
-        },
-      ]);
-
-      const res = toErrorResponse(err);
-      assert.equal(res.status, 422);
-      const json = await res.json();
-      assert.equal(json.itensComProblema.length, 1);
-      assert.equal(json.itensComProblema[0].codigo, '90-1105');
     });
 
     it('deve converter SaldoInsuficienteError para 422', async () => {

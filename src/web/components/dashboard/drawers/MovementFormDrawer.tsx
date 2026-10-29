@@ -104,6 +104,7 @@ export function MovementFormDrawer({
         const nNF = xml.querySelector('ide > nNF')?.textContent || xml.querySelector('nNF')?.textContent || '';
         const xNome = xml.querySelector('emit > xNome')?.textContent || '';
         const qComStr = xml.querySelector('det > prod > qCom')?.textContent || xml.querySelector('qCom')?.textContent;
+        const vUnComStr = xml.querySelector('det > prod > vUnCom')?.textContent || xml.querySelector('vUnCom')?.textContent;
         if (nNF) {
           setCamposInfo((prev) => ({ ...prev, 'NF-e': nNF, ...(xNome ? { Fornecedor: xNome } : {}) }));
         }

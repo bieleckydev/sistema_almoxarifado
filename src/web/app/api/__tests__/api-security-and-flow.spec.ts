@@ -10,7 +10,7 @@ import { POST as postItem, GET as getItemList } from '../itens/route';
 import { GET as getItemById } from '../itens/[id]/route';
 import { POST as postColaborador } from '../colaboradores/route';
 import { POST as postEntrada } from '../movimentacoes/entrada/route';
-import { POST as postBaixaLote } from '../movimentacoes/baixa-lote/route';
+import { POST as postBaixaInterna } from '../movimentacoes/baixa-interna/route';
 import { GET as getExtrato } from '../movimentacoes/extrato/[itemId]/route';
 import { GET as getMovimentacoes } from '../movimentacoes/route';
 
@@ -112,15 +112,16 @@ describe('Fase 5 — Validação Global de Segurança e Fluxo Completo de API (E
     it('deve aplicar matriz de permissão: Requisitante não pode movimentar estoque', async () => {
       setIdentityAuthenticator(async () => requisitanteUser);
 
-      const reqBaixa = new Request('http://localhost:3000/api/movimentacoes/baixa-lote', {
+      const reqBaixa = new Request('http://localhost:3000/api/movimentacoes/baixa-interna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          itemId: 'item-1',
+          quantidade: 1,
           colaboradorId: 'colab-1',
-          itens: [{ itemId: 'item-1', quantidade: 1 }],
         }),
       });
-      const resBaixa = await postBaixaLote(reqBaixa);
+      const resBaixa = await postBaixaInterna(reqBaixa);
       assert.equal(resBaixa.status, 403);
     });
   });
@@ -187,19 +188,21 @@ describe('Fase 5 — Validação Global de Segurança e Fluxo Completo de API (E
       assert.equal(movEntrada.saldoAnterior, 0);
       assert.equal(movEntrada.saldoResultante, 50);
 
-      // 4. Operador executa baixa rápida para retirada do soldador
-      const resBaixa = await postBaixaLote(
-        new Request('http://localhost:3000/api/movimentacoes/baixa-lote', {
+      // 4. Operador executa baixa interna para retirada do soldador
+      const resBaixa = await postBaixaInterna(
+        new Request('http://localhost:3000/api/movimentacoes/baixa-interna', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            itemId: itemCriado.id,
+            quantidade: 15,
             colaboradorId: colabCriado.id,
-            itens: [{ itemId: itemCriado.id, quantidade: 15, observacao: 'Turno da Manhã' }],
+            observacao: 'Turno da Manhã',
           }),
         })
       );
       assert.equal(resBaixa.status, 201);
-      const [movBaixa] = await resBaixa.json();
+      const movBaixa = await resBaixa.json();
       assert.equal(movBaixa.saldoAnterior, 50);
       assert.equal(movBaixa.saldoResultante, 35);
       assert.equal(movBaixa.colaboradorMatricula, '077');

@@ -6,7 +6,6 @@ import {
   setIdentityAuthenticator,
 } from '../api-helpers';
 import type { AuthenticatedIdentity } from '@/server/auth/identity';
-import { POST as postBaixaLote } from '../movimentacoes/baixa-lote/route';
 import { POST as postEntrada } from '../movimentacoes/entrada/route';
 import { POST as postBaixaInterna } from '../movimentacoes/baixa-interna/route';
 import { POST as postExpedicao } from '../movimentacoes/expedicao/route';
@@ -103,77 +102,6 @@ describe('Fase 4 — Rotas de API de Movimentações (/api/movimentacoes)', () =
     });
   });
 
-  describe('POST /api/movimentacoes/baixa-lote', () => {
-    it('deve realizar baixa em lote de múltiplos itens com sucesso (201 Created)', async () => {
-      const request = new Request('http://localhost:3000/api/movimentacoes/baixa-lote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          colaboradorId: 'colab-1',
-          itens: [
-            { itemId: 'item-flap', quantidade: 5, observacao: 'Uso no turno 1' },
-            { itemId: 'item-broca', quantidade: 2 },
-          ],
-        }),
-      });
-
-      const response = await postBaixaLote(request);
-      assert.equal(response.status, 201);
-      const movimentacoes = await response.json();
-      assert.equal(movimentacoes.length, 2);
-
-      // Checa novos saldos no banco
-      const flap = await memoryRepo.buscarItemPorId('item-flap');
-      assert.equal(flap?.estoqueAtual, 45); // 50 - 5
-
-      const broca = await memoryRepo.buscarItemPorId('item-broca');
-      assert.equal(broca?.estoqueAtual, 2); // 4 - 2
-    });
-
-    it('deve abortar lote INTEIRO e retornar 422 se qualquer item tiver estoque insuficiente', async () => {
-      const request = new Request('http://localhost:3000/api/movimentacoes/baixa-lote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          colaboradorId: 'colab-1',
-          itens: [
-            { itemId: 'item-flap', quantidade: 5 },
-            { itemId: 'item-broca', quantidade: 10 }, // Broca só tem 4 em estoque!
-          ],
-        }),
-      });
-
-      const response = await postBaixaLote(request);
-      assert.equal(response.status, 422);
-      const data = await response.json();
-      assert.ok(data.error.includes('saldo insuficiente'));
-      assert.equal(data.itensComProblema.length, 1);
-      assert.equal(data.itensComProblema[0].codigo, '90-1120');
-
-      // Nenhum saldo deve ter sido alterado
-      const flap = await memoryRepo.buscarItemPorId('item-flap');
-      assert.equal(flap?.estoqueAtual, 50);
-
-      const broca = await memoryRepo.buscarItemPorId('item-broca');
-      assert.equal(broca?.estoqueAtual, 4);
-    });
-
-    it('deve retornar 403 Forbidden se usuário não tiver permissão stock:operate', async () => {
-      setIdentityAuthenticator(async () => mockRequisitanteIdentity);
-
-      const request = new Request('http://localhost:3000/api/movimentacoes/baixa-lote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          colaboradorId: 'colab-1',
-          itens: [{ itemId: 'item-flap', quantidade: 1 }],
-        }),
-      });
-
-      const response = await postBaixaLote(request);
-      assert.equal(response.status, 403);
-    });
-  });
 
   describe('POST /api/movimentacoes/entrada', () => {
     it('deve registrar entrada de compra e aumentar saldo (201 Created)', async () => {

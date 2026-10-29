@@ -188,7 +188,7 @@ describe('2.4 — Contrato e Implementação de Repositório de Estoque', () => 
     assert(extrato.some((m) => m.id === 'mov-atomica-1'));
   });
 
-  it('deve registrar baixa em lote atômica com múltiplos itens (registrarBaixaLoteAtomica)', async () => {
+  it('deve registrar operações atômicas com múltiplos itens (registrarOperacoesAtomicas)', async () => {
     const movItem1: Movimentacao = {
       id: 'mov-lote-1',
       itemId: 'item-10-3812',
@@ -211,7 +211,7 @@ describe('2.4 — Contrato e Implementação de Repositório de Estoque', () => 
       colaboradorId: 'colab-1',
     };
 
-    const resultado = await repo.registrarBaixaLoteAtomica([
+    const resultado = await repo.registrarOperacoesAtomicas([
       { itemId: 'item-10-3812', novoSaldo: 1000, movimentacao: movItem1 },
       { itemId: 'item-90-1105', novoSaldo: 10, movimentacao: movItem2 },
     ]);

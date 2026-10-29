@@ -3,7 +3,6 @@ import {
   RegistrarEntradaInput,
   RegistrarBaixaInternaInput,
   RegistrarSaidaExpedicaoInput,
-  RegistrarBaixaLoteInput,
   RegistrarAjusteInventarioInput,
   Movimentacao,
 } from '../domain/movimentacao.schema';
@@ -86,32 +85,6 @@ export function useRegistrarBaixaInterna(customService?: MovimentacaoService) {
   });
 }
 
-/**
- * Hook para registrar baixa rápida em lote ("carrinho de retirada rápida" do chão de fábrica).
- * Invalida simultaneamente o cache de todos os itens envolvidos no lote.
- */
-export function useRegistrarBaixaLote(customService?: MovimentacaoService) {
-  const queryClient = useQueryClient();
-  const service = customService || defaultMovimentacaoService;
-
-  return useMutation({
-    mutationFn: (dados: RegistrarBaixaLoteInput): Promise<Movimentacao[]> =>
-      service.executarBaixaLote(dados),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: MOVIMENTACAO_QUERY_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: MOVIMENTACAO_QUERY_KEYS.itens });
-
-      for (const item of variables.itens) {
-        queryClient.invalidateQueries({
-          queryKey: MOVIMENTACAO_QUERY_KEYS.item(item.itemId),
-        });
-        queryClient.invalidateQueries({
-          queryKey: MOVIMENTACAO_QUERY_KEYS.extrato(item.itemId),
-        });
-      }
-    },
-  });
-}
 
 /**
  * Hook para registrar saída de produto acabado para expedição/cliente.
@@ -165,14 +138,12 @@ export function useRegistrarAjusteInventario(customService?: MovimentacaoService
 export function useMovimentacao(customService?: MovimentacaoService) {
   const entradaMutation = useRegistrarEntrada(customService);
   const baixaInternaMutation = useRegistrarBaixaInterna(customService);
-  const baixaLoteMutation = useRegistrarBaixaLote(customService);
   const saidaExpedicaoMutation = useRegistrarSaidaExpedicao(customService);
   const ajusteInventarioMutation = useRegistrarAjusteInventario(customService);
 
   const isPending =
     entradaMutation.isPending ||
     baixaInternaMutation.isPending ||
-    baixaLoteMutation.isPending ||
     saidaExpedicaoMutation.isPending ||
     ajusteInventarioMutation.isPending;
 
@@ -185,10 +156,6 @@ export function useMovimentacao(customService?: MovimentacaoService) {
     registrarBaixaInterna: baixaInternaMutation.mutateAsync,
     isRegistrandoBaixaInterna: baixaInternaMutation.isPending,
     erroBaixaInterna: baixaInternaMutation.error,
-
-    registrarBaixaLote: baixaLoteMutation.mutateAsync,
-    isRegistrandoBaixaLote: baixaLoteMutation.isPending,
-    erroBaixaLote: baixaLoteMutation.error,
 
     registrarSaidaExpedicao: saidaExpedicaoMutation.mutateAsync,
     isRegistrandoSaidaExpedicao: saidaExpedicaoMutation.isPending,

@@ -89,10 +89,10 @@ export interface IEstoqueRepository {
   ): Promise<Movimentacao>;
 
   /**
-   * Registra atomicamente uma baixa em lote de múltiplos itens com seus respectivos saldos e movimentações.
+   * Registra atomicamente múltiplas operações de itens com seus respectivos saldos e movimentações.
    * Se qualquer item apresentar divergência na transação, toda a operação é cancelada.
    */
-  registrarBaixaLoteAtomica?(
+  registrarOperacoesAtomicas?(
     operacoes: Array<{
       itemId: string;
       novoSaldo: number;

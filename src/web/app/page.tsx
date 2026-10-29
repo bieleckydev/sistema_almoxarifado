@@ -31,8 +31,6 @@ import { ItemEditDrawer } from '@/web/components/dashboard/drawers/ItemEditDrawe
 import { EtiquetaItemModal } from '@/web/components/dashboard/modals/EtiquetaItemModal';
 import { MovementFormDrawer } from '@/web/components/dashboard/drawers/MovementFormDrawer';
 import { QuickItemPickerDrawer } from '@/web/components/dashboard/drawers/QuickItemPickerDrawer';
-import { BaixaRapidaDrawer } from '@/web/components/gestao/saida/BaixaRapidaDrawer';
-import { useBaixaRapidaStore } from '@/core/store/useBaixaRapidaStore';
 import { VendasView } from '@/web/components/gestao/vendas/VendasView';
 import { OrderCreateDrawer } from '@/web/components/gestao/vendas/OrderCreateDrawer';
 import { ClientesView } from '@/web/components/gestao/clientes/ClientesView';
@@ -104,7 +102,6 @@ export default function AlmoxarifadoDashboardPage() {
     pedido: null,
   });
   const [isReceberTerceiroOpen, setIsReceberTerceiroOpen] = useState(false);
-  const [isBaixaRapidaOpen, setIsBaixaRapidaOpen] = useState(false);
 
   const { faturarPedido, kpis: faturamentoKpis } = useFaturamento();
   const { receberMaterial, isRecebendo: isRecebendoTerceiro } = useMaterialTerceiros();
@@ -388,7 +385,6 @@ export default function AlmoxarifadoDashboardPage() {
             onSelectSearchResult={handleSelectSearchResult}
             onRegistrarEntrada={() => setPickerDrawerState({ isOpen: true, tipo: 'Entrada' })}
             onRegistrarSaida={() => setPickerDrawerState({ isOpen: true, tipo: 'Saída' })}
-            onAbrirBaixaRapida={() => setIsBaixaRapidaOpen(true)}
             onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
             totalAlertas={totalCriticosGerais}
           />
@@ -526,12 +522,6 @@ export default function AlmoxarifadoDashboardPage() {
                   onSelectItem={handleSelectItem}
                   onRegistrarEntrada={(item) => handleOpenMovement(item, 'Entrada')}
                   onRegistrarSaida={(item) => handleOpenMovement(item, 'Saída')}
-                  onRegistrarBaixaRapida={(item) => {
-                    useBaixaRapidaStore.getState().adicionarItem(item, 1);
-                    toast(`Material ${item.descricao} adicionado ao carrinho de retirada.`, {
-                      type: 'success',
-                    });
-                  }}
                   onImprimirEtiqueta={(item) => setItemParaEtiqueta(item)}
                   selectedItemId={itemSelecionado?.id}
                   isLoading={isLoading}
@@ -577,7 +567,6 @@ export default function AlmoxarifadoDashboardPage() {
               <SaidaManualView
                 triggerExportCsv={triggerExportCSV}
                 onExportCsvDone={() => setTriggerExportCSV(false)}
-                onAbrirBaixaRapida={() => setIsBaixaRapidaOpen(true)}
                 onSelectItem={(item) => {
                   setItemSelecionado(item);
                   setIsDrawerOpen(true);
@@ -748,14 +737,6 @@ export default function AlmoxarifadoDashboardPage() {
           isSalvando={isRecebendoTerceiro}
         />
 
-        {/* Gaveta de Baixa Rápida em Lote (Carrinho Chão de Fábrica) */}
-        <BaixaRapidaDrawer
-          isOpen={isBaixaRapidaOpen}
-          onClose={() => setIsBaixaRapidaOpen(false)}
-          onSuccess={() => {
-            refetch();
-          }}
-        />
 
         {/* Barra de Navegação Inferior Móvel para Tablets e Celulares */}
         <MobileBottomNav

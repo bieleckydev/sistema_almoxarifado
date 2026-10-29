@@ -246,7 +246,7 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     return this.registrarMovimentacao(movimentacao);
   }
 
-  async registrarBaixaLoteAtomica(
+  async registrarOperacoesAtomicas(
     operacoes: Array<{
       itemId: string;
       novoSaldo: number;

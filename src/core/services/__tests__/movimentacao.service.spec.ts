@@ -6,7 +6,6 @@ import {
   ItemInativoError,
   ColaboradorNaoEncontradoError,
   ColaboradorInativoError,
-  LoteEstoqueInsuficienteError,
 } from '../movimentacao.service';
 import { MemoryEstoqueRepository } from '../../storage/memory-estoque.adapter';
 import { SaldoInsuficienteError } from '../estoque-calculator';
@@ -200,48 +199,6 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
     });
   });
 
-  describe('Orquestração de Baixa Rápida em Lote', () => {
-    it('deve processar baixa em lote com múltiplos itens com sucesso', async () => {
-      const resultado = await service.executarBaixaLote({
-        colaboradorId: 'colab-1',
-        itens: [
-          { itemId: 'item-1', quantidade: 5 },
-          { itemId: 'item-2', quantidade: 2 },
-        ],
-        observacaoGeral: 'Kit inicial montagem',
-      });
-
-      assert.equal(resultado.length, 2);
-      const item1 = await repo.buscarItemPorId('item-1');
-      const item2 = await repo.buscarItemPorId('item-2');
-      assert.equal(item1?.estoqueAtual, 45); // 50 - 5
-      assert.equal(item2?.estoqueAtual, 1);  // 3 - 2
-    });
-
-    it('deve abortar o lote INTEIRO se qualquer item não tiver saldo suficiente', async () => {
-      // item-1 tem 50 (suficiente), mas item-2 tem apenas 3 (solicitado 10)
-      await assert.rejects(
-        () =>
-          service.executarBaixaLote({
-            colaboradorId: 'colab-1',
-            itens: [
-              { itemId: 'item-1', quantidade: 10 },
-              { itemId: 'item-2', quantidade: 10 }, // vai falhar
-            ],
-          }),
-        LoteEstoqueInsuficienteError
-      );
-
-      // Garante atomicidade: o item-1 NÃO deve ter sido debitado!
-      const item1 = await repo.buscarItemPorId('item-1');
-      const item2 = await repo.buscarItemPorId('item-2');
-      assert.equal(item1?.estoqueAtual, 50);
-      assert.equal(item2?.estoqueAtual, 3);
-
-      const lista = await repo.listarMovimentacoes();
-      assert.equal(lista.total, 0);
-    });
-  });
 
   describe('Saída para Expedição e Ajuste de Inventário', () => {
     it('deve processar saída para expedição vinculada a cliente', async () => {
@@ -301,9 +258,9 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
   });
 
   describe('Delegação e Fallback de Transações Atômicas', () => {
-    it('deve utilizar registrarMovimentacaoComSaldo e registrarBaixaLoteAtomica quando disponíveis no repositório', async () => {
+    it('deve utilizar registrarMovimentacaoComSaldo e registrarOperacoesAtomicas quando disponíveis no repositório', async () => {
       let chamouComSaldo = false;
-      let chamouLoteAtomico = false;
+      let chamouOperacoesAtomicas = false;
 
       const repoEspiao = new MemoryEstoqueRepository({
         itens: [
@@ -337,10 +294,10 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
         return origComSaldo(id, saldo, mov);
       };
 
-      const origLoteAtomico = repoEspiao.registrarBaixaLoteAtomica.bind(repoEspiao);
-      repoEspiao.registrarBaixaLoteAtomica = async (ops) => {
-        chamouLoteAtomico = true;
-        return origLoteAtomico(ops);
+      const origOperacoesAtomicas = repoEspiao.registrarOperacoesAtomicas.bind(repoEspiao);
+      repoEspiao.registrarOperacoesAtomicas = async (ops) => {
+        chamouOperacoesAtomicas = true;
+        return origOperacoesAtomicas(ops);
       };
 
       const servicoComEspiao = new MovimentacaoService(repoEspiao);
@@ -352,12 +309,17 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       });
       assert.equal(chamouComSaldo, true);
 
-      // 2. Testa baixa em lote delegando para baixa lote atômica
-      await servicoComEspiao.executarBaixaLote({
-        colaboradorId: 'colab-1',
-        itens: [{ itemId: 'item-espiao-1', quantidade: 5 }],
-      });
-      assert.equal(chamouLoteAtomico, true);
+      // 2. Testa ajuste em lote delegando para operações atômicas
+      await servicoComEspiao.executarAjusteInventarioLote([
+        {
+          itemId: 'item-espiao-1',
+          tipo: 'AJUSTE_INVENTARIO_POSITIVO',
+          quantidade: 5,
+          motivo: 'Ajuste espiao',
+          responsavelId: 'user-1',
+        },
+      ]);
+      assert.equal(chamouOperacoesAtomicas, true);
     });
 
     it('deve realizar fallback suave quando repositório não implementar métodos atômicos', async () => {
@@ -389,7 +351,7 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
 
       // Remove intencionalmente os métodos atômicos
       delete (repoSemAtomico as any).registrarMovimentacaoComSaldo;
-      delete (repoSemAtomico as any).registrarBaixaLoteAtomica;
+      delete (repoSemAtomico as any).registrarOperacoesAtomicas;
 
       const servicoFallback = new MovimentacaoService(repoSemAtomico);
 
@@ -399,48 +361,21 @@ describe('2.3 — MovimentacaoService (Orquestração e Regras de Negócio)', ()
       });
       assert.equal(entrada.saldoResultante, 30);
 
-      const lote = await servicoFallback.executarBaixaLote({
-        colaboradorId: 'colab-1',
-        itens: [{ itemId: 'item-sem-1', quantidade: 5 }],
-      });
-      assert.equal(lote.length, 1);
-      assert.equal(lote[0].saldoResultante, 25);
+      const ajustes = await servicoFallback.executarAjusteInventarioLote([
+        {
+          itemId: 'item-sem-1',
+          tipo: 'AJUSTE_INVENTARIO_POSITIVO',
+          quantidade: 5,
+          motivo: 'Ajuste fallback',
+          responsavelId: 'user-1',
+        },
+      ]);
+      assert.equal(ajustes.length, 1);
+      assert.equal(ajustes[0].saldoResultante, 35);
     });
   });
 
   describe('Regressões de integridade de saldo', () => {
-    it('baixa em lote com o mesmo item repetido debita a soma das quantidades', async () => {
-      const resultado = await service.executarBaixaLote({
-        colaboradorId: 'colab-1',
-        itens: [
-          { itemId: 'item-1', quantidade: 3 },
-          { itemId: 'item-1', quantidade: 4 },
-        ],
-      });
-      assert.equal(resultado.length, 2);
-      assert.equal(resultado[0].saldoResultante, 47);
-      assert.equal(resultado[1].saldoAnterior, 47);
-      assert.equal(resultado[1].saldoResultante, 43);
-      const item = await repo.buscarItemPorId('item-1');
-      assert.equal(item?.estoqueAtual, 43);
-    });
-
-    it('baixa em lote com item repetido recusa quando a soma excede o saldo', async () => {
-      await assert.rejects(
-        () =>
-          service.executarBaixaLote({
-            colaboradorId: 'colab-1',
-            itens: [
-              { itemId: 'item-2', quantidade: 2 },
-              { itemId: 'item-2', quantidade: 2 },
-            ],
-          }),
-        LoteEstoqueInsuficienteError
-      );
-      const item = await repo.buscarItemPorId('item-2');
-      assert.equal(item?.estoqueAtual, 3);
-    });
-
     it('não permite estornar a mesma movimentação duas vezes', async () => {
       const mov = await service.executarBaixaInterna({
         itemId: 'item-1',

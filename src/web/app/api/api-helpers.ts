@@ -15,7 +15,6 @@ import {
   ItemInativoError,
   ColaboradorNaoEncontradoError,
   ColaboradorInativoError,
-  LoteEstoqueInsuficienteError,
   NotaFiscalDuplicadaError,
   MovimentacaoJaEstornadaError,
   MovimentacaoService,
@@ -196,16 +195,6 @@ export function toErrorResponse(error: unknown): NextResponse {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
 
-  // Lote de retirada com itens insuficientes (422 Unprocessable Entity com detalhes)
-  if (error instanceof LoteEstoqueInsuficienteError) {
-    return NextResponse.json(
-      {
-        error: error.message,
-        itensComProblema: error.itensComProblema,
-      },
-      { status: 422 }
-    );
-  }
 
   // Erros de regra de negócio de estoque (422 Unprocessable Entity)
   if (

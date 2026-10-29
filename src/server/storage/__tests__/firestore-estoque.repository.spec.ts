@@ -398,7 +398,7 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
       );
     });
 
-    it('deve executar baixa em lote atômica com múltiplos itens', async () => {
+    it('deve executar operações atômicas com múltiplos itens (registrarOperacoesAtomicas)', async () => {
       const movFlap: Movimentacao = {
         id: 'mov-lote-flap',
         itemId: 'item-flap-1',
@@ -421,7 +421,7 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
         colaboradorId: 'colab-1',
       };
 
-      const resultado = await repo.registrarBaixaLoteAtomica([
+      const resultado = await repo.registrarOperacoesAtomicas([
         { itemId: 'item-flap-1', novoSaldo: 40, movimentacao: movFlap },
         { itemId: 'item-tubo-1', novoSaldo: 150, movimentacao: movTubo },
       ]);
@@ -436,7 +436,7 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
       assert.equal(tuboAtualizado?.estoqueAtual, 150);
     });
 
-    it('deve abortar o lote INTEIRO e não alterar nenhum saldo se qualquer item tiver estoque insuficiente', async () => {
+    it('deve abortar a transação e não alterar nenhum saldo se qualquer item tiver estoque insuficiente', async () => {
       const movFlapValida: Movimentacao = {
         id: 'mov-flap-ok',
         itemId: 'item-flap-1',
@@ -462,11 +462,11 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
 
       await assert.rejects(
         () =>
-          repo.registrarBaixaLoteAtomica([
+          repo.registrarOperacoesAtomicas([
             { itemId: 'item-flap-1', novoSaldo: 40, movimentacao: movFlapValida },
             { itemId: 'item-tubo-1', novoSaldo: -300, movimentacao: movTuboExcessiva },
           ]),
-        /A baixa em lote não pôde ser efetuada devido a saldo insuficiente/
+        /Saldo insuficiente/
       );
 
       // Verificação de isolamento atômico (Rollback): NENHUM saldo foi alterado!

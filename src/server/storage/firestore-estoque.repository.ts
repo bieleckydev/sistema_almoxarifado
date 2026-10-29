@@ -11,7 +11,6 @@ import {
 import {
   ItemNaoEncontradoError,
   ItemInativoError,
-  LoteEstoqueInsuficienteError,
   MovimentacaoJaEstornadaError,
 } from '@/core/services/movimentacao.service';
 import {
@@ -433,10 +432,10 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
   }
 
   /**
-   * Registra a baixa simultânea de múltiplos itens em lote dentro de uma única transação atômica.
+   * Registra a execução simultânea de múltiplas operações dentro de uma única transação atômica.
    * Se qualquer item apresentar divergência ou saldo insuficiente, todas as operações são abortadas pelo Firestore.
    */
-  async registrarBaixaLoteAtomica(
+  async registrarOperacoesAtomicas(
     operacoes: Array<{
       itemId: string;
       novoSaldo: number;
@@ -451,20 +450,11 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     const refPorId = new Map(idsUnicos.map((id) => [id, this.db.collection('items').doc(id)]));
 
     return this.db.runTransaction(async (transaction) => {
-      // 1. TODAS as leituras primeiro (uma por item, mesmo se repetido no lote)
+      // 1. TODAS as leituras primeiro (uma por item, mesmo se repetido no conjunto)
       const snaps = await Promise.all(idsUnicos.map((id) => transaction.get(refPorId.get(id)!)));
       const snapPorId = new Map(idsUnicos.map((id, i) => [id, snaps[i]]));
 
       // 2. Validações e detecção de concorrência/saldo insuficiente
-      const itensComProblema: Array<{
-        itemId: string;
-        codigo: string;
-        descricao: string;
-        saldoAtual: number;
-        quantidadeSolicitada: number;
-        faltante: number;
-      }> = [];
-
       // Saldo corrente por item, recalculado a partir do banco e acumulado entre operações.
       const saldoCorrente = new Map<string, number>();
       for (const id of idsUnicos) {
@@ -481,29 +471,10 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
 
       const movsFinais: Movimentacao[] = [];
       for (const op of operacoes) {
-        const data = snapPorId.get(op.itemId)!.data() || {};
         const saldoAnterior = saldoCorrente.get(op.itemId)!;
-        let saldoResultante: number;
-        try {
-          saldoResultante = calcularNovoSaldo(saldoAnterior, op.movimentacao.tipo, op.movimentacao.quantidade);
-        } catch (err) {
-          if (!(err instanceof SaldoInsuficienteError)) throw err;
-          itensComProblema.push({
-            itemId: op.itemId,
-            codigo: data.codigo || op.itemId,
-            descricao: data.descricao || '',
-            saldoAtual: saldoAnterior,
-            quantidadeSolicitada: op.movimentacao.quantidade,
-            faltante: Math.max(0, op.movimentacao.quantidade - saldoAnterior),
-          });
-          continue;
-        }
+        const saldoResultante = calcularNovoSaldo(saldoAnterior, op.movimentacao.tipo, op.movimentacao.quantidade);
         saldoCorrente.set(op.itemId, saldoResultante);
         movsFinais.push({ ...op.movimentacao, saldoAnterior, saldoResultante });
-      }
-
-      if (itensComProblema.length > 0) {
-        throw new LoteEstoqueInsuficienteError(itensComProblema);
       }
 
       // 3. TODAS as escritas atômicas

@@ -20,8 +20,6 @@ import { NFeArchiveService } from '../services/nfe-archive.service';
 import { InventarioService } from '../services/inventario.service';
 import { FechamentoMensalService } from '../services/fechamento-mensal.service';
 
-// 4. Store Global Agnóstica
-import { useBaixaRapidaStore } from '../store/useBaixaRapidaStore';
 
 describe('5.4 — Suite de Testes de Integração Ponta a Ponta do Core Agnóstico', () => {
   it('deve executar o ciclo de vida operacional fabril completo: Cadastro -> Entrada NFe -> Baixa Rápida -> Inventário -> Fechamento Mensal', async () => {
@@ -200,35 +198,23 @@ describe('5.4 — Suite de Testes de Integração Ponta a Ponta do Core Agnósti
     assert.equal(flapAposEntrada?.estoqueAtual, 110);
 
     // =========================================================================
-    // ETAPA 5: Chão de Fábrica — Retirada Rápida com useBaixaRapidaStore
+    // ETAPA 5: Chão de Fábrica — Retirada Interna para Colaborador
     // =========================================================================
-    const store = useBaixaRapidaStore.getState();
-    store.reset();
+    await movimentacaoService.executarBaixaInterna({
+      itemId: itemTubo.id,
+      quantidade: 20,
+      colaboradorId: colaborador.id,
+      setor: colaborador.setor,
+      observacao: 'Ordem de Fabricação OF-2026-90',
+    });
 
-    // Almoxarife seleciona o soldador
-    store.selecionarColaborador(colaborador);
-    store.definirObservacaoGeral('Ordem de Fabricação OF-2026-90');
-
-    // Bipando os materiais retirados no carrinho
-    store.adicionarItem(tuboAposEntrada!, 20); // 20 KG de tubo
-    store.adicionarItem(flapAposEntrada!, 5); // 5 discos flap
-
-    // Validação de segurança de saldo
-    const checagemDisponibilidade = useBaixaRapidaStore.getState().validarDisponibilidadeGeral();
-    assert.equal(checagemDisponibilidade.valido, true);
-    assert.equal(useBaixaRapidaStore.getState().estaProntoParaConfirmar(), true);
-
-    // Geração do payload da baixa em lote
-    const payloadBaixaLote = useBaixaRapidaStore.getState().obterPayloadBaixaLote();
-    assert.notEqual(payloadBaixaLote, null);
-
-    // Orquestração atômica da baixa física
-    const movimentacoesBaixa = await movimentacaoService.executarBaixaEmLote(payloadBaixaLote!);
-    assert.equal(movimentacoesBaixa.length, 2);
-
-    // Carrinho limpo após a confirmação
-    useBaixaRapidaStore.getState().reset();
-    assert.equal(useBaixaRapidaStore.getState().itens.length, 0);
+    await movimentacaoService.executarBaixaInterna({
+      itemId: itemFlap.id,
+      quantidade: 5,
+      colaboradorId: colaborador.id,
+      setor: colaborador.setor,
+      observacao: 'Ordem de Fabricação OF-2026-90',
+    });
 
     // Conferência dos novos saldos físicos:
     // Tubo: 1020 - 20 = 1000 KG

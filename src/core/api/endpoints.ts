@@ -24,7 +24,6 @@ export const ENDPOINTS = {
     BASE: '/movimentacoes',
     ENTRADA: '/movimentacoes/entrada',
     BAIXA_INTERNA: '/movimentacoes/baixa-interna',
-    BAIXA_LOTE: '/movimentacoes/baixa-lote',
     EXPEDICAO: '/movimentacoes/expedicao',
     AJUSTE: '/movimentacoes/ajuste',
     EXTRATO_ITEM: (itemId: string) => `/movimentacoes/extrato/${itemId}`,

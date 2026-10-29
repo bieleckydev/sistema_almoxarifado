@@ -14,7 +14,6 @@ import {
   RegistrarEntradaSchema,
   RegistrarBaixaInternaSchema,
   RegistrarSaidaExpedicaoSchema,
-  RegistrarBaixaLoteSchema,
   RegistrarAjusteInventarioSchema,
   MovimentacaoSchema,
 } from '../movimentacao.schema';
@@ -645,21 +644,6 @@ describe('2.1 — Schemas de Movimentações de Estoque', () => {
     assert.equal(parsed.status, 'DESPACHADO');
   });
 
-  it('deve validar baixa em lote com múltiplos itens para o mesmo colaborador', () => {
-    const baixaLote = {
-      colaboradorId: 'colab-042',
-      setor: 'FERRAMENTARIA' as const,
-      itens: [
-        { itemId: 'item-90-1105', quantidade: 5 },
-        { itemId: 'item-90-2001', quantidade: 2, observacao: 'Broca 8mm' },
-      ],
-      observacaoGeral: 'Retirada de início de turno',
-    };
-
-    const parsed = RegistrarBaixaLoteSchema.parse(baixaLote);
-    assert.equal(parsed.itens.length, 2);
-    assert.equal(parsed.colaboradorId, 'colab-042');
-  });
 
   it('deve validar entidade consolidada Movimentacao com auditoria de saldo', () => {
     const mov = {

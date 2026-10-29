@@ -14,7 +14,6 @@ import {
   ChevronRight,
   Printer,
   DollarSign,
-  ShoppingCart,
 } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { calcularRazaoEstoque } from '@/core/domain/quantidade';
@@ -36,7 +35,6 @@ export interface StockTableProps {
   onSelectItem: (item: DashboardItem) => void;
   onRegistrarEntrada?: (item: DashboardItem) => void;
   onRegistrarSaida?: (item: DashboardItem) => void;
-  onRegistrarBaixaRapida?: (item: DashboardItem) => void;
   onImprimirEtiqueta?: (item: DashboardItem) => void;
   selectedItemId?: string | null;
   isLoading?: boolean;
@@ -51,7 +49,6 @@ export function StockTable({
   onSelectItem,
   onRegistrarEntrada,
   onRegistrarSaida,
-  onRegistrarBaixaRapida,
   onImprimirEtiqueta,
   selectedItemId,
   isLoading = false,
@@ -450,22 +447,6 @@ export function StockTable({
                         <ArrowDownRight className="w-3 h-3 text-zinc-500 shrink-0" />
                         <span>Retirar</span>
                       </button>
-
-                      {onRegistrarBaixaRapida && (
-                        <button
-                          type="button"
-                          disabled={item.estoqueAtual <= 0}
-                          onClick={() => onRegistrarBaixaRapida(item)}
-                          title={item.estoqueAtual <= 0 ? 'Sem saldo disponível' : 'Adicionar ao carrinho de retirada em lote'}
-                          className={`inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors border border-outline-variant/30 ${
-                            item.estoqueAtual <= 0
-                              ? 'bg-surface-container text-on-surface-variant/40 opacity-50 cursor-not-allowed'
-                              : 'text-on-surface bg-surface-container hover:bg-surface-container-high cursor-pointer'
-                          }`}
-                        >
-                          <ShoppingCart className="w-3.5 h-3.5 text-zinc-500" />
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>
