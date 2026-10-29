@@ -43,8 +43,17 @@ export function ItemEditDrawer({
       setLocalizacaoFisica(item.localizacaoFisica || '');
       setCustoUnitario(item.custoUnitario || 0);
       setEstoqueSeguranca(item.estoqueSeguranca || 0);
-      setCapacidadeMaxima(item.capacidadeMaxima || 100);
-      setEspecificacoes(item.especificacoes || {});
+      const specsIniciais = { ...(item.especificacoes || {}) };
+      Object.keys(specsIniciais).forEach((k) => {
+        if (k.toLowerCase().includes('lote')) {
+          delete specsIniciais[k];
+        }
+      });
+      if (item.aba === 'motos') {
+        delete specsIniciais['Marca'];
+        delete specsIniciais['marca'];
+      }
+      setEspecificacoes(specsIniciais);
       setErro(null);
 
       setTimeout(() => closeButtonRef.current?.focus(), 50);
@@ -99,8 +108,14 @@ export function ItemEditDrawer({
         setErro(null);
 
         const specsToSave = { ...especificacoes };
+        Object.keys(specsToSave).forEach((k) => {
+          if (k.toLowerCase().includes('lote')) {
+            delete specsToSave[k];
+          }
+        });
         if (item.aba === 'motos') {
           delete specsToSave['Marca'];
+          delete specsToSave['marca'];
         }
 
         const payload = {
@@ -193,7 +208,7 @@ export function ItemEditDrawer({
               </div>
             )}
 
-            {/* Código (Apenas Leitura no 3.0 para preservar integridade de lote e rastreio) */}
+            {/* Código (Apenas Leitura no 3.0 para preservar integridade e rastreabilidade histórica) */}
             <div>
               <label className="block text-xs font-semibold text-secondary mb-1">
                 Código SKU (Identificador Primário)
