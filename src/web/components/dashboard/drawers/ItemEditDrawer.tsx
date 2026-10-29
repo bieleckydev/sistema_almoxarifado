@@ -69,6 +69,13 @@ export function ItemEditDrawer({
 
   if (!isOpen || !item) return null;
 
+  const camposEspecificos: string[] =
+    item.aba === 'mp'
+      ? ['Certificado', 'NF-e', 'Fornecedor']
+      : item.aba === 'imp'
+        ? ['NF-e', 'Fornecedor']
+        : ['Modelo compatível', 'Código original', 'Medida'];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -91,6 +98,11 @@ export function ItemEditDrawer({
       try {
         setErro(null);
 
+        const specsToSave = { ...especificacoes };
+        if (item.aba === 'motos') {
+          delete specsToSave['Marca'];
+        }
+
         const payload = {
           descricao: descricao.trim(),
           categoria: categoria.trim(),
@@ -98,7 +110,7 @@ export function ItemEditDrawer({
           custoUnitario: Number(custoUnitario) || 0,
           estoqueSeguranca: Number(estoqueSeguranca),
           capacidadeMaxima: Number(capacidadeMaxima),
-          especificacoes,
+          especificacoes: specsToSave,
         };
 
         const response = await api.patch<Partial<DashboardItem>>(`/itens/${item.id}`, payload);
@@ -309,7 +321,7 @@ export function ItemEditDrawer({
                 Especificações Técnicas
               </h3>
               <div className="space-y-2">
-                {['Fornecedor', 'Marca', 'NF-e'].map((campo) => (
+                {camposEspecificos.map((campo) => (
                   <div key={campo} className="flex items-center gap-2">
                     <span className="w-28 text-xs font-medium text-secondary truncate">{campo}:</span>
                     <input

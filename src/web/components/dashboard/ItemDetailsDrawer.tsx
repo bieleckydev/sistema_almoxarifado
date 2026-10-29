@@ -112,7 +112,9 @@ export function ItemDetailsDrawer({
 
   const unidadeFormatada = UNIDADE_LABELS[item.unidade] || item.unidade.toLowerCase();
   const faltaParaMinimo = Math.max(0, item.estoqueSeguranca - item.estoqueAtual);
-  const especificacoes = Object.entries(item.especificacoes || {});
+  const especificacoes = Object.entries(item.especificacoes || {}).filter(
+    ([chave]) => !(item.aba === 'motos' && chave.toLowerCase() === 'marca')
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">

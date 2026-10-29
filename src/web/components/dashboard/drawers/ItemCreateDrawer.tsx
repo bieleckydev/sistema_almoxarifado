@@ -94,7 +94,7 @@ export function ItemCreateDrawer({
       ? ['Certificado', 'NF-e', 'Fornecedor']
       : aba === 'imp'
         ? ['NF-e', 'Fornecedor']
-        : ['Modelo compatível', 'Marca', 'Código original', 'Medida'];
+        : ['Modelo compatível', 'Código original', 'Medida'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
