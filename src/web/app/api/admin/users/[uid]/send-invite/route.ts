@@ -10,7 +10,23 @@ export async function POST(request: Request, context: UserRouteContext) {
     const identity = await requireIdentity(request);
     const { uid } = await context.params;
     const body = await readJson(request);
-    const { sendUserInvite } = await import('@/server/users/invite-user');
+    const { sendUserInvite, resolveContinueUrl } = await import('@/server/users/invite-user');
+
+    const origin =
+      request.headers.get('origin') ||
+      (request.headers.get('x-forwarded-proto') && request.headers.get('host')
+        ? `${request.headers.get('x-forwarded-proto')}://${request.headers.get('host')}`
+        : null) ||
+      new URL(request.url).origin;
+
+    const continueUrl =
+      process.env.FIREBASE_AUTH_CONTINUE_URL?.trim() ||
+      (origin && !origin.includes('localhost') && !origin.includes('127.0.0.1')
+        ? `${origin.replace(/\/+$/, '')}/login`
+        : resolveContinueUrl());
+
+    const endpoint = process.env.USER_EMAIL_DELIVERY_URL?.trim();
+    let emailSent = false;
 
     const delivery = {
       async sendInvite(input: {
@@ -18,9 +34,10 @@ export async function POST(request: Request, context: UserRouteContext) {
         recipientName: string;
         resetLink: string;
       }) {
-        const endpoint = process.env.USER_EMAIL_DELIVERY_URL?.trim();
         if (!endpoint) {
-          throw new Error('USER_EMAIL_DELIVERY_URL não está configurada.');
+          // Quando não há webhook de entrega de e-mails configurado,
+          // o link gerado será retornado na resposta para cópia e envio manual.
+          return;
         }
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -30,12 +47,24 @@ export async function POST(request: Request, context: UserRouteContext) {
         if (!response.ok) {
           throw new Error(`Entrega de e-mail recusada com status ${response.status}.`);
         }
+        emailSent = true;
       },
     };
 
-    return NextResponse.json(
-      await sendUserInvite(identity.user, uid, body, delivery)
-    );
+    const { adminAuth, adminDb } = await import('@/server/firebase-admin');
+
+    const result = await sendUserInvite(identity.user, uid, body, delivery, {
+      auth: adminAuth,
+      db: adminDb,
+      continueUrl,
+      now: () => new Date(),
+    });
+
+    return NextResponse.json({
+      ...result,
+      emailDeliveryConfigured: Boolean(endpoint),
+      emailSent,
+    });
   } catch (error) {
     return toErrorResponse(error);
   }

@@ -51,6 +51,7 @@ import {
 } from '../user.schema';
 import {
   PublicUserProfileSchema,
+  toPublicUserProfile,
   UserAuditActionSchema,
   UserAuditLogSchema,
   UserRoleChangeSchema,
@@ -254,6 +255,34 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     assert.equal('updatedBy' in profile, false);
     assert.equal('createdBy' in profile, false);
     assert.equal('token' in profile, false);
+  });
+
+  it('deve converter entidade User completa com createdBy e updatedBy para perfil público seguro', () => {
+    const rawUserData = {
+      id: 'user-2',
+      name: 'Lucas Santana',
+      email: 'lucassantanasouzaprofissional@gmail.com',
+      role: 'admin' as const,
+      ativo: true,
+      mustChangePassword: true,
+      createdAt: '2026-10-28T22:47:11.453Z',
+      updatedAt: '2026-10-28T22:47:11.453Z',
+      createdBy: 'mestre-uid-123',
+      updatedBy: 'mestre-uid-123',
+    };
+
+    const publicProfile = toPublicUserProfile(rawUserData);
+
+    assert.equal(publicProfile.id, 'user-2');
+    assert.equal(publicProfile.name, 'Lucas Santana');
+    assert.equal(publicProfile.email, 'lucassantanasouzaprofissional@gmail.com');
+    assert.equal(publicProfile.role, 'admin');
+    assert.equal(publicProfile.ativo, true);
+    assert.equal(publicProfile.mustChangePassword, true);
+    assert.equal(publicProfile.createdAt, '2026-10-28T22:47:11.453Z');
+    assert.equal(publicProfile.updatedAt, '2026-10-28T22:47:11.453Z');
+    assert.equal('createdBy' in publicProfile, false);
+    assert.equal('updatedBy' in publicProfile, false);
   });
 
   it('deve validar a alteração de papel para auditoria', () => {

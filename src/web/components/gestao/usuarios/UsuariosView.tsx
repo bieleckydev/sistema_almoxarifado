@@ -119,8 +119,13 @@ export function UsuariosView({ onNovoUsuario }: UsuariosViewProps) {
 
   const handleReenviarConvite = async (u: PublicUserProfile) => {
     try {
-      await enviarConvite(u.id);
-      toast(`Convite reenviado com sucesso para ${u.email}!`, { type: 'success' });
+      const res = await enviarConvite(u.id);
+      if (res?.resetLink && !res.emailDeliveryConfigured) {
+        await navigator.clipboard.writeText(res.resetLink).catch(() => {});
+        toast(`Link de convite gerado e copiado para a área de transferência!`, { type: 'success', duration: 7000 });
+      } else {
+        toast(`Convite enviado com sucesso para ${u.email}!`, { type: 'success' });
+      }
     } catch (err: unknown) {
       const msg =
         (err as any)?.response?.data?.error ||
@@ -132,8 +137,13 @@ export function UsuariosView({ onNovoUsuario }: UsuariosViewProps) {
 
   const handleRedefinirSenha = async (u: PublicUserProfile) => {
     try {
-      await redefinirSenha(u.id);
-      toast(`E-mail de redefinição de senha enviado para ${u.email}!`, { type: 'success' });
+      const res = await redefinirSenha(u.id);
+      if (res?.resetLink && !res.emailDeliveryConfigured) {
+        await navigator.clipboard.writeText(res.resetLink).catch(() => {});
+        toast(`Link de redefinição gerado e copiado para a área de transferência!`, { type: 'success', duration: 7000 });
+      } else {
+        toast(`E-mail de redefinição de senha enviado para ${u.email}!`, { type: 'success' });
+      }
     } catch (err: unknown) {
       const msg =
         (err as any)?.response?.data?.error ||

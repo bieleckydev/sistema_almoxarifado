@@ -6,8 +6,8 @@ import {
   type User,
 } from '../../core/domain/user.schema';
 import {
-  PublicUserProfileSchema,
   UserAuditLogSchema,
+  toPublicUserProfile,
   type PublicUserProfile,
 } from '../../core/domain/user-audit.schema';
 import { hasUserPermission } from '../../core/domain/user-authorization';
@@ -49,16 +49,7 @@ const defaultDependencies: UserProfileUpdateDependencies = {
 };
 
 function publicProfile(user: User): PublicUserProfile {
-  return PublicUserProfileSchema.parse({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    ativo: user.ativo,
-    mustChangePassword: user.mustChangePassword,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  });
+  return toPublicUserProfile(user);
 }
 
 function authUpdateFor(

@@ -113,6 +113,16 @@ async function main() {
     throw new Error('A API não criou o usuário com o papel solicitado.');
   }
 
+  const listedAfterCreate = await request(`${appUrl}/api/admin/users`, { headers });
+  if (!listedAfterCreate.users.some((user) => user.id === created.user.id)) {
+    throw new Error('O usuário recém-criado não apareceu na listagem administrativa.');
+  }
+
+  const fetchedUser = await request(`${appUrl}/api/admin/users/${created.user.id}`, { headers });
+  if (fetchedUser.id !== created.user.id) {
+    throw new Error('O perfil do usuário recém-criado não pôde ser consultado.');
+  }
+
   const disabled = await request(`${appUrl}/api/admin/users/${created.user.id}/disable`, {
     method: 'POST',
     headers,

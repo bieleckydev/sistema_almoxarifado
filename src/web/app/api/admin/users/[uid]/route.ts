@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { UserSchema } from '@/core/domain/user.schema';
-import { PublicUserProfileSchema } from '@/core/domain/user-audit.schema';
+import { toPublicUserProfile } from '@/core/domain/user-audit.schema';
 import { hasUserPermission } from '@/core/domain/user-authorization';
 import { readJson, requireIdentity, toErrorResponse } from '../api-utils';
 
@@ -20,9 +19,7 @@ export async function GET(request: Request, context: UserRouteContext) {
     if (!snapshot.exists) {
       return NextResponse.json({ error: 'Perfil do usuário não foi encontrado.' }, { status: 404 });
     }
-    return NextResponse.json(PublicUserProfileSchema.parse(
-      UserSchema.parse({ id: snapshot.id, ...snapshot.data() })
-    ));
+    return NextResponse.json(toPublicUserProfile({ id: snapshot.id, ...snapshot.data() }));
   } catch (error) {
     return toErrorResponse(error);
   }

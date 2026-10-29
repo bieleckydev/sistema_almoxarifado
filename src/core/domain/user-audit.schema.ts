@@ -47,6 +47,24 @@ export const PublicUserProfileSchema = UserSchema.pick({
 }).strict();
 export type PublicUserProfile = z.infer<typeof PublicUserProfileSchema>;
 
+/**
+ * Converte de forma segura uma entidade de usuário completa (ou documento Firestore)
+ * para o perfil público estrito, omitindo campos internos de auditoria (createdBy, updatedBy).
+ */
+export function toPublicUserProfile(user: unknown): PublicUserProfile {
+  const parsed = UserSchema.parse(user);
+  return PublicUserProfileSchema.parse({
+    id: parsed.id,
+    name: parsed.name,
+    email: parsed.email,
+    role: parsed.role,
+    ativo: parsed.ativo,
+    mustChangePassword: parsed.mustChangePassword,
+    createdAt: parsed.createdAt,
+    updatedAt: parsed.updatedAt,
+  });
+}
+
 export const UserRoleChangeSchema = z.object({
   previousRole: UserRoleSchema,
   newRole: UserRoleSchema,
