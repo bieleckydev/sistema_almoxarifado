@@ -64,15 +64,6 @@ describe('4.4 — Gestor de Metadados de Arquivamento (NFeArchiveService)', () =
       'nfe-archive/2026/01/15/35260112345678000190550010000012341234567890'
     );
 
-    const caminhoXml = service.gerarCaminhoVirtual(
-      notaFiscalExemplo.dataRecebimento,
-      notaFiscalExemplo.chaveAcesso,
-      'xml'
-    );
-    assert.equal(
-      caminhoXml,
-      'nfe-archive/2026/01/15/35260112345678000190550010000012341234567890.xml'
-    );
 
     const caminhoDanfe = service.gerarCaminhoVirtual(
       notaFiscalExemplo.dataRecebimento,
@@ -104,7 +95,6 @@ describe('4.4 — Gestor de Metadados de Arquivamento (NFeArchiveService)', () =
     assert.equal(metadados.dia, 15);
     assert.equal(metadados.valorTotalNota, 25000);
     assert.equal(metadados.statusConferencia, 'APROVADA');
-    assert.equal(metadados.caminhoArquivoXml, 'nfe-archive/2026/01/15/35260112345678000190550010000012341234567890.xml');
     assert.equal(metadados.caminhoArquivoDanfe, 'nfe-archive/2026/01/15/35260112345678000190550010000012341234567890.pdf');
     assert.equal(metadados.quantidadeItens, 1);
     assert.ok(metadados.tagsBusca.includes('1234'));

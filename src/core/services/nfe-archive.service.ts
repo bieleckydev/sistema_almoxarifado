@@ -27,7 +27,6 @@ export interface NFeArchiveMetadata {
   statusConferencia: StatusConferenciaNFe;
   numeroPedidoCompra?: string;
   caminhoDiretorio: string;
-  caminhoArquivoXml: string;
   caminhoArquivoDanfe: string;
   quantidadeItens: number;
   tagsBusca: string[];
@@ -115,7 +114,7 @@ export class NFeArchiveService {
    *
    * @param dataIso Data base para o particionamento (recebimento ou emissão)
    * @param chaveAcesso Chave de acesso de 44 dígitos da NFe
-   * @param extensao Extensão opcional do arquivo (ex.: 'xml' ou 'pdf')
+   * @param extensao Extensão opcional do arquivo (ex.: 'pdf')
    */
   public gerarCaminhoVirtual(dataIso: string, chaveAcesso: string, extensao?: string): string {
     const chaveLimpa = sanitizarChaveAcessoNFe(chaveAcesso);
@@ -197,7 +196,6 @@ export class NFeArchiveService {
     const { ano, mes, dia, caminhoParticao } = this.extrairParticionamentoData(dataRef);
 
     const caminhoDiretorio = `${NFeArchiveService.ROOT_ARCHIVE_PATH}/${caminhoParticao}/${chaveLimpa}`;
-    const caminhoArquivoXml = `${caminhoDiretorio}.xml`;
     const caminhoArquivoDanfe = `${caminhoDiretorio}.pdf`;
 
     const tagsBusca = this.construirTagsBusca(notaFiscal);
@@ -220,7 +218,6 @@ export class NFeArchiveService {
       statusConferencia: notaFiscal.status,
       numeroPedidoCompra: notaFiscal.numeroPedidoCompra,
       caminhoDiretorio,
-      caminhoArquivoXml,
       caminhoArquivoDanfe,
       quantidadeItens: notaFiscal.itens.length,
       tagsBusca,

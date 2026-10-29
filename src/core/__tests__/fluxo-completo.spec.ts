@@ -174,8 +174,8 @@ describe('5.4 — Suite de Testes de Integração Ponta a Ponta do Core Agnósti
       resultadoConciliacao.notaFiscalAtualizada
     );
     assert.equal(
-      metadadosArquivo.caminhoArquivoXml,
-      'nfe-archive/2026/01/15/35260112345678000190550010000077881234567890.xml'
+      metadadosArquivo.caminhoArquivoDanfe,
+      'nfe-archive/2026/01/15/35260112345678000190550010000077881234567890.pdf'
     );
     await storageAdapter.setJson(`nfe_${metadadosArquivo.chaveAcesso}`, metadadosArquivo);
 
