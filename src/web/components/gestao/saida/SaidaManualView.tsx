@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Download,
   RefreshCw,
@@ -62,6 +63,12 @@ export function SaidaManualView({
     itens,
     movimentacoes,
     resumoItens,
+    totalNoBanco,
+    totalCarregado,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    tamanhoLote,
     isLoading,
     isFetching,
     refetch,
@@ -127,6 +134,38 @@ export function SaidaManualView({
     if (filtroTipoLedger === 'todos') return movimentacoes;
     return movimentacoes.filter((m) => m.tipo === filtroTipoLedger);
   }, [movimentacoes, filtroTipoLedger]);
+
+  // Container e virtualizador de linhas da tabela histórica (blocos de 300)
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: movimentacoesFiltradas.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 58,
+    overscan: 8,
+    getItemKey: (index) => movimentacoesFiltradas[index]?.id || index,
+  });
+
+  // Auto-fetch da próxima página de 300 ao atingir o final da rolagem
+  useEffect(() => {
+    const virtualItems = rowVirtualizer.getVirtualItems();
+    if (virtualItems.length === 0) return;
+    const lastItem = virtualItems[virtualItems.length - 1];
+    if (
+      lastItem &&
+      lastItem.index >= movimentacoesFiltradas.length - 4 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
+      fetchNextPage();
+    }
+  }, [rowVirtualizer.getVirtualItems(), hasNextPage, isFetchingNextPage, movimentacoesFiltradas.length, fetchNextPage]);
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const totalSize = rowVirtualizer.getTotalSize();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+  const paddingBottom =
+    virtualRows.length > 0 ? totalSize - virtualRows[virtualRows.length - 1].end : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -664,11 +703,19 @@ export function SaidaManualView({
               <History className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-headline-sm text-sm font-bold text-on-surface">
-                Relatório de Entradas e Saídas do Turno
-              </h3>
-              <p className="font-body-sm text-xs text-secondary">
-                Registro cronológico de baixas, entradas e transferências físicas.
+              <div className="flex items-center gap-2">
+                <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                  Relatório de Entradas e Saídas do Turno
+                </h3>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                  Lotes de {tamanhoLote} (Virtualizado)
+                </span>
+              </div>
+              <p className="font-body-sm text-xs text-secondary mt-0.5">
+                {movimentacoesFiltradas.length}{' '}
+                {movimentacoesFiltradas.length === 1 ? 'movimentação exibida' : 'movimentações exibidas'}
+                {totalNoBanco > 0 && ` de ${totalNoBanco} no banco de dados`}
+                {hasNextPage ? ' · role para carregar mais' : ' · fim do histórico'}
               </p>
             </div>
           </div>
@@ -733,136 +780,161 @@ export function SaidaManualView({
           </div>
         </div>
 
-        {/* Tabela do Histórico de Movimentações */}
-        <div className="w-full overflow-x-auto">
+        {/* Tabela do Histórico de Movimentações Virtualizada (Blocos de 300) */}
+        <div
+          ref={tableContainerRef}
+          className="w-full overflow-auto max-h-[520px] relative scroll-smooth"
+        >
           <table className="w-full text-left border-collapse min-w-[760px]">
-            <thead>
-              <tr className="bg-surface-container-low text-secondary text-xs font-medium border-b border-outline-variant/20 select-none">
-                <th className="py-2.5 px-4 font-semibold">Horário &amp; Operador</th>
-                <th className="py-2.5 px-4 font-semibold">Item &amp; Código SKU</th>
-                <th className="py-2.5 px-4 font-semibold">Tipo &amp; Setor</th>
-                <th className="py-2.5 px-4 font-semibold text-center">Variação</th>
-                <th className="py-2.5 px-4 font-semibold text-right">Saldo Atual</th>
-                <th className="py-2.5 px-4 text-right font-semibold">Ação</th>
+            <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/20 shadow-2xs select-none">
+              <tr className="bg-surface-container-low text-secondary text-xs font-medium">
+                <th className="py-2.5 px-4 font-semibold bg-surface-container-low">Horário &amp; Operador</th>
+                <th className="py-2.5 px-4 font-semibold bg-surface-container-low">Item &amp; Código SKU</th>
+                <th className="py-2.5 px-4 font-semibold bg-surface-container-low">Tipo &amp; Setor</th>
+                <th className="py-2.5 px-4 font-semibold text-center bg-surface-container-low">Variação</th>
+                <th className="py-2.5 px-4 font-semibold text-right bg-surface-container-low">Saldo Atual</th>
+                <th className="py-2.5 px-4 text-right font-semibold bg-surface-container-low">Ação</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/15 text-xs text-on-surface">
               {movimentacoesFiltradas.length > 0 ? (
-                movimentacoesFiltradas.map((m) => {
-                  const unidadeFmt = m.item
-                    ? UNIDADE_LABELS[m.item.unidade] || m.item.unidade.toLowerCase()
-                    : 'un';
-                  const isEntrada = m.tipo === 'Entrada';
-                  const iniciaisOperador = (m.quem || 'OP')
-                    .split(' ')
-                    .slice(0, 2)
-                    .map((w) => w[0]?.toUpperCase() || '')
-                    .join('');
+                <>
+                  {paddingTop > 0 && (
+                    <tr aria-hidden="true">
+                      <td
+                        colSpan={6}
+                        style={{ height: `${paddingTop}px`, padding: 0, border: 0 }}
+                      />
+                    </tr>
+                  )}
+                  {virtualRows.map((virtualRow) => {
+                    const m = movimentacoesFiltradas[virtualRow.index];
+                    if (!m) return null;
 
-                  return (
-                    <tr
-                      key={m.id}
-                      className="hover:bg-surface-container-low/60 transition-colors group"
-                    >
-                      {/* Horário & Operador */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <span className="font-data-tabular font-bold text-on-surface">
-                            {m.hora || '—'}
-                          </span>
-                          <span className="text-outline text-xs">•</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">
-                              {iniciaisOperador}
+                    const unidadeFmt = m.item
+                      ? UNIDADE_LABELS[m.item.unidade] || m.item.unidade.toLowerCase()
+                      : 'un';
+                    const isEntrada = m.tipo === 'Entrada';
+                    const iniciaisOperador = (m.quem || 'OP')
+                      .split(' ')
+                      .slice(0, 2)
+                      .map((w) => w[0]?.toUpperCase() || '')
+                      .join('');
+
+                    return (
+                      <tr
+                        key={m.id}
+                        data-index={virtualRow.index}
+                        className="hover:bg-surface-container-low/60 transition-colors group"
+                      >
+                        {/* Horário & Operador */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className="font-data-tabular font-bold text-on-surface">
+                              {m.hora || '—'}
                             </span>
-                            <span className="font-medium text-on-surface">
+                            <span className="text-outline text-xs">•</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">
+                                {iniciaisOperador}
+                              </span>
+                              <span className="font-medium text-on-surface">
+                                {m.quem}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Item & Código SKU */}
+                        <td className="py-3 px-4">
+                          <div className="flex flex-col">
+                            {m.item ? (
+                              <button
+                                type="button"
+                                onClick={() => onSelectItem?.(m.item!)}
+                                className="font-headline-sm font-semibold text-xs text-left text-on-surface hover:text-primary transition-colors block truncate cursor-pointer leading-tight"
+                              >
+                                {m.item.descricao}
+                              </button>
+                            ) : (
+                              <span className="font-semibold text-on-surface block truncate">
+                                Material não identificado
+                              </span>
+                            )}
+                            <div className="flex items-center gap-2 mt-0.5 font-mono text-[11px] text-secondary">
+                              <span>SKU: {m.item?.codigo || m.rotulo || '—'}</span>
+                              {m.obs && <span>• {m.obs}</span>}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Tipo & Setor */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <div
+                              className={`flex items-center gap-1 font-semibold ${
+                                isEntrada ? 'text-tertiary' : 'text-error'
+                              }`}
+                            >
+                              {isEntrada ? (
+                                <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                              ) : (
+                                <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
+                              )}
+                              <span>{m.tipo === 'Entrada' ? 'Entrada - Reposição' : 'Saída - Produção'}</span>
+                            </div>
+                            <span className="text-[11px] text-secondary">
                               {m.quem}
                             </span>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Item & Código SKU */}
-                      <td className="py-3 px-4">
-                        <div className="flex flex-col">
-                          {m.item ? (
+                        {/* Variação */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap font-data-tabular">
+                          <span
+                            className={`font-bold px-2 py-0.5 rounded-full text-xs ${
+                              isEntrada
+                                ? 'bg-tertiary/10 text-tertiary'
+                                : 'bg-error-container text-on-error-container'
+                            }`}
+                          >
+                            {isEntrada ? '+' : '−'}
+                            {m.quantidade.toLocaleString('pt-BR')} {unidadeFmt}
+                          </span>
+                        </td>
+
+                        {/* Saldo Resultante / Atual */}
+                        <td className="py-3 px-4 text-right whitespace-nowrap font-data-tabular">
+                          <span className="font-medium text-on-surface">
+                            {m.item ? `${m.item.estoqueAtual.toLocaleString('pt-BR')} ${unidadeFmt}` : '—'}
+                          </span>
+                        </td>
+
+                        {/* Ação */}
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          {m.item && (
                             <button
                               type="button"
                               onClick={() => onSelectItem?.(m.item!)}
-                              className="font-headline-sm font-semibold text-xs text-left text-on-surface hover:text-primary transition-colors block truncate cursor-pointer leading-tight"
+                              className="px-2 py-1 rounded-md text-xs font-medium text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+                              title="Visualizar detalhes do item"
                             >
-                              {m.item.descricao}
+                              Ver item →
                             </button>
-                          ) : (
-                            <span className="font-semibold text-on-surface block truncate">
-                              Material não identificado
-                            </span>
                           )}
-                          <div className="flex items-center gap-2 mt-0.5 font-mono text-[11px] text-secondary">
-                            <span>SKU: {m.item?.codigo || m.rotulo || '—'}</span>
-                            {m.obs && <span>• {m.obs}</span>}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Tipo & Setor */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <div
-                            className={`flex items-center gap-1 font-semibold ${
-                              isEntrada ? 'text-tertiary' : 'text-error'
-                            }`}
-                          >
-                            {isEntrada ? (
-                              <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
-                            ) : (
-                              <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
-                            )}
-                            <span>{m.tipo === 'Entrada' ? 'Entrada - Reposição' : 'Saída - Produção'}</span>
-                          </div>
-                          <span className="text-[11px] text-secondary">
-                            {m.quem}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Variação */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap font-data-tabular">
-                        <span
-                          className={`font-bold px-2 py-0.5 rounded-full text-xs ${
-                            isEntrada
-                              ? 'bg-tertiary/10 text-tertiary'
-                              : 'bg-error-container text-on-error-container'
-                          }`}
-                        >
-                          {isEntrada ? '+' : '−'}
-                          {m.quantidade.toLocaleString('pt-BR')} {unidadeFmt}
-                        </span>
-                      </td>
-
-                      {/* Saldo Resultante / Atual */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap font-data-tabular">
-                        <span className="font-medium text-on-surface">
-                          {m.item ? `${m.item.estoqueAtual.toLocaleString('pt-BR')} ${unidadeFmt}` : '—'}
-                        </span>
-                      </td>
-
-                      {/* Ação */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        {m.item && (
-                          <button
-                            type="button"
-                            onClick={() => onSelectItem?.(m.item!)}
-                            className="px-2 py-1 rounded-md text-xs font-medium text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
-                            title="Visualizar detalhes do item"
-                          >
-                            Ver item →
-                          </button>
-                        )}
-                      </td>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {paddingBottom > 0 && (
+                    <tr aria-hidden="true">
+                      <td
+                        colSpan={6}
+                        style={{ height: `${paddingBottom}px`, padding: 0, border: 0 }}
+                      />
                     </tr>
-                  );
-                })
+                  )}
+                </>
               ) : (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-secondary text-xs">
@@ -872,6 +944,43 @@ export function SaidaManualView({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Rodapé informativo de Paginação e Scroll Infinito */}
+        <div className="p-3 bg-surface-container-low/40 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-secondary">
+          <div className="flex items-center gap-2">
+            <span>
+              Exibindo <strong className="text-on-surface font-semibold">{movimentacoesFiltradas.length}</strong> de{' '}
+              <strong className="text-on-surface font-semibold">{totalNoBanco > 0 ? totalNoBanco : movimentacoesFiltradas.length}</strong> registros
+            </span>
+            {isFetchingNextPage && (
+              <span className="inline-flex items-center gap-1.5 text-primary text-xs font-medium animate-pulse ml-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Carregando próximo lote de {tamanhoLote}...
+              </span>
+            )}
+          </div>
+
+          {hasNextPage && (
+            <button
+              type="button"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-xs font-semibold hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Buscando...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 text-primary" />
+                  <span>Carregar mais (+{tamanhoLote})</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </section>
 
