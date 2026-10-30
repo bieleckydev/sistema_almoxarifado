@@ -344,6 +344,9 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       if (filtros?.dataFim) {
         query = query.where('dataMovimentacao', '<=', filtros.dataFim);
       }
+      if (filtros?.numeroNF) {
+        query = query.where('numeroNF', '==', filtros.numeroNF);
+      }
 
       const snap = await query.get();
       let lista: Movimentacao[] = snap.docs.map((d) =>

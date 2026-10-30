@@ -215,6 +215,9 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     if (filtros?.dataFim) {
       list = list.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
     }
+    if (filtros?.numeroNF) {
+      list = list.filter((m) => m.numeroNF === filtros.numeroNF);
+    }
 
     const total = list.length;
     const pagina = filtros?.pagina || 1;

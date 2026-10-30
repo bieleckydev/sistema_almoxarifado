@@ -140,7 +140,7 @@ export const MovimentacaoFiltrosSchema = z.object({
   dataFim: z.string().datetime().optional(),
   numeroNF: z.string().optional(),
   pagina: z.number().int().min(1).default(1),
-  limite: z.number().int().min(1).max(500).default(20),
+  limite: z.number().int().min(1).max(1000).default(20),
 });
 
 export type MovimentacaoFiltros = z.input<typeof MovimentacaoFiltrosSchema>;
