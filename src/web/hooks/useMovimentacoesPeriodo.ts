@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/core/api/client';
 import type { Movimentacao } from '@/core/domain/movimentacao.schema';
 import { isMovimentacaoEntrada } from '@/core/services/estoque-calculator';
@@ -15,6 +15,13 @@ import {
 } from './usePeriodoGlobal';
 
 export type { PeriodoFiltro };
+
+export const TAMANHO_LOTE_MOVIMENTACOES = 300;
+
+export interface MovimentacoesApiResponse {
+  movimentacoes: Movimentacao[];
+  total: number;
+}
 
 export interface MovimentacaoEnriquecida {
   id: string;
@@ -115,27 +122,46 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
     return map;
   }, [itens]);
 
-  // 2. Consulta Movimentações no backend
+  // 2. Consulta Movimentações no backend com paginação em lotes de 300 (useInfiniteQuery)
   const {
-    data: movimentacoesRaw = [],
+    data: infiniteData,
     isLoading: isLoadingMovs,
     isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     refetch,
-  } = useQuery<Movimentacao[]>({
+  } = useInfiniteQuery<MovimentacoesApiResponse>({
     queryKey: ['movimentacoes-periodo'],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 1 }) => {
       try {
-        const res = await api.get<{ movimentacoes: Movimentacao[]; total: number }>(
-          '/movimentacoes?limite=500'
+        const res = await api.get<MovimentacoesApiResponse>(
+          `/movimentacoes?limite=${TAMANHO_LOTE_MOVIMENTACOES}&pagina=${pageParam}`
         );
-        return res.data?.movimentacoes || [];
+        return res.data || { movimentacoes: [], total: 0 };
       } catch (err) {
         console.warn('Erro ao consultar /api/movimentacoes:', err);
-        return [];
+        return { movimentacoes: [], total: 0 };
       }
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const carregados = allPages.length * TAMANHO_LOTE_MOVIMENTACOES;
+      const total = lastPage?.total ?? 0;
+      if (carregados < total && (lastPage?.movimentacoes?.length || 0) > 0) {
+        return allPages.length + 1;
+      }
+      return undefined;
     },
     staleTime: 30 * 1000,
   });
+
+  const movimentacoesRaw = useMemo<Movimentacao[]>(() => {
+    if (!infiniteData?.pages) return [];
+    return infiniteData.pages.flatMap((page) => page.movimentacoes || []);
+  }, [infiniteData]);
+
+  const totalNoBanco = infiniteData?.pages[0]?.total ?? 0;
 
   // 3. Converte e enriquece movimentações
   const todasMovimentacoes = useMemo<MovimentacaoEnriquecida[]>(() => {
@@ -308,6 +334,12 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
     movimentacoes: movimentacoesFiltradas,
     todasMovimentacoes,
     resumoItens,
+    totalNoBanco,
+    totalCarregado: todasMovimentacoes.length,
+    hasNextPage: Boolean(hasNextPage),
+    isFetchingNextPage,
+    fetchNextPage,
+    tamanhoLote: TAMANHO_LOTE_MOVIMENTACOES,
     isLoading: isLoadingItens || isLoadingMovs,
     isFetching,
     refetch,

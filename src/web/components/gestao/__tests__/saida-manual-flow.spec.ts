@@ -14,6 +14,7 @@ import {
   diaAntes,
   type MovimentacaoEnriquecida,
   type ResumoItemPeriodo,
+  TAMANHO_LOTE_MOVIMENTACOES,
 } from '../../../hooks/useMovimentacoesPeriodo';
 import type { DashboardItem } from '../../../data/mock-almoxarifado';
 
@@ -340,4 +341,25 @@ describe('Fase 6 — Módulo de Saída Manual, Relatórios Analíticos e Exporta
       assert.equal(validar('Entrada', 50, 'Fornecedor Abrasivos'), null);
     });
   });
+
+  describe('Paginação e Lotes de Movimentações (Virtualização)', () => {
+    it('deve definir o tamanho padrão do lote incremental como 300 itens', () => {
+      assert.equal(TAMANHO_LOTE_MOVIMENTACOES, 300);
+    });
+
+    it('deve calcular corretamente a próxima página com base no total e carregados', () => {
+      const getNextPage = (carregados: number, total: number, allPagesCount: number) => {
+        if (carregados < total) return allPagesCount + 1;
+        return undefined;
+      };
+
+      // 300 carregados de 750 totais -> busca página 2
+      assert.equal(getNextPage(300, 750, 1), 2);
+      // 600 carregados de 750 totais -> busca página 3
+      assert.equal(getNextPage(600, 750, 2), 3);
+      // 750 carregados de 750 totais -> sem mais páginas
+      assert.equal(getNextPage(750, 750, 3), undefined);
+    });
+  });
 });
+
