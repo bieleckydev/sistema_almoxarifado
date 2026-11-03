@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Radio,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -505,31 +504,8 @@ export function AppSidebar({
         </nav>
       </div>
 
-      {/* Seção Inferior: Status do Terminal & Perfil de Usuário */}
+      {/* Seção Inferior: Perfil de Usuário */}
       <div className="flex flex-col gap-3 pt-3 border-t border-white/10">
-        {/* Status do Terminal (RF / Firestore) */}
-        {!isMini ? (
-          <div className="p-2.5 rounded-lg bg-surface-container/10 border border-white/5 flex items-center justify-between">
-            <div className="flex flex-col min-w-0">
-              <span className="font-label-sm text-[10px] text-outline-variant font-medium">
-                Status do Terminal
-              </span>
-              <span className="font-body-sm text-xs text-inverse-on-surface font-semibold flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-tertiary-fixed shrink-0 animate-pulse" />
-                <span className="truncate">Coletor RF Online</span>
-              </span>
-            </div>
-            <Radio className="w-4 h-4 text-tertiary-fixed shrink-0" />
-          </div>
-        ) : (
-          <div
-            className="flex justify-center p-2 rounded-lg bg-surface-container/10 text-tertiary-fixed"
-            title="Terminal Coletor RF Online"
-          >
-            <Radio className="w-4 h-4" />
-          </div>
-        )}
-
         {/* Perfil e Logout */}
         {user && (
           <div className="flex items-center justify-between pt-1">
