@@ -25,6 +25,11 @@ export interface ApiClientConfig {
    */
   storageAdapter?: IStorageAdapter;
   /**
+   * Provedor dinâmico de token (ex.: Firebase auth.currentUser.getIdToken()).
+   * Quando definido, tem precedência sobre a leitura estática do storageAdapter.
+   */
+  tokenProvider?: () => string | null | Promise<string | null>;
+  /**
    * URL base do backend ou BFF (default: '/api' ou process.env.NEXT_PUBLIC_API_URL).
    */
   baseURL?: string;
@@ -44,6 +49,7 @@ export interface ApiClientConfig {
 
 let activeStorage: IStorageAdapter | null = null;
 let activeTokenKey = 'auth_token';
+let activeTokenProvider: (() => string | null | Promise<string | null>) | null = null;
 let activeOnUnauthorized: (() => void | Promise<void>) | null = null;
 
 /**
@@ -65,22 +71,32 @@ export function createApiClient(config: ApiClientConfig = {}): AxiosInstance {
 
   const explicitStorage = config.storageAdapter;
   const explicitTokenKey = config.tokenKey;
+  const explicitTokenProvider = config.tokenProvider;
   const explicitOnUnauthorized = config.onUnauthorized;
 
-  // Interceptador de Requisição: Injeta token JWT se presente no storage
+  // Interceptador de Requisição: Injeta token JWT se presente no tokenProvider ou storage
   client.interceptors.request.use(async (reqConfig: InternalAxiosRequestConfig) => {
     const currentStorage = explicitStorage || activeStorage;
     const currentTokenKey = explicitTokenKey || activeTokenKey;
+    const currentTokenProvider = explicitTokenProvider || activeTokenProvider;
 
     let token: string | null = null;
 
-    if (currentStorage) {
+    if (currentTokenProvider) {
+      try {
+        token = await currentTokenProvider();
+      } catch (err) {
+        console.warn('Falha ao obter token dinâmico via tokenProvider:', err);
+      }
+    }
+
+    if (!token && currentStorage) {
       try {
         token = await currentStorage.getItem(currentTokenKey);
       } catch (err) {
         console.warn('Falha ao recuperar token de autenticação do storage:', err);
       }
-    } else if (typeof window !== 'undefined') {
+    } else if (!token && typeof window !== 'undefined') {
       try {
         token = localStorage.getItem(currentTokenKey);
       } catch {
@@ -140,10 +156,12 @@ export function configureApiClient(configOrStorage: ApiClientConfig | IStorageAd
   if ('getItem' in configOrStorage) {
     activeStorage = configOrStorage;
     activeTokenKey = 'auth_token';
+    activeTokenProvider = null;
     activeOnUnauthorized = null;
   } else {
     activeStorage = configOrStorage.storageAdapter || null;
     activeTokenKey = configOrStorage.tokenKey || 'auth_token';
+    activeTokenProvider = configOrStorage.tokenProvider || null;
     activeOnUnauthorized = configOrStorage.onUnauthorized || null;
     if (configOrStorage.baseURL) {
       api.defaults.baseURL = configOrStorage.baseURL;
@@ -160,6 +178,7 @@ export function configureApiClient(configOrStorage: ApiClientConfig | IStorageAd
 export function resetApiClient(): void {
   activeStorage = null;
   activeTokenKey = 'auth_token';
+  activeTokenProvider = null;
   activeOnUnauthorized = null;
   api.defaults.baseURL =
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || '/api';

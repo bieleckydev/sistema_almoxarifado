@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  onIdTokenChanged,
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -22,6 +23,7 @@ export interface AuthState {
   logout: () => Promise<void>;
   clearError: () => void;
   initializeAuth: () => () => void; // Retorna função de unsubscribe
+  getValidToken: (forceRefresh?: boolean) => Promise<string | null>;
 }
 
 const TOKEN_STORAGE_KEY = 'auth_token';
@@ -57,6 +59,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
 
   clearError: () => set({ error: null }),
+
+  getValidToken: async (forceRefresh = false): Promise<string | null> => {
+    try {
+      if (auth?.currentUser) {
+        const freshToken = await auth.currentUser.getIdToken(forceRefresh);
+        if (freshToken) {
+          setStoredToken(freshToken);
+          if (get().token !== freshToken) {
+            set({ token: freshToken });
+          }
+          return freshToken;
+        }
+      }
+    } catch {
+      // Fallback para token armazenado em caso de falha transitória de rede
+    }
+    return get().token || getStoredToken();
+  },
 
   login: async (email: string, pass: string): Promise<User> => {
     set({ isLoading: true, error: null });
@@ -167,7 +187,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initializeAuth: () => {
     // Evita registrar múltiplos listeners se já inicializado
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+    const subscribe = typeof onIdTokenChanged === 'function' ? onIdTokenChanged : onAuthStateChanged;
+    const unsubscribe = subscribe(auth, async (firebaseUser: FirebaseUser | null) => {
       if (!firebaseUser) {
         setStoredToken(null);
         set({

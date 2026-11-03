@@ -136,4 +136,23 @@ describe('5.3 — Interceptadores e Injeção de Dependência (client.ts)', () =
 
     assert.equal(config.headers.Authorization, 'Bearer token-operador-rhowert');
   });
+
+  it('deve priorizar tokenProvider dinâmico sobre o storage estático para evitar expiração de JWT', async () => {
+    const storage = new MemoryStorageAdapter({
+      auth_token: 'token-expirado-antigo',
+    });
+
+    const client = createApiClient({
+      storageAdapter: storage,
+      tokenProvider: async () => 'token-renovado-firebase',
+    });
+
+    // @ts-expect-error - manipulador do interceptador
+    const requestInterceptor = client.interceptors.request.handlers[0];
+    const config = await requestInterceptor.fulfilled({
+      headers: new AxiosHeaders(),
+    } as InternalAxiosRequestConfig);
+
+    assert.equal(config.headers.Authorization, 'Bearer token-renovado-firebase');
+  });
 });

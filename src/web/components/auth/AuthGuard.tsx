@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/core/store/useAuthStore';
+import { configureApiClient } from '@/core/api/client';
 import { Loader2 } from 'lucide-react';
 
 export interface AuthGuardProps {
@@ -14,6 +15,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isInitialized, initializeAuth } = useAuthStore();
 
   useEffect(() => {
+    configureApiClient({
+      tokenProvider: () => useAuthStore.getState().getValidToken(),
+      onUnauthorized: async () => {
+        const refreshed = await useAuthStore.getState().getValidToken(true);
+        if (!refreshed) {
+          await useAuthStore.getState().logout();
+        }
+      },
+    });
+
     const unsubscribe = initializeAuth();
     return () => {
       if (unsubscribe) unsubscribe();
