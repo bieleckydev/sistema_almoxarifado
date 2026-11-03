@@ -334,6 +334,10 @@ FIREBASE_AUTH_CONTINUE_URL=http://localhost:3000/login
 
 ---
 
+> **Produção:** antes do primeiro deploy, siga o roteiro em [docs/deploy-producao.md](docs/deploy-producao.md) (variáveis da Vercel, domínios autorizados, deploy de regras/índices e backup).
+
+---
+
 ## 📜 Scripts Disponíveis
 
 | Comando | Descrição |
