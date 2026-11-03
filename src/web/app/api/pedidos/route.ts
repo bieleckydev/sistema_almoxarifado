@@ -119,7 +119,10 @@ export async function GET(request: Request) {
 
       return {
         ...pedidoRaw,
-        clienteNome: clientesMap.get(pedidoRaw.clienteId) || 'Cliente não identificado',
+        clienteNome:
+          (typeof d.data().clienteNome === 'string' && d.data().clienteNome.trim()) ||
+          clientesMap.get(pedidoRaw.clienteId) ||
+          'Cliente não identificado',
         itensDetalhes,
         atrasado: isPedidoAtrasado(pedidoRaw),
         faltaEstoque: hasPedidoFaltaEstoque(pedidoRaw, estoqueDisponivelMap),
@@ -192,11 +195,18 @@ export async function POST(request: Request) {
 
     const db = getServerDb();
     const contadorRef = db.collection('counters').doc('pedidos');
+    const clienteRef = db.collection('clients').doc(input.clienteId);
     const now = new Date().toISOString();
     const valorTotal = calcularTotalPedido(input.itens);
 
     const novoPedido = await db.runTransaction(async (tx) => {
-      const contadorSnap = await tx.get(contadorRef);
+      const [contadorSnap, clienteSnap] = await Promise.all([
+        tx.get(contadorRef),
+        tx.get(clienteRef),
+      ]);
+      const clienteNome = clienteSnap.exists
+        ? String(clienteSnap.data()?.nome || clienteSnap.data()?.razaoSocial || '')
+        : undefined;
       let ultimo: number;
       if (contadorSnap.exists) {
         ultimo = Number(contadorSnap.data()?.ultimo) || 100;
@@ -226,7 +236,10 @@ export async function POST(request: Request) {
       };
 
       tx.set(contadorRef, { ultimo: numeroSequencial, updatedAt: now });
-      tx.create(db.collection('orders').doc(id), semUndefined(pedido));
+      tx.create(
+        db.collection('orders').doc(id),
+        semUndefined({ ...pedido, ...(clienteNome ? { clienteNome } : {}) })
+      );
       return pedido;
     });
 

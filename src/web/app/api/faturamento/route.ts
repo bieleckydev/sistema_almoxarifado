@@ -95,7 +95,10 @@ export async function GET(request: Request) {
       };
       return {
         ...nf,
-        clienteNome: clientesMap.get(nf.clienteId) || 'Cliente não identificado',
+        clienteNome:
+          (typeof data.clienteNome === 'string' && data.clienteNome.trim()) ||
+          clientesMap.get(nf.clienteId) ||
+          'Cliente não identificado',
         status: data.status === 'CANCELADA' ? 'CANCELADA' : 'EMITIDA',
         motivoCancelamento: data.motivoCancelamento ? String(data.motivoCancelamento) : undefined,
       };
@@ -223,7 +226,18 @@ export async function POST(request: Request) {
         valorTotal: valorTotalPedido,
       };
 
-      tx.create(notaRef, semUndefined({ ...nota, status: 'EMITIDA' }));
+      const clienteNomeNota =
+        typeof pedidoSnap.data()?.clienteNome === 'string' && pedidoSnap.data()?.clienteNome.trim()
+          ? String(pedidoSnap.data()?.clienteNome).trim()
+          : undefined;
+      tx.create(
+        notaRef,
+        semUndefined({
+          ...nota,
+          ...(clienteNomeNota ? { clienteNome: clienteNomeNota } : {}),
+          status: 'EMITIDA',
+        })
+      );
       tx.update(orderRef, { faturamento: semUndefined(faturamento), updatedAt: now });
 
       return {

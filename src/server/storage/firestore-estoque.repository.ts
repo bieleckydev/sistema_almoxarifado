@@ -294,6 +294,10 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
         query = query.where('tipo', '==', filtros.tipo);
       }
 
+      if (typeof (query as any).orderBy === 'function') {
+        query = query.orderBy('dataMovimentacao', 'desc');
+      }
+
       const snap = await query.get();
       let lista: Movimentacao[] = snap.docs.map((d) =>
         movimentacaoFromFirestore(d.id, d.data())
@@ -347,6 +351,10 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       }
       if (filtros?.numeroNF) {
         query = query.where('numeroNF', '==', filtros.numeroNF);
+      }
+
+      if (typeof (query as any).orderBy === 'function') {
+        query = query.orderBy('dataMovimentacao', 'desc');
       }
 
       const snap = await query.get();

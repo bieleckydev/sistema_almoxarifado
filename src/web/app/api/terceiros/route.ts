@@ -205,8 +205,15 @@ export async function POST(request: Request) {
 
     // 3. Material e movimentação gravados juntos
     const db = getServerDb();
+    const clienteSnap = await db.collection('clients').doc(input.clienteId).get();
+    const clienteNome = clienteSnap.exists
+      ? String(clienteSnap.data()?.nome || clienteSnap.data()?.razaoSocial || '')
+      : undefined;
     const batch = db.batch();
-    batch.create(db.collection('third_party_materials').doc(materialId), semUndefined(novoMaterial));
+    batch.create(
+      db.collection('third_party_materials').doc(materialId),
+      semUndefined({ ...novoMaterial, ...(clienteNome ? { clienteNome } : {}) })
+    );
     batch.create(db.collection('third_party_movements').doc(movId), semUndefined(novaMovimentacao));
     await batch.commit();
 
