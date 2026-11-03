@@ -12,7 +12,6 @@ import {
   PackageCheck,
   Truck,
   Layers,
-  MapPin,
   ShoppingBag,
   PackageX,
   Calendar,
@@ -433,7 +432,7 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
             <thead>
               <tr className="border-b border-outline-variant/20 bg-surface-container-low text-secondary font-label-sm uppercase tracking-wider select-none">
                 <th className="py-3 px-4 whitespace-nowrap">Pedido &amp; Emissão</th>
-                <th className="py-3 px-4">Cliente &amp; Destino</th>
+                <th className="py-3 px-4">Cliente</th>
                 <th className="py-3 px-4">Itens Solicitados (Almoxarifado)</th>
                 <th className="py-3 px-4 whitespace-nowrap">Situação do Estoque</th>
                 <th className="py-3 px-4 whitespace-nowrap">Prazo SLA</th>
@@ -487,16 +486,12 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
                         </div>
                       </td>
 
-                      {/* Cliente & Destino */}
+                      {/* Cliente */}
                       <td className="py-3.5 px-4 align-top">
                         <div className="flex flex-col max-w-xs">
                           <span className="font-headline-sm font-semibold text-xs text-on-surface group-hover:text-primary transition-colors truncate">
                             {pedido.clienteNome}
                           </span>
-                          <div className="flex items-center gap-1 text-secondary text-[11px] mt-0.5">
-                            <MapPin className="w-3 h-3 text-outline shrink-0" />
-                            <span className="truncate">Expedição Geral / Doca 01</span>
-                          </div>
                         </div>
                       </td>
 
