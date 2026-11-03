@@ -2,8 +2,6 @@
 
 import React from 'react';
 import {
-  Warehouse,
-  ChevronDown,
   Calendar,
   Bell,
   ChevronRight,
@@ -81,18 +79,6 @@ export function AppTopHeader({
         >
           <Menu className="w-5 h-5 text-on-surface" />
         </button>
-
-        {/* Seletor de Galpão / Unidade Operacional */}
-        <div
-          className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface select-none shrink-0 border border-outline-variant/20 hover:bg-surface-container transition-colors cursor-pointer"
-          title="Almoxarifado Ativo"
-        >
-          <Warehouse className="w-4 h-4 text-primary shrink-0" />
-          <span className="font-headline-sm text-xs font-semibold text-on-surface truncate">
-            Unidade Matriz - Galpão 01
-          </span>
-          <ChevronDown className="w-3.5 h-3.5 text-outline shrink-0" />
-        </div>
 
         {/* Breadcrumb sutil para telas menores */}
         <div className="flex md:hidden items-center gap-1.5 text-xs text-on-surface-variant shrink-0">
