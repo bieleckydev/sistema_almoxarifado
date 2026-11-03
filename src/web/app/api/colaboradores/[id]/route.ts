@@ -8,6 +8,7 @@ import {
 import { ColaboradorNaoEncontradoError } from '@/core/services/movimentacao.service';
 import {
   ApiError,
+  getAuditoriaService,
   getEstoqueRepository,
   readJson,
   requireIdentity,
@@ -59,7 +60,20 @@ export async function PATCH(request: Request, context: ColaboradorRouteContext) 
     }
 
     const body = await readJson(request);
-    const dadosAtualizacao = UpdateColaboradorSchema.parse(body);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new ApiError('Corpo da requisição inválido.', 400);
+    }
+    const parsed = UpdateColaboradorSchema.parse(body);
+
+    // O schema parcial ainda injeta o default de `ativo`; aplica só as chaves enviadas
+    // para que editar um colaborador inativo não o reative sem querer.
+    const enviados = body as Record<string, unknown>;
+    const dadosAtualizacao = Object.fromEntries(
+      Object.entries(parsed).filter(([chave]) => chave in enviados)
+    ) as typeof parsed;
+    if (Object.keys(dadosAtualizacao).length === 0) {
+      throw new ApiError('Nenhum campo informado para atualização.', 400);
+    }
 
     // Se houver alteração de matrícula, verificar se não colide com outro colaborador
     if (dadosAtualizacao.matricula) {
@@ -83,6 +97,29 @@ export async function PATCH(request: Request, context: ColaboradorRouteContext) 
     });
 
     const salvo = await repo.salvarColaborador(atualizado);
+
+    const mudouStatus = colaboradorExistente.ativo !== salvo.ativo;
+    const acao = mudouStatus
+      ? salvo.ativo
+        ? 'REATIVAR_COLABORADOR'
+        : 'INATIVAR_COLABORADOR'
+      : 'EDITAR_COLABORADOR';
+    const verbo = mudouStatus ? (salvo.ativo ? 'reativado' : 'inativado') : 'atualizado';
+    try {
+      await getAuditoriaService().registrar({
+        quando: salvo.updatedAt ?? new Date().toISOString(),
+        usuarioId: identity.user.id,
+        usuarioNome: identity.user.name || 'Operador',
+        papel: identity.user.role || 'operador',
+        acao,
+        detalhe: `Colaborador ${salvo.matricula} - ${salvo.nome} ${verbo}`,
+        entidade: 'Colaborador',
+        entidadeId: salvo.id,
+      });
+    } catch (auditErr) {
+      console.warn('Falha ao auditar alteração de colaborador:', auditErr);
+    }
+
     return NextResponse.json(salvo, { status: 200 });
   } catch (error) {
     return toErrorResponse(error);

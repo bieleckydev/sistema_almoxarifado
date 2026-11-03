@@ -1,7 +1,10 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { MemoryEstoqueRepository } from '@/core/storage/memory-estoque.adapter';
+import { MemoryAuditoriaRepository } from '@/core/services/auditoria.service';
 import {
+  getAuditoriaService,
+  setAuditoriaRepository,
   setEstoqueRepository,
   setIdentityAuthenticator,
 } from '../api-helpers';
@@ -41,6 +44,7 @@ describe('Fase 3 — Rotas de API de Colaboradores (/api/colaboradores)', () => 
   beforeEach(async () => {
     memoryRepo = new MemoryEstoqueRepository();
     setEstoqueRepository(memoryRepo);
+    setAuditoriaRepository(new MemoryAuditoriaRepository());
     setIdentityAuthenticator(async () => mockAdminIdentity);
 
     // Cadastra colaboradores de teste
@@ -255,6 +259,44 @@ describe('Fase 3 — Rotas de API de Colaboradores (/api/colaboradores)', () => 
       });
 
       assert.equal(response.status, 403);
+    });
+
+    const patchColab = (id: string, body: unknown) =>
+      patchColaboradorById(
+        new Request(`http://localhost:3000/api/colaboradores/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+        { params: Promise.resolve({ id }) }
+      );
+
+    it('deve inativar e reativar colaborador registrando auditoria', async () => {
+      const inativar = await patchColab('colab-1', { ativo: false });
+      assert.equal(inativar.status, 200);
+      assert.equal((await inativar.json()).ativo, false);
+
+      const reativar = await patchColab('colab-1', { ativo: true });
+      assert.equal(reativar.status, 200);
+      assert.equal((await reativar.json()).ativo, true);
+
+      const acoes = (await getAuditoriaService().listar({})).map((e) => e.acao);
+      assert.ok(acoes.includes('INATIVAR_COLABORADOR'));
+      assert.ok(acoes.includes('REATIVAR_COLABORADOR'));
+    });
+
+    it('não deve reativar colaborador inativo ao editar outro campo', async () => {
+      await patchColab('colab-1', { ativo: false });
+      const response = await patchColab('colab-1', { funcao: 'Torneiro CNC' });
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(data.funcao, 'Torneiro CNC');
+      assert.equal(data.ativo, false);
+    });
+
+    it('deve rejeitar corpo sem campos', async () => {
+      const response = await patchColab('colab-1', {});
+      assert.equal(response.status, 400);
     });
   });
 
