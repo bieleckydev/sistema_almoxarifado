@@ -2,14 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/core/services/firebase';
+import { useAuthStore } from '@/core/store/useAuthStore';
 import { collection, getDocs, limit, query, orderBy } from 'firebase/firestore';
 import {
   type AbaEstoque,
   METADADOS_ABAS,
   UNIDADE_LABELS,
-  NOTAS_INICIAIS,
-  MATERIAIS_TERCEIROS_INICIAIS,
-  CLIENTES_INICIAIS,
 } from '@/web/data/mock-almoxarifado';
 
 export type SearchResultType =
@@ -88,9 +86,10 @@ interface RawDataCache {
 }
 
 /**
- * Carrega a base indexada para a busca global rápida no cliente.
+ * Carrega a base indexada para a busca global rápida no cliente sem dados mockados.
+ * Respeita o papel do usuário autenticado para não consultar coleções restritas.
  */
-async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
+async function fetchGlobalSearchIndex(userRole?: string): Promise<RawDataCache> {
   const result: RawDataCache = {
     itens: [],
     nfes: [],
@@ -99,6 +98,9 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
     notasFaturamento: [],
     terceiros: [],
   };
+
+  const canOperateStock =
+    userRole === 'mestre' || userRole === 'admin' || userRole === 'operador';
 
   // 1. Itens de estoque
   try {
@@ -127,18 +129,29 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
     console.warn('Erro ao carregar itens para busca global:', err);
   }
 
-  // 2. Movimentações com NF-e
+  // 2. Movimentações com NF-e (ordenadas por dataMovimentacao)
   try {
-    const movsQ = query(collection(db, 'movements'), orderBy('createdAt', 'desc'), limit(150));
+    const movsQ = query(
+      collection(db, 'movements'),
+      orderBy('dataMovimentacao', 'desc'),
+      limit(150)
+    );
     const movsSnap = await getDocs(movsQ);
     const itemMap = new Map(result.itens.map((it) => [it.id, it]));
 
     movsSnap.forEach((doc) => {
       const d = doc.data();
-      const nfe = String(d.numeroNotaFiscal || d.nfe || (d.info as Record<string, unknown>)?.[`NF-e`] || '');
+      const nfe = String(
+        d.numeroNF ||
+          d.numeroNotaFiscal ||
+          d.nfe ||
+          (d.info as Record<string, unknown>)?.[`NF-e`] ||
+          ''
+      );
       if (nfe && nfe.trim()) {
         const itemId = String(d.itemId || '');
         const item = itemMap.get(itemId);
+        const dataRef = d.dataMovimentacao || d.createdAt;
         result.nfes.push({
           id: doc.id,
           nfe: nfe.trim(),
@@ -147,8 +160,10 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
           aba: item?.aba || 'mp',
           quantidade: Number(d.quantidade) || 0,
           unidade: item?.unidade || 'un',
-          dataHora: d.createdAt ? new Date(d.createdAt).toLocaleDateString('pt-BR') : '',
-          fornecedor: String(d.fornecedor || (d.info as Record<string, unknown>)?.[`Fornecedor`] || ''),
+          dataHora: dataRef ? new Date(dataRef).toLocaleDateString('pt-BR') : '',
+          fornecedor: String(
+            d.fornecedor || (d.info as Record<string, unknown>)?.[`Fornecedor`] || ''
+          ),
         });
       }
     });
@@ -156,7 +171,7 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
     console.warn('Erro ao carregar movimentações para busca global:', err);
   }
 
-  // 3. Clientes e Parceiros
+  // 3. Clientes e Parceiros (sem fallback mock)
   try {
     const clientsSnap = await getDocs(collection(db, 'clients'));
     clientsSnap.forEach((doc) => {
@@ -170,15 +185,7 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
       });
     });
   } catch (err) {
-    CLIENTES_INICIAIS.forEach((c) => {
-      result.clientes.push({
-        id: c.id,
-        nome: c.nome,
-        tipo: c.tipo,
-        documento: c.documento,
-        contato: c.contato,
-      });
-    });
+    console.warn('Erro ao carregar clientes para busca global:', err);
   }
 
   const clientMap = new Map(result.clientes.map((c) => [c.id, c.nome]));
@@ -204,71 +211,55 @@ async function fetchGlobalSearchIndex(): Promise<RawDataCache> {
     console.warn('Erro ao carregar pedidos para busca global:', err);
   }
 
-  // 5. Notas Fiscais Emitidas (Faturamento)
-  try {
-    const invoicesSnap = await getDocs(collection(db, 'invoices'));
-    invoicesSnap.forEach((doc) => {
-      const d = doc.data();
-      result.notasFaturamento.push({
-        id: doc.id,
-        numeroNF: String(d.numeroNF || ''),
-        serie: String(d.serie || '1'),
-        clienteNome: clientMap.get(String(d.clienteId || '')) || 'Cliente',
-        tipo: d.tipo === 'RETORNO_INDUSTRIALIZACAO' ? 'Retorno' : 'Venda',
-        valorTotal: Number(d.valorTotal) || 0,
-        dataEmissao: String(d.dataEmissao || ''),
+  // 5. Notas Fiscais Emitidas (Faturamento) — apenas para perfis com acesso operacional
+  if (canOperateStock) {
+    try {
+      const invoicesSnap = await getDocs(collection(db, 'invoices'));
+      invoicesSnap.forEach((doc) => {
+        const d = doc.data();
+        result.notasFaturamento.push({
+          id: doc.id,
+          numeroNF: String(d.numeroNF || ''),
+          serie: String(d.serie || '1'),
+          clienteNome: String(d.clienteNome || clientMap.get(String(d.clienteId || '')) || 'Cliente'),
+          tipo: d.tipo === 'RETORNO_INDUSTRIALIZACAO' ? 'Retorno' : 'Venda',
+          valorTotal: Number(d.valorTotal) || 0,
+          dataEmissao: String(d.dataEmissao || ''),
+        });
       });
-    });
-  } catch (err) {
-    NOTAS_INICIAIS.forEach((n) => {
-      result.notasFaturamento.push({
-        id: n.id,
-        numeroNF: n.numeroNF,
-        serie: n.serie,
-        clienteNome: clientMap.get(n.clienteId) || 'Cliente',
-        tipo: n.tipo === 'RETORNO_INDUSTRIALIZACAO' ? 'Retorno' : 'Venda',
-        valorTotal: n.valorTotal,
-        dataEmissao: n.dataEmissao,
-      });
-    });
-  }
+    } catch (err) {
+      console.warn('Erro ao carregar notas fiscais para busca global:', err);
+    }
 
-  // 6. Materiais de Terceiros (Custódia)
-  try {
-    const thirdsSnap = await getDocs(collection(db, 'third_party_materials'));
-    thirdsSnap.forEach((doc) => {
-      const d = doc.data();
-      result.terceiros.push({
-        id: doc.id,
-        descricao: String(d.descricao || ''),
-        codigoSku: d.codigoSku ? String(d.codigoSku) : undefined,
-        clienteNome: clientMap.get(String(d.clienteId || '')) || 'Cliente',
-        saldoAtual: Number(d.saldoAtual) || 0,
-        unidade: String(d.unidade || 'un'),
-        numeroNFRemessa: d.numeroNFRemessa ? String(d.numeroNFRemessa) : undefined,
+    // 6. Materiais de Terceiros (Custódia) — apenas para perfis com acesso operacional
+    try {
+      const thirdsSnap = await getDocs(collection(db, 'third_party_materials'));
+      thirdsSnap.forEach((doc) => {
+        const d = doc.data();
+        result.terceiros.push({
+          id: doc.id,
+          descricao: String(d.descricao || ''),
+          codigoSku: d.codigoSku ? String(d.codigoSku) : undefined,
+          clienteNome: String(d.clienteNome || clientMap.get(String(d.clienteId || '')) || 'Cliente'),
+          saldoAtual: Number(d.saldoAtual) || 0,
+          unidade: String(d.unidade || 'un'),
+          numeroNFRemessa: d.numeroNFRemessa ? String(d.numeroNFRemessa) : undefined,
+        });
       });
-    });
-  } catch (err) {
-    MATERIAIS_TERCEIROS_INICIAIS.forEach((t) => {
-      result.terceiros.push({
-        id: t.id,
-        descricao: t.descricao,
-        codigoSku: t.codigoSku,
-        clienteNome: clientMap.get(t.clienteId) || 'Cliente',
-        saldoAtual: t.saldoAtual,
-        unidade: t.unidade,
-        numeroNFRemessa: t.numeroNFRemessa,
-      });
-    });
+    } catch (err) {
+      console.warn('Erro ao carregar materiais de terceiros para busca global:', err);
+    }
   }
 
   return result;
 }
 
 export function useGlobalSearch(termoBusca: string) {
+  const userRole = useAuthStore((s) => s.user?.role);
+
   const { data: index, isLoading } = useQuery<RawDataCache>({
-    queryKey: ['global-search-index'],
-    queryFn: fetchGlobalSearchIndex,
+    queryKey: ['global-search-index', userRole],
+    queryFn: () => fetchGlobalSearchIndex(userRole),
     staleTime: 60 * 1000, // 1 minuto
   });
 
