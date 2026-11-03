@@ -6,6 +6,7 @@ import {
   isPedidoAtrasado,
   hasPedidoFaltaEstoque,
   calcularTotalPedido,
+  JANELA_PEDIDOS_ENCERRADOS_DIAS,
 } from '@/core/domain/pedido.schema';
 import {
   ApiError,
@@ -18,6 +19,9 @@ import {
   toErrorResponse,
 } from '../api-helpers';
 import { pedidoFromDoc } from './pedido-firestore';
+import { buscarDocsPorIds } from '../firestore-lookup';
+
+const STATUS_ABERTOS = ['PENDENTE', 'SEPARADO'];
 
 export interface PedidoEnriquecidoItem {
   itemId: string;
@@ -62,24 +66,73 @@ function parsePedidoFiltros(request: Request) {
 }
 
 /**
+ * Lê os documentos de pedidos necessários para a listagem.
+ * Com histórico completo (ou busca textual), lê todos. Caso contrário, lê os pedidos
+ * em aberto e os encerrados com prazo de entrega dentro da janela recente.
+ */
+async function carregarDocsPedidos(
+  db: ReturnType<typeof getServerDb>,
+  historicoCompleto: boolean
+): Promise<Array<{ id: string; data: Record<string, any> }>> {
+  if (historicoCompleto) {
+    const snap = await db.collection('orders').get();
+    return snap.docs.map((d) => ({ id: d.id, data: d.data() }));
+  }
+
+  const corte = new Date();
+  corte.setDate(corte.getDate() - JANELA_PEDIDOS_ENCERRADOS_DIAS);
+  const corteISO = corte.toISOString().slice(0, 10);
+
+  const [abertosSnap, recentesSnap] = await Promise.all([
+    db.collection('orders').where('status', 'in', STATUS_ABERTOS).get(),
+    db.collection('orders').where('prazoEntrega', '>=', corteISO).get(),
+  ]);
+
+  const porId = new Map<string, Record<string, any>>();
+  for (const d of [...abertosSnap.docs, ...recentesSnap.docs]) {
+    porId.set(d.id, d.data());
+  }
+  return [...porId.entries()].map(([id, data]) => ({ id, data }));
+}
+
+/**
  * GET /api/pedidos
- * Lista todos os pedidos enriquecidos com dados de cliente e itens de estoque.
+ * Lista pedidos enriquecidos com dados de cliente e itens de estoque.
+ *
+ * Por padrão retorna todos os pedidos em aberto e os encerrados (entregues/cancelados)
+ * com prazo nos últimos JANELA_PEDIDOS_ENCERRADOS_DIAS dias. Use `historico=completo`
+ * para todos; a busca textual sempre considera o histórico completo.
+ * Clientes e itens são lidos apenas pelos IDs referenciados nos pedidos retornados.
  */
 export async function GET(request: Request) {
   try {
     await requireIdentity(request);
     const filtros = parsePedidoFiltros(request);
     const db = getServerDb();
+    const { searchParams } = new URL(request.url);
+    const historicoCompleto = searchParams.get('historico') === 'completo' || Boolean(filtros.busca);
 
-    const [clientsSnap, itemsSnap, ordersSnap] = await Promise.all([
-      db.collection('clients').get(),
-      db.collection('items').get(),
-      db.collection('orders').get(),
+    const docsPedidos = await carregarDocsPedidos(db, historicoCompleto);
+    const pedidosBase = docsPedidos.map((d) => ({ doc: d, pedido: pedidoFromDoc(d.id, d.data) }));
+
+    const [clientesDocs, itensDocs] = await Promise.all([
+      buscarDocsPorIds(
+        db,
+        'clients',
+        pedidosBase
+          .filter(({ doc }) => !(typeof doc.data.clienteNome === 'string' && doc.data.clienteNome.trim()))
+          .map(({ pedido }) => pedido.clienteId)
+      ),
+      buscarDocsPorIds(
+        db,
+        'items',
+        pedidosBase.flatMap(({ pedido }) => pedido.itens.map((i) => i.itemId))
+      ),
     ]);
 
     const clientesMap = new Map<string, string>();
-    clientsSnap.forEach((d) => {
-      clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
+    clientesDocs.forEach((data, id) => {
+      clientesMap.set(id, String(data.nome || 'Cliente'));
     });
 
     const itensMap = new Map<
@@ -87,20 +140,18 @@ export async function GET(request: Request) {
       { nome: string; codigo: string; unidade: string; estoqueAtual: number }
     >();
     const estoqueDisponivelMap = new Map<string, number>();
-    itemsSnap.forEach((d) => {
-      const data = d.data();
+    itensDocs.forEach((data, id) => {
       const estoqueAtual = Number(data.estoqueAtual) || 0;
-      itensMap.set(d.id, {
+      itensMap.set(id, {
         nome: String(data.descricao || data.nome || 'Produto'),
         codigo: String(data.codigo || ''),
         unidade: String(data.unidade || 'UNIDADE'),
         estoqueAtual,
       });
-      estoqueDisponivelMap.set(d.id, estoqueAtual);
+      estoqueDisponivelMap.set(id, estoqueAtual);
     });
 
-    let pedidos: PedidoEnriquecido[] = ordersSnap.docs.map((d) => {
-      const pedidoRaw = pedidoFromDoc(d.id, d.data());
+    let pedidos: PedidoEnriquecido[] = pedidosBase.map(({ doc, pedido: pedidoRaw }) => {
       const itensDetalhes: PedidoEnriquecidoItem[] = pedidoRaw.itens.map((it) => {
         const itemInfo = itensMap.get(it.itemId);
         const precoUnitario = it.precoUnitario || 0;
@@ -120,7 +171,7 @@ export async function GET(request: Request) {
       return {
         ...pedidoRaw,
         clienteNome:
-          (typeof d.data().clienteNome === 'string' && d.data().clienteNome.trim()) ||
+          (typeof doc.data.clienteNome === 'string' && doc.data.clienteNome.trim()) ||
           clientesMap.get(pedidoRaw.clienteId) ||
           'Cliente não identificado',
         itensDetalhes,
@@ -164,6 +215,8 @@ export async function GET(request: Request) {
       {
         dados: pedidos,
         total: pedidos.length,
+        historicoCompleto,
+        janelaEncerradosDias: historicoCompleto ? null : JANELA_PEDIDOS_ENCERRADOS_DIAS,
       },
       { status: 200 }
     );

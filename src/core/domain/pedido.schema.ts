@@ -276,6 +276,12 @@ export function isPedidoFaturado(
 /**
  * Informa se o pedido é elegível para faturamento (separado ou entregue e ainda não faturado).
  */
+/**
+ * Janela padrão (em dias, pelo prazo de entrega) para listar pedidos já encerrados
+ * (entregues/cancelados). Pedidos em aberto são sempre listados.
+ */
+export const JANELA_PEDIDOS_ENCERRADOS_DIAS = 90;
+
 export function isPedidoElegivelFaturamento(
   pedido: { status: StatusPedido; faturamento?: unknown }
 ): boolean {

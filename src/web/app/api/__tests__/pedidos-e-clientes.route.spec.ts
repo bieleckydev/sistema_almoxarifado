@@ -67,6 +67,51 @@ describe('Fase 7 — Rotas BFF e Integração (/api/pedidos e /api/clientes)', (
       assert.ok(data.dados.every((p: any) => p.status === 'ENTREGUE'));
     });
 
+    it('deve omitir pedidos encerrados antigos por padrão e incluí-los com historico=completo', async () => {
+      const db = instalarFirestoreDeTeste();
+      db.seed('orders', [
+        {
+          id: 'ped-antigo',
+          numeroSequencial: 7,
+          clienteId: 'cli-1',
+          prazoEntrega: '2024-01-10',
+          status: 'ENTREGUE',
+          itens: [{ itemId: 'item-1', quantidade: 1, precoUnitario: 10 }],
+        },
+        {
+          id: 'ped-aberto-antigo',
+          numeroSequencial: 8,
+          clienteId: 'cli-1',
+          prazoEntrega: '2024-01-10',
+          status: 'PENDENTE',
+          itens: [{ itemId: 'item-1', quantidade: 1, precoUnitario: 10 }],
+        },
+      ]);
+
+      const padrao = await (await getPedidos(new Request('http://localhost:3000/api/pedidos'))).json();
+      const idsPadrao = padrao.dados.map((p: any) => p.id);
+      assert.ok(!idsPadrao.includes('ped-antigo'), 'encerrado antigo não deve aparecer');
+      assert.ok(idsPadrao.includes('ped-aberto-antigo'), 'pedido em aberto sempre aparece');
+      assert.equal(padrao.historicoCompleto, false);
+
+      const completo = await (
+        await getPedidos(new Request('http://localhost:3000/api/pedidos?historico=completo'))
+      ).json();
+      assert.ok(completo.dados.some((p: any) => p.id === 'ped-antigo'));
+      assert.equal(completo.historicoCompleto, true);
+
+      const busca = await (await getPedidos(new Request('http://localhost:3000/api/pedidos?busca=7'))).json();
+      assert.ok(busca.dados.some((p: any) => p.id === 'ped-antigo'), 'busca considera todo o histórico');
+    });
+
+    it('deve enriquecer o pedido com nome do cliente e dados do item', async () => {
+      const res = await getPedidos(new Request('http://localhost:3000/api/pedidos?historico=completo'));
+      const data = await res.json();
+      const comItem = data.dados.find((p: any) => p.itensDetalhes.some((i: any) => i.codigo));
+      assert.ok(comItem, 'ao menos um pedido referencia item cadastrado');
+      assert.notEqual(comItem.clienteNome, 'Cliente não identificado');
+    });
+
     it('deve filtrar pedidos por busca textual', async () => {
       const request = new Request('http://localhost:3000/api/pedidos?busca=Metalurgica');
       const response = await getPedidos(request);

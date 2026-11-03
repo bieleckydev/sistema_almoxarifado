@@ -97,7 +97,14 @@ export class FakeDocRef {
   }
 }
 
-type Filtro = { campo: string; valor: unknown };
+type Filtro = { campo: string; op: '==' | 'in' | '>='; valor: unknown };
+
+function atende(d: Dados, f: Filtro): boolean {
+  const v = d[f.campo];
+  if (f.op === 'in') return Array.isArray(f.valor) && f.valor.includes(v);
+  if (f.op === '>=') return v !== undefined && v !== null && (v as string | number) >= (f.valor as string | number);
+  return v === f.valor;
+}
 
 class FakeQuery {
   constructor(
@@ -109,10 +116,16 @@ class FakeQuery {
   ) {}
 
   where(campo: string, op: string, valor: unknown): FakeQuery {
-    if (op !== '==') {
+    if (op !== '==' && op !== 'in' && op !== '>=') {
       throw new Error(`FakeFirestore: operador "${op}" não suportado.`);
     }
-    return new FakeQuery(this.store, this.collectionName, [...this.filtros, { campo, valor }], this.ordem, this.limite);
+    return new FakeQuery(
+      this.store,
+      this.collectionName,
+      [...this.filtros, { campo, op, valor }],
+      this.ordem,
+      this.limite
+    );
   }
 
   orderBy(campo: string, direcao: 'asc' | 'desc' = 'asc'): FakeQuery {
@@ -126,7 +139,7 @@ class FakeQuery {
   async get(): Promise<FakeQuerySnapshot> {
     let entradas = this.store
       .listar(this.collectionName)
-      .filter(([, d]) => this.filtros.every((f) => d[f.campo] === f.valor));
+      .filter(([, d]) => this.filtros.every((f) => atende(d, f)));
 
     if (this.ordem) {
       const { campo, direcao } = this.ordem;
@@ -225,6 +238,11 @@ export class FakeFirestore {
 
   batch(): FakeWriteBatch {
     return new FakeWriteBatch(this);
+  }
+
+  /** Lê vários documentos de uma vez, como Firestore.getAll do Admin SDK. */
+  async getAll(...refs: FakeDocRef[]): Promise<FakeDocSnapshot[]> {
+    return Promise.all(refs.map((r) => r.get()));
   }
 
   async runTransaction<T>(fn: (tx: FakeTransaction) => Promise<T>): Promise<T> {

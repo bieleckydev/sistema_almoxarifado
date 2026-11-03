@@ -12,6 +12,7 @@ import {
   semUndefined,
   toErrorResponse,
 } from '../api-helpers';
+import { buscarDocsPorIds } from '../firestore-lookup';
 
 export interface MaterialTerceiroEnriquecido extends MaterialTerceiro {
   clienteNome: string;
@@ -42,15 +43,20 @@ export async function GET(request: Request) {
     const busca = searchParams.get('busca')?.toLowerCase().trim();
 
     const db = getServerDb();
-    const [clientsSnap, materiaisSnap, movSnap] = await Promise.all([
-      db.collection('clients').get(),
+    const [materiaisSnap, movSnap] = await Promise.all([
       db.collection('third_party_materials').get(),
       db.collection('third_party_movements').get(),
     ]);
 
+    // Clientes lidos apenas pelos IDs dos materiais em custódia.
+    const clientesDocs = await buscarDocsPorIds(
+      db,
+      'clients',
+      materiaisSnap.docs.map((d) => d.data().clienteId)
+    );
     const clientesMap = new Map<string, string>();
-    clientsSnap.forEach((d) => {
-      clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
+    clientesDocs.forEach((data, id) => {
+      clientesMap.set(id, String(data.nome || 'Cliente'));
     });
 
     const materiais: MaterialTerceiro[] = materiaisSnap.docs.map((d) => {

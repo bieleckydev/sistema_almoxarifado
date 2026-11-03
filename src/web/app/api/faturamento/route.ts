@@ -20,6 +20,7 @@ import {
   semUndefined,
   toErrorResponse,
 } from '../api-helpers';
+import { buscarDocsPorIds } from '../firestore-lookup';
 import { pedidoFromDoc } from '../pedidos/pedido-firestore';
 
 export interface PedidoAFaturarItem {
@@ -59,21 +60,38 @@ export async function GET(request: Request) {
     await requireIdentity(request);
     const db = getServerDb();
 
-    const [clientsSnap, itemsSnap, invoicesSnap, ordersSnap] = await Promise.all([
-      db.collection('clients').get(),
-      db.collection('items').get(),
+    // Só pedidos SEPARADO/ENTREGUE podem ser faturados; os demais nem são lidos.
+    const [invoicesSnap, ordersSnap] = await Promise.all([
       db.collection('invoices').get(),
-      db.collection('orders').get(),
+      db.collection('orders').where('status', 'in', ['SEPARADO', 'ENTREGUE']).get(),
+    ]);
+
+    const pedidosElegiveis = ordersSnap.docs
+      .map((d) => ({ pedido: pedidoFromDoc(d.id, d.data()), clienteNome: d.data().clienteNome }))
+      .filter(({ pedido }) => isPedidoElegivelFaturamento(pedido));
+
+    // Clientes e itens são lidos apenas pelos IDs referenciados.
+    const temNome = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+    const [clientesDocs, itensDocs] = await Promise.all([
+      buscarDocsPorIds(db, 'clients', [
+        ...invoicesSnap.docs.filter((d) => !temNome(d.data().clienteNome)).map((d) => d.data().clienteId),
+        ...pedidosElegiveis.filter((p) => !temNome(p.clienteNome)).map((p) => p.pedido.clienteId),
+      ]),
+      buscarDocsPorIds(
+        db,
+        'items',
+        pedidosElegiveis.flatMap(({ pedido }) => pedido.itens.map((i) => i.itemId))
+      ),
     ]);
 
     const clientesMap = new Map<string, string>();
-    clientsSnap.forEach((d) => {
-      clientesMap.set(d.id, String(d.data().nome || 'Cliente'));
+    clientesDocs.forEach((data, id) => {
+      clientesMap.set(id, String(data.nome || 'Cliente'));
     });
 
     const itensNomeMap = new Map<string, string>();
-    itemsSnap.forEach((d) => {
-      itensNomeMap.set(d.id, String(d.data().descricao || d.data().nome || 'Item'));
+    itensDocs.forEach((data, id) => {
+      itensNomeMap.set(id, String(data.descricao || data.nome || 'Item'));
     });
 
     const notasEmitidas: NotaFiscalEmitidaEnriquecida[] = invoicesSnap.docs.map((d) => {
@@ -107,14 +125,15 @@ export async function GET(request: Request) {
     // Ordena notas da mais recente para a mais antiga
     notasEmitidas.sort((a, b) => b.dataEmissao.localeCompare(a.dataEmissao));
 
-    const pedidosAFaturar: PedidoAFaturarItem[] = ordersSnap.docs
-      .map((d) => pedidoFromDoc(d.id, d.data()))
-      .filter((p) => isPedidoElegivelFaturamento(p))
-      .map((p) => ({
+    const pedidosAFaturar: PedidoAFaturarItem[] = pedidosElegiveis
+      .map(({ pedido: p, clienteNome }) => ({
         id: p.id,
         numeroSequencial: p.numeroSequencial,
         clienteId: p.clienteId,
-        clienteNome: clientesMap.get(p.clienteId) || 'Cliente não identificado',
+        clienteNome:
+          (temNome(clienteNome) ? String(clienteNome).trim() : '') ||
+          clientesMap.get(p.clienteId) ||
+          'Cliente não identificado',
         prazoEntrega: p.prazoEntrega,
         status: p.status,
         valorTotal: p.valorTotal || calcularTotalPedido(p.itens),
