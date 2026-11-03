@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/core/api/client';
 import type { Movimentacao } from '@/core/domain/movimentacao.schema';
-import type { SetorFabril } from '@/core/domain/colaborador.schema';
+import { type SetorFabril, SETOR_FABRIL_LABELS } from '@/core/domain/colaborador.schema';
 import { isMovimentacaoEntrada } from '@/core/services/estoque-calculator';
 import { useItensEstoque } from './useItensEstoque';
 import type { DashboardItem } from '../data/mock-almoxarifado';
@@ -185,7 +185,7 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
           m.colaboradorId ||
           m.fornecedor ||
           m.destinatario ||
-          (m.setor ? `Setor ${m.setor}` : 'Produção');
+          (m.setor ? `Setor ${SETOR_FABRIL_LABELS[m.setor]}` : 'Não informado');
 
         const item = itensMap.get(m.itemId);
 
