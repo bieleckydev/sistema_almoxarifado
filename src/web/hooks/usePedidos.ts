@@ -11,14 +11,22 @@ export interface UsePedidosResult {
   pedidosAEntregar: number;
   pedidosAtrasados: number;
   pedidosSemEstoque: number;
+  /** Janela (dias) aplicada aos pedidos encerrados; null quando o histórico é completo. */
+  janelaEncerradosDias: number | null;
   isLoading: boolean;
   isFetching: boolean;
   error: Error | null;
   refetch: () => void;
 }
 
-export function usePedidos(filtros?: Partial<PedidoFiltros>): UsePedidosResult {
+export interface UsePedidosOptions extends Partial<PedidoFiltros> {
+  /** Inclui pedidos encerrados antigos (fora da janela padrão do servidor). */
+  historicoCompleto?: boolean;
+}
+
+export function usePedidos(filtros?: UsePedidosOptions): UsePedidosResult {
   const queryParams = new URLSearchParams();
+  if (filtros?.historicoCompleto) queryParams.set('historico', 'completo');
   if (filtros?.busca) queryParams.set('busca', filtros.busca);
   if (filtros?.status && filtros.status !== 'TODOS') queryParams.set('status', filtros.status);
   if (filtros?.clienteId) queryParams.set('clienteId', filtros.clienteId);
@@ -30,6 +38,8 @@ export function usePedidos(filtros?: Partial<PedidoFiltros>): UsePedidosResult {
   const { data, isLoading, isFetching, error, refetch } = useQuery<{
     dados: PedidoEnriquecido[];
     total: number;
+    historicoCompleto?: boolean;
+    janelaEncerradosDias?: number | null;
   }>({
     queryKey: ['pedidos-lista', filtros],
     queryFn: async () => {
@@ -41,6 +51,7 @@ export function usePedidos(filtros?: Partial<PedidoFiltros>): UsePedidosResult {
 
   const pedidos = data?.dados ?? [];
   const total = data?.total ?? 0;
+  const janelaEncerradosDias = data?.janelaEncerradosDias ?? null;
 
   // Métricas calculadas para os KPIs de topo
   const abertos = pedidos.filter((p) => p.status !== 'ENTREGUE' && p.status !== 'CANCELADO');
@@ -54,6 +65,7 @@ export function usePedidos(filtros?: Partial<PedidoFiltros>): UsePedidosResult {
     pedidosAEntregar,
     pedidosAtrasados,
     pedidosSemEstoque,
+    janelaEncerradosDias,
     isLoading,
     isFetching,
     error: error as Error | null,

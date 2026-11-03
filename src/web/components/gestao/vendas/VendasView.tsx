@@ -20,6 +20,8 @@ import {
   Receipt,
   Ban,
 } from 'lucide-react';
+import { JANELA_PEDIDOS_ENCERRADOS_DIAS } from '@/core/domain/pedido.schema';
+import { useDebounce } from '@/web/hooks/useDebounce';
 import { usePedidos, useAtualizarStatusPedido } from '@/web/hooks/usePedidos';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { CancelarPedidoModal } from './CancelarPedidoModal';
@@ -40,6 +42,8 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatusVendas>('todos');
   const [alertaEstoque, setAlertaEstoque] = useState<string | null>(null);
   const [pedidoParaCancelar, setPedidoParaCancelar] = useState<PedidoEnriquecido | null>(null);
+  const [historicoCompleto, setHistoricoCompleto] = useState(false);
+  const buscaDebounced = useDebounce(busca.trim(), 350);
 
   const {
     pedidos,
@@ -50,7 +54,7 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
     isLoading,
     isFetching,
     refetch,
-  } = usePedidos({ busca });
+  } = usePedidos({ busca: buscaDebounced || undefined, historicoCompleto });
 
   const atualizarStatusMutation = useAtualizarStatusPedido();
 
@@ -326,6 +330,16 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
             </button>
           )}
         </div>
+
+        <label className="inline-flex items-center gap-2 text-xs text-on-surface-variant cursor-pointer select-none whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={historicoCompleto}
+            onChange={(e) => setHistoricoCompleto(e.target.checked)}
+            className="w-3.5 h-3.5 accent-primary cursor-pointer"
+          />
+          Incluir encerrados há mais de {JANELA_PEDIDOS_ENCERRADOS_DIAS} dias
+        </label>
 
         {/* Filtros Segmentados de Situação */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0" role="group" aria-label="Filtro de pedidos">
