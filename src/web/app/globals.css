@@ -302,6 +302,29 @@ code, kbd, samp, pre, .font-mono {
   letter-spacing: 0;
 }
 
+/* Impressão da etiqueta: só a etiqueta sai no papel, com 80 mm de largura */
+@media print {
+  body:has(#etiqueta-para-impressao) * {
+    visibility: hidden;
+  }
+
+  #etiqueta-para-impressao,
+  #etiqueta-para-impressao * {
+    visibility: visible;
+  }
+
+  #etiqueta-para-impressao {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 80mm;
+    max-width: none;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
 /* Transição fluida e suave para alternância instantânea entre abas */
 @keyframes tabContentFadeIn {
   0% {
