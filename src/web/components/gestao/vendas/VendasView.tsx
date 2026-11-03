@@ -476,7 +476,7 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
                             #{pedido.numeroSequencial || pedido.id}
                           </span>
                           <span className="font-label-sm text-[11px] text-secondary mt-0.5">
-                            {pedido.createdAt ? formatarDataBR(pedido.createdAt.slice(0, 10)) : 'Hoje'}
+                            {pedido.createdAt ? formatarDataBR(pedido.createdAt.slice(0, 10)) : '—'}
                           </span>
                           {pedido.atrasado && !isEntregue && (
                             <span className="mt-1 inline-flex items-center gap-1 font-label-sm text-[10px] text-error font-bold">
