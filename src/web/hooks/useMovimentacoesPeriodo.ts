@@ -212,47 +212,8 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
       });
     }
 
-    // Se ainda não houver movimentações cadastradas no backend, gera movimentações de demonstração
-    // com base nos itens cadastrados para espelhar a riqueza do protótipo
-    if (itens.length === 0) return [];
-
-    const mockSeed: Array<{
-      itemIndex: number;
-      tipo: 'Entrada' | 'Saída';
-      quantidade: number;
-      quem: string;
-      dia: 'hoje' | 'ontem' | '7dias';
-      hora: string;
-      obs?: string;
-    }> = [
-      { itemIndex: 7, tipo: 'Saída', quantidade: 6, quem: 'Manutenção', dia: 'hoje', hora: '09:42' },
-      { itemIndex: 9, tipo: 'Saída', quantidade: 3, quem: 'Produção', dia: 'hoje', hora: '09:15' },
-      { itemIndex: 0, tipo: 'Entrada', quantidade: 20, quem: 'Recebimento', dia: 'hoje', hora: '08:30' },
-      { itemIndex: 17, tipo: 'Saída', quantidade: 4, quem: 'Oficina', dia: 'ontem', hora: '17:10' },
-      { itemIndex: 4, tipo: 'Saída', quantidade: 12, quem: 'Serralheria', dia: 'ontem', hora: '16:58' },
-      { itemIndex: 3, tipo: 'Saída', quantidade: 8, quem: 'Soldagem', dia: 'ontem', hora: '15:20' },
-      { itemIndex: 12, tipo: 'Entrada', quantidade: 24, quem: 'Recebimento', dia: 'ontem', hora: '11:05' },
-      { itemIndex: 13, tipo: 'Saída', quantidade: 3, quem: 'Balcão', dia: 'ontem', hora: '08:47' },
-    ];
-
-    return mockSeed.map((seed, idx) => {
-      const it = itens[seed.itemIndex % itens.length];
-      const dataYMD = seed.dia === 'hoje' ? hoje() : seed.dia === 'ontem' ? ontem() : diaAntes(2);
-      return {
-        id: `mock-mov-${idx + 1}`,
-        itemId: it.id,
-        tipo: seed.tipo,
-        quantidade: seed.quantidade,
-        data: dataYMD,
-        hora: seed.hora,
-        quem: seed.quem,
-        obs: seed.obs,
-        info: it.especificacoes,
-        item: it,
-        rotulo: formatarRotuloDataHora(dataYMD, seed.hora),
-      };
-    });
-  }, [movimentacoesRaw, itens, itensMap]);
+    return [];
+  }, [movimentacoesRaw, itensMap]);
 
   // 4. Filtra por período e busca
   const movimentacoesFiltradas = useMemo<MovimentacaoEnriquecida[]>(() => {
