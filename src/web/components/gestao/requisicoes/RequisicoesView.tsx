@@ -14,6 +14,7 @@ import {
   User,
   ShieldCheck,
 } from 'lucide-react';
+import { JANELA_REQUISICOES_ENCERRADAS_DIAS } from '@/core/domain/requisicao.schema';
 import { useRequisicoes, useAtualizarStatusRequisicao } from '@/web/hooks/useRequisicoes';
 import { NovaRequisicaoModal } from './NovaRequisicaoModal';
 import { useAuthStore } from '@/core/store/useAuthStore';
@@ -32,9 +33,11 @@ export function RequisicoesView() {
   const [isNovaReqOpen, setIsNovaReqOpen] = useState(false);
   const [reqParaRejeitar, setReqParaRejeitar] = useState<Requisicao | null>(null);
   const [motivoRejeicao, setMotivoRejeicao] = useState('');
+  const [historicoCompleto, setHistoricoCompleto] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useRequisicoes({
     status: filtroStatus !== 'TODOS' ? filtroStatus : undefined,
+    historicoCompleto,
   });
 
   const atualizarStatusMutation = useAtualizarStatusRequisicao();
@@ -222,6 +225,16 @@ export function RequisicoesView() {
             className="w-full text-xs pl-8 pr-3 h-7 rounded-lg bg-surface-container border border-outline-variant/30 text-on-surface placeholder:text-outline/70 focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
+
+        <label className="inline-flex items-center gap-2 text-xs text-on-surface-variant cursor-pointer select-none whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={historicoCompleto}
+            onChange={(e) => setHistoricoCompleto(e.target.checked)}
+            className="w-3.5 h-3.5 accent-primary cursor-pointer"
+          />
+          Incluir concluídas há mais de {JANELA_REQUISICOES_ENCERRADAS_DIAS} dias
+        </label>
       </div>
 
       {/* Tabela de Requisições */}

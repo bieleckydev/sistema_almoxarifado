@@ -8,9 +8,10 @@ import type {
   StatusRequisicao,
 } from '@/core/domain/requisicao.schema';
 
-export function useRequisicoes(filtros?: { status?: string }) {
+export function useRequisicoes(filtros?: { status?: string; historicoCompleto?: boolean }) {
   const queryParams = new URLSearchParams();
   if (filtros?.status && filtros.status !== 'TODOS') queryParams.set('status', filtros.status);
+  if (filtros?.historicoCompleto) queryParams.set('historico', 'completo');
 
   const endpoint = queryParams.toString()
     ? `/requisicoes?${queryParams.toString()}`

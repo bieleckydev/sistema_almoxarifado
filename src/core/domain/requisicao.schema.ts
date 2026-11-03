@@ -11,6 +11,12 @@ export const StatusRequisicaoSchema = z.enum([
 
 export type StatusRequisicao = z.infer<typeof StatusRequisicaoSchema>;
 
+/** Status que ainda exigem ação; sempre listados, independente da data. */
+export const STATUS_REQUISICAO_ABERTOS: StatusRequisicao[] = ['PENDENTE', 'APROVADA'];
+
+/** Janela padrão (dias desde a criação) para listar requisições já concluídas. */
+export const JANELA_REQUISICOES_ENCERRADAS_DIAS = 90;
+
 export const ItemRequisicaoSchema = z.object({
   itemId: z.string().min(1, 'ID do item é obrigatório'),
   codigo: z.string().optional(),

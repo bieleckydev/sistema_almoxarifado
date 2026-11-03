@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import {
   CriarRequisicaoInputSchema,
+  JANELA_REQUISICOES_ENCERRADAS_DIAS,
+  STATUS_REQUISICAO_ABERTOS,
   type Requisicao,
 } from '@/core/domain/requisicao.schema';
 import {
@@ -22,10 +24,27 @@ export async function GET(request: Request) {
     const identity = await requireIdentity(request);
     requireAcaoPermissao(identity, 'requisitar');
 
-    const snap = await getServerDb().collection('requisicoes').get();
-    let dados: Requisicao[] = snap.docs.map((d) => ({ ...(d.data() as Requisicao), id: d.id }));
-
     const { searchParams } = new URL(request.url);
+    const historicoCompleto = searchParams.get('historico') === 'completo';
+    const colecao = getServerDb().collection('requisicoes');
+
+    // Sem histórico completo: abertas sempre + concluídas criadas dentro da janela.
+    let docs;
+    if (historicoCompleto) {
+      docs = (await colecao.get()).docs;
+    } else {
+      const corte = new Date();
+      corte.setDate(corte.getDate() - JANELA_REQUISICOES_ENCERRADAS_DIAS);
+      const [abertas, recentes] = await Promise.all([
+        colecao.where('status', 'in', STATUS_REQUISICAO_ABERTOS).get(),
+        colecao.where('createdAt', '>=', corte.toISOString()).get(),
+      ]);
+      const porId = new Map(abertas.docs.map((d) => [d.id, d]));
+      for (const d of recentes.docs) porId.set(d.id, d);
+      docs = [...porId.values()];
+    }
+    let dados: Requisicao[] = docs.map((d) => ({ ...(d.data() as Requisicao), id: d.id }));
+
     const status = searchParams.get('status');
     if (status && status !== 'TODOS') {
       dados = dados.filter((r) => r.status === status);
@@ -37,6 +56,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       dados,
       total: dados.length,
+      historicoCompleto,
+      janelaEncerradasDias: historicoCompleto ? null : JANELA_REQUISICOES_ENCERRADAS_DIAS,
       pendentes: dados.filter((r) => r.status === 'PENDENTE').length,
     });
   } catch (error) {
