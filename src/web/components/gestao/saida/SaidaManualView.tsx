@@ -39,7 +39,7 @@ import {
   METADADOS_ABAS,
 } from '@/web/data/mock-almoxarifado';
 import { ColaboradorSelect } from '@/web/components/common/ColaboradorSelect';
-import type { Colaborador } from '@/core/domain/colaborador.schema';
+import { type Colaborador, SETOR_FABRIL_LABELS } from '@/core/domain/colaborador.schema';
 
 export interface SaidaManualViewProps {
   onSelectItem?: (item: DashboardItem) => void;
@@ -881,10 +881,10 @@ export function SaidaManualView({
                               ) : (
                                 <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
                               )}
-                              <span>{m.tipo === 'Entrada' ? 'Entrada - Reposição' : 'Saída - Produção'}</span>
+                              <span>{m.tipo}</span>
                             </div>
                             <span className="text-[11px] text-secondary">
-                              {m.quem}
+                              {m.setor ? SETOR_FABRIL_LABELS[m.setor] : '—'}
                             </span>
                           </div>
                         </td>
