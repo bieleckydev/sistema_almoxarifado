@@ -104,10 +104,7 @@ export function RecentActivityFeed({
       </div>
 
       {/* Rodapé limpo */}
-      <div className="mt-3.5 pt-2.5 border-t border-outline-variant/30 flex items-center justify-between text-xs text-on-surface-variant">
-        <span className="font-mono text-[10.5px]">
-          Coletor RF sincronizado
-        </span>
+      <div className="mt-3.5 pt-2.5 border-t border-outline-variant/30 flex items-center justify-end text-xs text-on-surface-variant">
         <button
           type="button"
           onClick={onVerHistoricoCompleto}
