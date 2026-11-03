@@ -23,6 +23,7 @@ import {
 } from './firestore-estoque.mapper';
 import { adminDb } from '../firebase-admin';
 import { fetchFirestoreCollectionRest } from './firestore-rest-client';
+import { calcularCustoMedioPonderado } from '@/core/services/custo-medio';
 
 /**
  * Implementação de produção do IEstoqueRepository utilizando o Google Cloud Firestore via Firebase Admin SDK.
@@ -379,7 +380,7 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
     itemId: string,
     _novoSaldoEstimado: number,
     movimentacao: Movimentacao,
-    opcoes: { estornoDe?: string } = {}
+    opcoes: { estornoDe?: string; valorUnitario?: number; novoCustoUnitario?: number } = {}
   ): Promise<Movimentacao> {
     const itemRef = this.db.collection('items').doc(itemId);
     const movRef = this.db.collection('movements').doc(movimentacao.id);
@@ -422,6 +423,18 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
 
       transaction.update(itemRef, {
         estoqueAtual: saldoResultante,
+        ...(opcoes.valorUnitario !== undefined && opcoes.valorUnitario > 0
+          ? {
+              custoUnitario: calcularCustoMedioPonderado(
+                saldoAnterior,
+                typeof itemData.custoUnitario === 'number' ? itemData.custoUnitario : 0,
+                movimentacao.quantidade,
+                opcoes.valorUnitario
+              ),
+            }
+          : opcoes.novoCustoUnitario !== undefined
+            ? { custoUnitario: opcoes.novoCustoUnitario }
+            : {}),
         updatedAt: new Date().toISOString(),
       });
       transaction.set(movRef, movimentacaoToFirestore(movFinal));

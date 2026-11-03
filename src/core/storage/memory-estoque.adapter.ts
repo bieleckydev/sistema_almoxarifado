@@ -2,7 +2,8 @@ import { IEstoqueRepository } from './estoque.repository.interface';
 import { Item, ItemFiltros } from '../domain/item.schema';
 import { Colaborador, ColaboradorFiltros, normalizarMatricula } from '../domain/colaborador.schema';
 import { Movimentacao, MovimentacaoFiltros } from '../domain/movimentacao.schema';
-import { determinarStatusEstoque } from '../services/estoque-calculator';
+import { determinarStatusEstoque, calcularNovoSaldo } from '../services/estoque-calculator';
+import { calcularCustoMedioPonderado } from '../services/custo-medio';
 
 /**
  * Adaptador de repositório em memória para IEstoqueRepository.
@@ -232,7 +233,7 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     itemId: string,
     novoSaldo: number,
     movimentacao: Movimentacao,
-    opcoes: { estornoDe?: string } = {}
+    opcoes: { estornoDe?: string; valorUnitario?: number; novoCustoUnitario?: number } = {}
   ): Promise<Movimentacao> {
     if (opcoes.estornoDe) {
       const original = this.movimentacoes.find((m) => m.id === opcoes.estornoDe);
@@ -245,8 +246,25 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
       original.estornado = true;
       original.estornadoPor = movimentacao.id;
     }
-    await this.atualizarSaldoItem(itemId, novoSaldo);
-    return this.registrarMovimentacao(movimentacao);
+    const itemAtual = this.itens.get(itemId);
+    const saldoAnterior = itemAtual ? itemAtual.estoqueAtual : movimentacao.saldoAnterior;
+    const saldoResultante = itemAtual
+      ? calcularNovoSaldo(saldoAnterior, movimentacao.tipo, movimentacao.quantidade, { itemId: itemAtual.codigo || itemId })
+      : novoSaldo;
+
+    if (opcoes.valorUnitario !== undefined && opcoes.valorUnitario > 0) {
+      const custoAnterior = itemAtual?.custoUnitario || 0;
+      const novoCusto =
+        opcoes.novoCustoUnitario ??
+        calcularCustoMedioPonderado(saldoAnterior, custoAnterior, movimentacao.quantidade, opcoes.valorUnitario);
+      await this.atualizarSaldoECustoItem(itemId, saldoResultante, novoCusto);
+    } else if (opcoes.novoCustoUnitario !== undefined) {
+      await this.atualizarSaldoECustoItem(itemId, saldoResultante, opcoes.novoCustoUnitario);
+    } else {
+      await this.atualizarSaldoItem(itemId, saldoResultante);
+    }
+    return this.registrarMovimentacao({ ...movimentacao, saldoAnterior, saldoResultante });
+
   }
 
   async registrarOperacoesAtomicas(

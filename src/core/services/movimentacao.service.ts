@@ -181,6 +181,22 @@ export class MovimentacaoService {
       createdAt: agora,
     };
 
+    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
+      const novoCustoEstimado =
+        validado.valorUnitario !== undefined && validado.valorUnitario > 0
+          ? calcularCustoMedioPonderado(
+              saldoAnterior,
+              item.custoUnitario || 0,
+              validado.quantidade,
+              validado.valorUnitario
+            )
+          : undefined;
+      return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao, {
+        valorUnitario: validado.valorUnitario,
+        novoCustoUnitario: novoCustoEstimado,
+      });
+    }
+
     if (validado.valorUnitario !== undefined && validado.valorUnitario > 0) {
       const novoCusto = calcularCustoMedioPonderado(
         saldoAnterior,
@@ -190,10 +206,6 @@ export class MovimentacaoService {
       );
       await this.repository.atualizarSaldoECustoItem(item.id, saldoResultante, novoCusto);
       return this.repository.registrarMovimentacao(movimentacao);
-    }
-
-    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
-      return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao);
     }
 
     await this.repository.atualizarSaldoItem(item.id, saldoResultante);

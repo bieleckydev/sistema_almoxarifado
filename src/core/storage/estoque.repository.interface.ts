@@ -85,7 +85,7 @@ export interface IEstoqueRepository {
     itemId: string,
     novoSaldo: number,
     movimentacao: Movimentacao,
-    opcoes?: { estornoDe?: string }
+    opcoes?: { estornoDe?: string; valorUnitario?: number; novoCustoUnitario?: number }
   ): Promise<Movimentacao>;
 
   /**

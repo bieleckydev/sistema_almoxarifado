@@ -360,6 +360,27 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
       assert.equal(item?.estoqueAtual, 40);
     });
 
+    it('recalcula o custo médio ponderado atomicamente dentro da transação quando valorUnitario é informado', async () => {
+      await repo.atualizarSaldoECustoItem('item-flap-1', 10, 100);
+      const entrada = (id: string, valorUnitario: number): Movimentacao => ({
+        id,
+        itemId: 'item-flap-1',
+        tipo: 'ENTRADA_COMPRA',
+        quantidade: 10,
+        saldoAnterior: 10,
+        saldoResultante: 20,
+        dataMovimentacao: new Date().toISOString(),
+      });
+
+      await repo.registrarMovimentacaoComSaldo('item-flap-1', 20, entrada('mov-custo-1', 200), {
+        valorUnitario: 200,
+      });
+
+      const itemAtualizado = await repo.buscarItemPorId('item-flap-1');
+      assert.equal(itemAtualizado?.estoqueAtual, 20);
+      assert.equal(itemAtualizado?.custoUnitario, 150);
+    });
+
     it('deve rejeitar e abortar transação se o novoSaldo for negativo', async () => {
       const movInvalida: Movimentacao = {
         id: 'mov-neg-1',
