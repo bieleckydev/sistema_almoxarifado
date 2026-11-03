@@ -15,7 +15,11 @@ import {
   Printer,
   DollarSign,
 } from 'lucide-react';
-import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
+import {
+  type DashboardItem,
+  UNIDADE_LABELS,
+  calcularStatusCriticidade,
+} from '@/web/data/mock-almoxarifado';
 import { calcularRazaoEstoque } from '@/core/domain/quantidade';
 import { calcularValorTotalItem, formatarMoedaBrl } from '@/core/services/custo-medio';
 import { StockStatusBadge } from './StockStatusBadge';
@@ -281,18 +285,22 @@ export function StockTable({
               );
               const valorTotalItem = calcularValorTotalItem(item.estoqueAtual, item.custoUnitario);
 
-              // Cores semânticas da barra de progresso
-              const barBgColor = deficit > 0 && item.estoqueAtual === 0
-                ? 'bg-error'
-                : deficit > 0
-                ? 'bg-amber-500'
-                : 'bg-tertiary';
-
-              const barTrackColor = deficit > 0 && item.estoqueAtual === 0
-                ? 'bg-error-container'
-                : deficit > 0
-                ? 'bg-amber-100 dark:bg-amber-950'
-                : 'bg-surface-container';
+              // Cores semânticas seguem a mesma regra do badge de situação
+              const status = calcularStatusCriticidade(item.estoqueAtual, item.estoqueSeguranca);
+              const barBgColor =
+                status === 'crit' ? 'bg-error' : status === 'low' ? 'bg-amber-500' : 'bg-tertiary';
+              const barTrackColor =
+                status === 'crit'
+                  ? 'bg-error-container'
+                  : status === 'low'
+                  ? 'bg-amber-100 dark:bg-amber-950'
+                  : 'bg-surface-container';
+              const saldoTextColor =
+                status === 'crit'
+                  ? 'text-error'
+                  : status === 'low'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-on-surface';
 
               return (
                 <tr
@@ -354,13 +362,7 @@ export function StockTable({
                     <div className="w-full max-w-[170px]">
                       <div className="flex justify-between items-baseline font-data-tabular text-xs mb-1 leading-none">
                         <span
-                          className={`font-bold tabular-nums ${
-                            deficit > 0 && item.estoqueAtual === 0
-                              ? 'text-error'
-                              : deficit > 0
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-on-surface'
-                          }`}
+                          className={`font-bold tabular-nums ${saldoTextColor}`}
                         >
                           {item.estoqueAtual.toLocaleString('pt-BR')} {unidadeFormatada}
                         </span>
@@ -378,9 +380,7 @@ export function StockTable({
                         </div>
                         <span
                           className={`text-[10.5px] tabular-nums font-semibold shrink-0 ${
-                            deficit > 0
-                              ? 'text-error'
-                              : 'text-secondary'
+                            deficit > 0 ? saldoTextColor : 'text-secondary'
                           }`}
                         >
                           {deficit > 0 ? `-${deficit}` : `${percentualCap}%`}
