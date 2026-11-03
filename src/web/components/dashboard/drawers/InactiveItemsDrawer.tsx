@@ -37,11 +37,17 @@ export function InactiveItemsDrawer({ isOpen, aba, onClose, onItemReativado }: I
     },
   });
 
+  // Mantém a referência mais recente de onClose sem refazer o efeito de foco a cada render.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!isOpen) return;
     setBusca('');
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     window.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
@@ -51,7 +57,7 @@ export function InactiveItemsDrawer({ isOpen, aba, onClose, onItemReativado }: I
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
