@@ -17,6 +17,31 @@
       ]
     },
     {
+      "collectionGroup": "items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ativo", "order": "ASCENDING" },
+        { "fieldPath": "tipo", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ativo", "order": "ASCENDING" },
+        { "fieldPath": "tipo", "order": "ASCENDING" },
+        { "fieldPath": "clienteDestino", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "collaborators",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ativo", "order": "ASCENDING" },
+        { "fieldPath": "setor", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "movements",
       "queryScope": "COLLECTION",
       "fields": [
@@ -47,6 +72,30 @@
         { "fieldPath": "itemId", "order": "ASCENDING" },
         { "fieldPath": "tipo", "order": "ASCENDING" },
         { "fieldPath": "dataMovimentacao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "prazoEntrega", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "clienteId", "order": "ASCENDING" },
+        { "fieldPath": "prazoEntrega", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "requisicoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
   ],

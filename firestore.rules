@@ -1,21 +1,56 @@
 rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users/{userId}
+//   - id: string (required, immutable, matches userId)
+//   - name: string (required, 1..200 chars)
+//   - email: string (required, <= 254 chars)
+//   - role: 'mestre' | 'admin' | 'operador' | 'requisitante' (required)
+//   - ativo: bool (optional, defaults to true)
+//   - mustChangePassword: bool (optional)
+//   - createdAt, updatedAt: string | timestamp (optional)
+//   - createdBy, updatedBy: string (optional)
+//
+// Collection: items/{itemId}
+//   - id: string (required, immutable, matches itemId)
+//   - codigo: string (required, 1..60 chars)
+//   - descricao: string (required, 1..300 chars)
+//   - estoqueAtual: number (required on create == 0, immutable from client)
+//   - tipo, unidade, estoqueSeguranca, custoUnitario, capacidadeMaxima,
+//     especificacoes, categoria, embalagem, localizacaoFisica,
+//     clienteDestino, ativo, observacoes, createdAt, updatedAt
+//
+// Collection: clients/{clientId}
+//   - id: string (required, immutable, matches clientId)
+//   - nome: string (required, 2..200 chars)
+//   - razaoSocial, nomeFantasia, tipo, documento, contato, telefone,
+//     email, cidade, estado, endereco, observacoes, ativo, createdAt, updatedAt
+//
+// ===============================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
       return request.auth != null;
     }
 
-    function isMestre() {
+    function isActiveUser() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'mestre';
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ativo != false;
     }
 
     function currentRole() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      return isActiveUser()
         ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
         : '';
+    }
+
+    function isMestre() {
+      return currentRole() == 'mestre';
     }
 
     function hasRole(role) {
@@ -47,11 +82,101 @@ service cloud.firestore {
           'updatedAt',
           'createdBy',
           'updatedBy'
-        ]);
+        ])
+        && request.resource.data.id is string
+        && request.resource.data.id.size() >= 1
+        && request.resource.data.id.size() <= 128
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 3
+        && request.resource.data.email.size() <= 254
+        && (!('ativo' in request.resource.data) || request.resource.data.ativo is bool)
+        && (!('mustChangePassword' in request.resource.data) || request.resource.data.mustChangePassword is bool);
+    }
+
+    function validItemPayload() {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'codigo',
+          'descricao',
+          'tipo',
+          'unidade',
+          'estoqueSeguranca',
+          'estoqueAtual',
+          'custoUnitario',
+          'capacidadeMaxima',
+          'especificacoes',
+          'categoria',
+          'embalagem',
+          'localizacaoFisica',
+          'clienteDestino',
+          'ativo',
+          'observacoes',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.codigo is string
+        && request.resource.data.codigo.size() >= 1
+        && request.resource.data.codigo.size() <= 60
+        && request.resource.data.descricao is string
+        && request.resource.data.descricao.size() >= 1
+        && request.resource.data.descricao.size() <= 300;
+    }
+
+    function validCollaboratorPayload() {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'matricula',
+          'nome',
+          'setor',
+          'funcao',
+          'ativo',
+          'email',
+          'telefone',
+          'observacoes',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() >= 2
+        && request.resource.data.nome.size() <= 200
+        && request.resource.data.matricula is string
+        && request.resource.data.matricula.size() >= 1
+        && request.resource.data.matricula.size() <= 20;
+    }
+
+    function validClientPayload() {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'nome',
+          'razaoSocial',
+          'nomeFantasia',
+          'tipo',
+          'documento',
+          'contato',
+          'telefone',
+          'email',
+          'cidade',
+          'estado',
+          'endereco',
+          'observacoes',
+          'ativo',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() >= 2
+        && request.resource.data.nome.size() <= 200;
     }
 
     match /users/{userId} {
-      allow read: if signedIn() && (request.auth.uid == userId || isMestre());
+      allow read: if signedIn()
+        && (
+          (request.auth.uid == userId && (resource == null || resource.data.ativo != false))
+          || isMestre()
+        );
 
       // New users start without elevated privileges. The first mestre must be
       // bootstrapped from the Firebase Console or a trusted Admin SDK.
@@ -60,9 +185,10 @@ service cloud.firestore {
         && request.resource.data.id == userId
         && request.resource.data.role == 'requisitante'
         && request.resource.data.email == request.auth.token.email
+        && (!('ativo' in request.resource.data) || request.resource.data.ativo == true)
         && validUserFields();
 
-      allow update: if signedIn()
+      allow update: if isActiveUser()
         && request.resource.data.id == userId
         && validUserRole()
         && validUserFields()
@@ -100,12 +226,14 @@ service cloud.firestore {
     }
 
     match /items/{itemId} {
-      allow read: if signedIn();
+      allow read: if isActiveUser();
       allow create: if canManageCatalog()
         && request.resource.data.id == itemId
-        && request.resource.data.estoqueAtual == 0;
+        && request.resource.data.estoqueAtual == 0
+        && validItemPayload();
       allow update: if canManageCatalog()
         && request.resource.data.id == itemId
+        && validItemPayload()
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly([
             'codigo',
@@ -113,6 +241,10 @@ service cloud.firestore {
             'tipo',
             'unidade',
             'estoqueSeguranca',
+            'custoUnitario',
+            'categoria',
+            'capacidadeMaxima',
+            'especificacoes',
             'embalagem',
             'localizacaoFisica',
             'clienteDestino',
@@ -124,11 +256,13 @@ service cloud.firestore {
     }
 
     match /collaborators/{collaboratorId} {
-      allow read: if signedIn();
+      allow read: if isActiveUser();
       allow create: if canManageCatalog()
-        && request.resource.data.id == collaboratorId;
+        && request.resource.data.id == collaboratorId
+        && validCollaboratorPayload();
       allow update: if canManageCatalog()
         && request.resource.data.id == collaboratorId
+        && validCollaboratorPayload()
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly([
             'matricula',
@@ -147,7 +281,7 @@ service cloud.firestore {
     // O razão de movimentações e os saldos são gravados só pelo backend
     // (Admin SDK), dentro de transações. O navegador apenas lê.
     match /movements/{movementId} {
-      allow read: if signedIn();
+      allow read: if isActiveUser();
       allow write: if false;
     }
 
@@ -177,18 +311,21 @@ service cloud.firestore {
     }
 
     match /clients/{clientId} {
-      allow read: if signedIn();
+      allow read: if isActiveUser();
       allow create: if canManageCatalog()
-        && request.resource.data.id == clientId;
+        && request.resource.data.id == clientId
+        && validClientPayload();
       allow update: if canManageCatalog()
-        && request.resource.data.id == clientId;
+        && request.resource.data.id == clientId
+        && validClientPayload()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'createdAt']);
       allow delete: if isMestre();
     }
 
     // Pedidos, notas, requisições e material de terceiros mudam de status com
     // efeitos em estoque e faturamento; só o backend grava.
     match /orders/{orderId} {
-      allow read: if signedIn();
+      allow read: if isActiveUser();
       allow write: if false;
     }
 
@@ -199,7 +336,7 @@ service cloud.firestore {
 
     match /requisicoes/{reqId} {
       allow read: if canOperateStock()
-        || (signedIn() && resource.data.requisitanteId == request.auth.uid);
+        || (isActiveUser() && resource.data.requisitanteId == request.auth.uid);
       allow write: if false;
     }
 
