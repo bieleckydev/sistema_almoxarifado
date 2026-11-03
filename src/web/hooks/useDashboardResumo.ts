@@ -5,6 +5,7 @@ import { db } from '@/core/services/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { isPedidoAtrasado, type StatusPedido } from '@/core/domain/pedido.schema';
 import { type AbaEstoque } from '../data/mock-almoxarifado';
+import { calcularStatusCriticidade } from '@/core/services/estoque-calculator';
 
 export interface ResumoEstoqueAba {
   totalItens: number;
@@ -64,14 +65,15 @@ export function useDashboardResumo() {
           else if (tipo === 'ACABADO') aba = 'motos';
 
           estoqueResumo[aba].totalItens += 1;
-          if (atual <= min * 0.5) {
+          const status = calcularStatusCriticidade(atual, min);
+          if (status === 'crit') {
             estoqueResumo[aba].criticos += 1;
-          } else if (atual <= min) {
+          } else if (status === 'low') {
             estoqueResumo[aba].abaixoMinimo += 1;
           }
 
           // Se estiver crítico ou abaixo do mínimo, insere na lista de atenção
-          if (atual <= min && min > 0) {
+          if (status !== 'ok' && min > 0) {
             const proporcao = atual / min;
             itensParaAtencao.push({
               id: doc.id,
@@ -81,7 +83,7 @@ export function useDashboardResumo() {
               estoqueAtual: atual,
               estoqueSeguranca: min,
               unidade: String(data.unidade || 'un'),
-              status: atual <= min * 0.5 ? 'crit' : 'low',
+              status,
               proporcao,
             });
           }
