@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   Receipt,
   Users,
+  HardHat,
   ShieldCheck,
   UserCog,
   type LucideIcon,
@@ -33,6 +34,7 @@ import type { UserRole } from '@/core/domain/user.schema';
  * - clientes: Cadastro de clientes, fornecedores e parceiros
  * - aud: Auditoria e log operacional
  * - usuarios: Gestão administrativa de usuários e acessos
+ * - colab: Cadastro de colaboradores fabris (baixas internas)
  */
 export type TelaOuAba3 =
   | 'inicio'
@@ -47,7 +49,8 @@ export type TelaOuAba3 =
   | 'fat'
   | 'clientes'
   | 'aud'
-  | 'usuarios';
+  | 'usuarios'
+  | 'colab';
 
 export interface ItemMenuDef {
   chave: TelaOuAba3;
@@ -130,6 +133,12 @@ export const MENU_ESTRUTURA_3_0: GrupoMenuDef[] = [
         nome: 'Inventário (contagem)',
         icon: CheckSquare,
         permissao: 'ajustar',
+      },
+      {
+        chave: 'colab',
+        nome: 'Colaboradores',
+        icon: HardHat,
+        permissao: 'cadastros',
       },
     ],
   },

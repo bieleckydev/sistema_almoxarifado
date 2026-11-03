@@ -68,6 +68,7 @@ export const TELAS_PERMISSAO: Record<string, AcaoPermissao> = {
   terc: 'terceiros',
   vendas: 'vender',
   clientes: 'cadastros',
+  colab: 'cadastros',
   saida: 'mover',
   req: 'requisitar',
 };

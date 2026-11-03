@@ -45,6 +45,7 @@ import { InventarioView } from '@/web/components/gestao/inventario/InventarioVie
 import { RequisicoesView } from '@/web/components/gestao/requisicoes/RequisicoesView';
 import { AuditoriaView } from '@/web/components/gestao/auditoria/AuditoriaView';
 import { UsuariosView } from '@/web/components/gestao/usuarios/UsuariosView';
+import { ColaboradoresView } from '@/web/components/gestao/colaboradores/ColaboradoresView';
 import { UserCreateDrawer } from '@/web/components/gestao/usuarios/UserCreateDrawer';
 import { useFaturamento } from '@/web/hooks/useFaturamento';
 import { useMaterialTerceiros } from '@/web/hooks/useMaterialTerceiros';
@@ -593,6 +594,9 @@ export default function AlmoxarifadoDashboardPage() {
             ) : telaAtiva === 'aud' ? (
               /* 8. Módulo de Auditoria Operacional & Compliance (3.0) */
               <AuditoriaView />
+            ) : telaAtiva === 'colab' ? (
+              /* Cadastro de colaboradores fabris (baixas internas) */
+              <ColaboradoresView />
             ) : telaAtiva === 'usuarios' ? (
               /* 9. Módulo de Gestão de Usuários & Acessos (Mestre) */
               <UsuariosView onNovoUsuario={() => setIsUserCreateOpen(true)} />

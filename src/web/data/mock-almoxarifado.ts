@@ -115,7 +115,8 @@ export type TelaOuAba =
   | 'req'
   | 'inv'
   | 'aud'
-  | 'usuarios';
+  | 'usuarios'
+  | 'colab';
 
 /**
  * Módulos corporativos introduzidos na V5 (Ribbon / Sidebar de Módulos).
@@ -298,6 +299,7 @@ export function obterModuloDeTela(
   if (view === 'saida') return moduloAtual === 'compras' ? 'compras' : 'estoque';
   if (view === 'clientes') return moduloAtual === 'compras' ? 'compras' : 'vendas';
   if (view === 'usuarios') return 'inicio';
+  if (view === 'colab') return 'estoque';
   return 'estoque';
 }
 
