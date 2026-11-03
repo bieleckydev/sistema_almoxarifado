@@ -21,7 +21,6 @@ import {
   CheckSquare,
   Package,
   Activity,
-  Radio,
   FileSpreadsheet,
   Tag,
   ArrowUpDown,
@@ -448,13 +447,6 @@ export function SaidaManualView({
                 Lançamento direto em grade com conferência automática de saldo físico.
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-semibold">
-              <Radio className="w-3.5 h-3.5 animate-pulse" />
-              <span>Coletor RF Operacional</span>
-            </span>
           </div>
         </div>
 
