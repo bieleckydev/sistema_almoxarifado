@@ -81,9 +81,6 @@ export function InicioDashboardView({
           <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-surface-container text-on-surface font-mono text-xs border border-outline-variant/20">
             <Clock className="w-3.5 h-3.5 text-zinc-500" />
             <span className="font-semibold">Hoje</span>
-            <span className="text-on-surface-variant text-[11px] hidden sm:inline">
-              (06h - 15h)
-            </span>
           </div>
 
           <button
