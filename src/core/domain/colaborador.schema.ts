@@ -107,6 +107,8 @@ export const ColaboradorFiltrosSchema = z.object({
   busca: z.string().trim().optional(),
   setor: SetorFabrilSchema.optional(),
   apenasAtivos: z.boolean().default(true),
+  /** Quando true, retorna só colaboradores inativos (tem precedência sobre apenasAtivos). */
+  apenasInativos: z.boolean().optional(),
   pagina: z.number().int().min(1).default(1),
   limite: z.number().int().min(1).max(100).default(20),
 });

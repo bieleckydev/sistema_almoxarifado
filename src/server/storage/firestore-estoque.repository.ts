@@ -217,7 +217,9 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       }
       let query: Query<DocumentData> = this.db.collection('collaborators');
 
-      if (filtros?.apenasAtivos !== false) {
+      if (filtros?.apenasInativos) {
+        query = query.where('ativo', '==', false);
+      } else if (filtros?.apenasAtivos !== false) {
         query = query.where('ativo', '==', true);
       }
 
@@ -240,6 +242,8 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
           c.funcao.toLowerCase().includes(q)
       );
     }
+
+    lista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
     const total = lista.length;
     const pagina = filtros?.pagina || 1;

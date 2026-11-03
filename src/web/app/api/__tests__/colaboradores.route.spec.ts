@@ -298,6 +298,17 @@ describe('Fase 3 — Rotas de API de Colaboradores (/api/colaboradores)', () => 
       const response = await patchColab('colab-1', {});
       assert.equal(response.status, 400);
     });
+
+    it('deve listar apenas inativos quando apenasInativos=true', async () => {
+      await patchColab('colab-2', { ativo: false });
+      const response = await getColaboradores(
+        new Request('http://localhost:3000/api/colaboradores?apenasInativos=true')
+      );
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(data.total, 1);
+      assert.equal(data.colaboradores[0].id, 'colab-2');
+    });
   });
 
   describe('GET /api/colaboradores/matricula/[matricula]', () => {

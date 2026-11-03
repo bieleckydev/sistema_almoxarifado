@@ -24,6 +24,9 @@ export function useColaboradores(filtros?: Partial<ColaboradorFiltros>): UseCola
   if (filtros?.apenasAtivos !== undefined) {
     queryParams.set('apenasAtivos', String(filtros.apenasAtivos));
   }
+  if (filtros?.apenasInativos) {
+    queryParams.set('apenasInativos', 'true');
+  }
   if (filtros?.limite !== undefined) {
     queryParams.set('limite', String(filtros.limite));
   }
@@ -54,6 +57,25 @@ export function useColaboradores(filtros?: Partial<ColaboradorFiltros>): UseCola
     error: error as Error | null,
     refetch,
   };
+}
+
+export type AtualizarColaboradorInput = Partial<Omit<CreateColaboradorInput, 'id'>>;
+
+/**
+ * Atualiza dados de um colaborador. Também inativa (`{ ativo: false }`) ou reativa (`{ ativo: true }`).
+ */
+export function useAtualizarColaborador() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, dados }: { id: string; dados: AtualizarColaboradorInput }) => {
+      const res = await api.patch<Colaborador>(`/colaboradores/${id}`, dados);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['colaboradores-lista'] });
+    },
+  });
 }
 
 export function useCriarColaborador() {

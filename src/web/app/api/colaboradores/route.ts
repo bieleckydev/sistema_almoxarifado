@@ -32,6 +32,9 @@ function parseColaboradorFiltros(request: Request) {
   if (raw.apenasAtivos !== undefined) {
     data.apenasAtivos = raw.apenasAtivos === 'true' || raw.apenasAtivos === '1';
   }
+  if (raw.apenasInativos !== undefined) {
+    data.apenasInativos = raw.apenasInativos === 'true' || raw.apenasInativos === '1';
+  }
   if (raw.pagina !== undefined && raw.pagina.trim() !== '') {
     const p = parseInt(raw.pagina, 10);
     if (!isNaN(p)) data.pagina = p;

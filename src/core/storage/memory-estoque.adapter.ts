@@ -135,7 +135,9 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
     let lista = Array.from(this.colaboradores.values());
 
     if (filtros) {
-      if (filtros.apenasAtivos !== false) {
+      if (filtros.apenasInativos) {
+        lista = lista.filter((c) => !c.ativo);
+      } else if (filtros.apenasAtivos !== false) {
         lista = lista.filter((c) => c.ativo);
       }
       if (filtros.setor) {
@@ -151,6 +153,8 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
         );
       }
     }
+
+    lista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
     const total = lista.length;
     const pagina = filtros?.pagina || 1;
