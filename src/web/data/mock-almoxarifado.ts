@@ -4,8 +4,13 @@ import type { Cliente } from '@/core/domain/cliente.schema';
 import type { Pedido } from '@/core/domain/pedido.schema';
 import type { MaterialTerceiro, MovimentacaoTerceiro } from '@/core/domain/material-terceiro.schema';
 
+export {
+  calcularStatusCriticidade,
+  type StatusCriticidade,
+} from '@/core/services/estoque-calculator';
+import type { StatusCriticidade } from '@/core/services/estoque-calculator';
+
 export type AbaEstoque = 'mp' | 'imp' | 'motos';
-export type StatusCriticidade = 'ok' | 'low' | 'crit';
 
 export interface DashboardItem extends Omit<Item, 'embalagem' | 'especificacoes'> {
   aba: AbaEstoque;
@@ -72,25 +77,6 @@ export const ESPECIFICACOES_ITENS: Record<string, Record<string, string>> = {};
  */
 export const MOCK_ITENS: DashboardItem[] = [];
 export const MOCK_MOVIMENTACOES: DashboardMovimentacao[] = [];
-
-/**
- * Calcula a classificação de criticidade do item.
- * - 'crit': saldo <= min * 0.5 (situação crítica)
- * - 'low': saldo <= min (abaixo do mínimo de segurança)
- * - 'ok': saldo > min (nível normal)
- */
-export function calcularStatusCriticidade(
-  estoqueAtual: number,
-  estoqueSeguranca: number
-): StatusCriticidade {
-  if (estoqueAtual <= estoqueSeguranca * 0.5) {
-    return 'crit';
-  }
-  if (estoqueAtual <= estoqueSeguranca) {
-    return 'low';
-  }
-  return 'ok';
-}
 
 /**
  * Rótulos legíveis para a situação do estoque.

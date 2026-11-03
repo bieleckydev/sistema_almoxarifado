@@ -133,6 +133,34 @@ export function determinarStatusEstoque(
 }
 
 /**
+ * Situação do item frente ao estoque mínimo, como exibida nas telas.
+ * - 'crit': saldo até 50% do mínimo (crítico)
+ * - 'low': saldo até o mínimo (abaixo do mínimo de segurança)
+ * - 'ok': saldo acima do mínimo (normal)
+ */
+export type StatusCriticidade = 'ok' | 'low' | 'crit';
+
+/** Fração do estoque mínimo a partir da qual o item é considerado crítico. */
+export const LIMITE_CRITICO_SOBRE_MINIMO = 0.5;
+
+/**
+ * Regra única de criticidade usada por badges, barras, cards e resumos.
+ * Saldo zerado é um caso particular de crítico (quando há mínimo definido).
+ */
+export function calcularStatusCriticidade(
+  estoqueAtual: number,
+  estoqueSeguranca: number
+): StatusCriticidade {
+  if (estoqueAtual <= estoqueSeguranca * LIMITE_CRITICO_SOBRE_MINIMO) {
+    return 'crit';
+  }
+  if (estoqueAtual <= estoqueSeguranca) {
+    return 'low';
+  }
+  return 'ok';
+}
+
+/**
  * Função pura que valida a disponibilidade imediata de estoque para uma requisição de saída.
  * Não lança erro, retornando a análise detalhada para feedback em tempo real na UI ou validação prévia.
  */
