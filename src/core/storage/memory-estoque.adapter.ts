@@ -224,10 +224,19 @@ export class MemoryEstoqueRepository implements IEstoqueRepository {
       list = list.filter((m) => m.numeroNF === filtros.numeroNF);
     }
 
+    list.sort(
+      (a, b) =>
+        b.dataMovimentacao.localeCompare(a.dataMovimentacao) || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0)
+    );
+
     const total = list.length;
-    const pagina = filtros?.pagina || 1;
     const limite = filtros?.limite || 20;
-    const inicio = (pagina - 1) * limite;
+    let inicio = ((filtros?.pagina || 1) - 1) * limite;
+    if (filtros?.cursor) {
+      const pos = list.findIndex((m) => m.id === filtros.cursor);
+      if (pos < 0) throw Object.assign(new Error(`Cursor de paginação inválido: movimentação "${filtros.cursor}" não existe.`), { statusCode: 400 });
+      inicio = pos + 1;
+    }
     const paginados = list.slice(inicio, inicio + limite).map((m) => ({ ...m }));
 
     return { movimentacoes: paginados, total };

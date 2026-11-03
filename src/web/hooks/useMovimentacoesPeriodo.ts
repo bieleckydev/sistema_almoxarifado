@@ -133,10 +133,12 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
     refetch,
   } = useInfiniteQuery<MovimentacoesApiResponse>({
     queryKey: ['movimentacoes-periodo'],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam }) => {
       try {
+        // Paginação por cursor: o servidor continua após a última movimentação recebida.
+        const cursor = typeof pageParam === 'string' ? `&cursor=${encodeURIComponent(pageParam)}` : '';
         const res = await api.get<MovimentacoesApiResponse>(
-          `/movimentacoes?limite=${TAMANHO_LOTE_MOVIMENTACOES}&pagina=${pageParam}`
+          `/movimentacoes?limite=${TAMANHO_LOTE_MOVIMENTACOES}${cursor}`
         );
         return res.data || { movimentacoes: [], total: 0 };
       } catch (err) {
@@ -144,12 +146,13 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
         return { movimentacoes: [], total: 0 };
       }
     },
-    initialPageParam: 1,
+    initialPageParam: null as string | null,
     getNextPageParam: (lastPage, allPages) => {
-      const carregados = allPages.length * TAMANHO_LOTE_MOVIMENTACOES;
+      const carregados = allPages.reduce((acc, p) => acc + (p.movimentacoes?.length || 0), 0);
       const total = lastPage?.total ?? 0;
-      if (carregados < total && (lastPage?.movimentacoes?.length || 0) > 0) {
-        return allPages.length + 1;
+      const ultima = lastPage?.movimentacoes?.[lastPage.movimentacoes.length - 1];
+      if (carregados < total && ultima) {
+        return ultima.id;
       }
       return undefined;
     },

@@ -329,24 +329,30 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
       query = query.where('numeroNF', '==', filtros.numeroNF);
     }
 
-    if (typeof (query as any).orderBy === 'function') {
-      query = query.orderBy('dataMovimentacao', 'desc');
+    query = query.orderBy('dataMovimentacao', 'desc');
+
+    // A paginação acontece no Firestore: cada página lê só os seus documentos.
+    // O total vem de uma agregação count(), que não lê os documentos.
+    const limite = filtros?.limite || 20;
+    const totalSnap = await query.count().get();
+    const total = totalSnap.data().count;
+
+    let pagina = query;
+    if (filtros?.cursor) {
+      const cursorSnap = await this.db.collection('movements').doc(filtros.cursor).get();
+      if (!cursorSnap.exists) {
+        throw Object.assign(new Error(`Cursor de paginação inválido: movimentação "${filtros.cursor}" não existe.`), { statusCode: 400 });
+      }
+      pagina = pagina.startAfter(cursorSnap);
+    } else if (filtros?.pagina && filtros.pagina > 1) {
+      // Compatibilidade com paginação por número (offset cobra leitura dos documentos pulados).
+      pagina = pagina.offset((filtros.pagina - 1) * limite);
     }
 
-    const snap = await query.get();
-    let lista: Movimentacao[] = snap.docs.map((d) =>
-      movimentacaoFromFirestore(d.id, d.data())
-    );
+    const snap = await pagina.limit(limite).get();
+    const movimentacoes = snap.docs.map((d) => movimentacaoFromFirestore(d.id, d.data()));
 
-    lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
-
-    const total = lista.length;
-    const pagina = filtros?.pagina || 1;
-    const limite = filtros?.limite || 20;
-    const inicio = (pagina - 1) * limite;
-    const paginados = lista.slice(inicio, inicio + limite);
-
-    return { movimentacoes: paginados, total };
+    return { movimentacoes, total };
   }
 
   // ==========================================

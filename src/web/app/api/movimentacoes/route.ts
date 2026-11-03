@@ -17,6 +17,7 @@ function parseMovimentacaoFiltros(request: Request) {
   if (raw.dataInicio && raw.dataInicio.trim()) data.dataInicio = raw.dataInicio.trim();
   if (raw.dataFim && raw.dataFim.trim()) data.dataFim = raw.dataFim.trim();
   if (raw.numeroNF && raw.numeroNF.trim()) data.numeroNF = raw.numeroNF.trim();
+  if (raw.cursor && raw.cursor.trim()) data.cursor = raw.cursor.trim();
   if (raw.pagina && raw.pagina.trim()) {
     const p = parseInt(raw.pagina, 10);
     if (!isNaN(p)) data.pagina = p;

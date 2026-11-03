@@ -141,6 +141,8 @@ export const MovimentacaoFiltrosSchema = z.object({
   numeroNF: z.string().optional(),
   pagina: z.number().int().min(1).default(1),
   limite: z.number().int().min(1).max(1000).default(20),
+  /** ID da última movimentação da página anterior; quando informado, substitui `pagina`. */
+  cursor: z.string().min(1).optional(),
 });
 
 export type MovimentacaoFiltros = z.input<typeof MovimentacaoFiltrosSchema>;

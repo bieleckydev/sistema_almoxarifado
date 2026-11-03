@@ -189,6 +189,35 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
       assert.equal(lista.total, 1);
       assert.equal(lista.movimentacoes[0].id, 'mov-tubo-1');
     });
+
+    it('deve paginar movimentações por cursor, da mais recente para a mais antiga', async () => {
+      for (let dia = 1; dia <= 5; dia++) {
+        await repo.registrarMovimentacao({
+          id: `mov-pag-${dia}`,
+          itemId: 'item-pag',
+          tipo: 'ENTRADA_COMPRA',
+          quantidade: 1,
+          saldoAnterior: dia - 1,
+          saldoResultante: dia,
+          dataMovimentacao: `2026-09-0${dia}T10:00:00.000Z`,
+        });
+      }
+
+      const p1 = await repo.listarMovimentacoes({ itemId: 'item-pag', limite: 2 });
+      assert.equal(p1.total, 5);
+      assert.deepEqual(p1.movimentacoes.map((m) => m.id), ['mov-pag-5', 'mov-pag-4']);
+
+      const p2 = await repo.listarMovimentacoes({ itemId: 'item-pag', limite: 2, cursor: 'mov-pag-4' });
+      assert.deepEqual(p2.movimentacoes.map((m) => m.id), ['mov-pag-3', 'mov-pag-2']);
+
+      const p3 = await repo.listarMovimentacoes({ itemId: 'item-pag', limite: 2, cursor: 'mov-pag-2' });
+      assert.deepEqual(p3.movimentacoes.map((m) => m.id), ['mov-pag-1']);
+
+      const porPagina = await repo.listarMovimentacoes({ itemId: 'item-pag', limite: 2, pagina: 2 });
+      assert.deepEqual(porPagina.movimentacoes.map((m) => m.id), ['mov-pag-3', 'mov-pag-2']);
+
+      await assert.rejects(() => repo.listarMovimentacoes({ cursor: 'nao-existe' }));
+    });
   });
 
   describe('Fase 3 — Transações Atômicas (ACID via runTransaction)', () => {

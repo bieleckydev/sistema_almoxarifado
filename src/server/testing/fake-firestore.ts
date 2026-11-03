@@ -106,52 +106,91 @@ function atende(d: Dados, f: Filtro): boolean {
   return v === f.valor;
 }
 
+interface OpcoesConsulta {
+  ordem?: { campo: string; direcao: 'asc' | 'desc' };
+  limite?: number;
+  pular?: number;
+  aposId?: string;
+}
+
 class FakeQuery {
   constructor(
     protected readonly store: FakeFirestore,
     readonly collectionName: string,
     protected readonly filtros: Filtro[] = [],
-    protected readonly ordem?: { campo: string; direcao: 'asc' | 'desc' },
-    protected readonly limite?: number
+    protected readonly opcoes: OpcoesConsulta = {}
   ) {}
+
+  private com(mudancas: Partial<OpcoesConsulta>, filtros = this.filtros): FakeQuery {
+    return new FakeQuery(this.store, this.collectionName, filtros, { ...this.opcoes, ...mudancas });
+  }
 
   where(campo: string, op: string, valor: unknown): FakeQuery {
     if (op !== '==' && op !== 'in' && op !== '>=') {
       throw new Error(`FakeFirestore: operador "${op}" não suportado.`);
     }
-    return new FakeQuery(
-      this.store,
-      this.collectionName,
-      [...this.filtros, { campo, op, valor }],
-      this.ordem,
-      this.limite
-    );
+    return this.com({}, [...this.filtros, { campo, op, valor }]);
   }
 
   orderBy(campo: string, direcao: 'asc' | 'desc' = 'asc'): FakeQuery {
-    return new FakeQuery(this.store, this.collectionName, this.filtros, { campo, direcao }, this.limite);
+    return this.com({ ordem: { campo, direcao } });
   }
 
   limit(n: number): FakeQuery {
-    return new FakeQuery(this.store, this.collectionName, this.filtros, this.ordem, n);
+    return this.com({ limite: n });
   }
 
-  async get(): Promise<FakeQuerySnapshot> {
+  offset(n: number): FakeQuery {
+    return this.com({ pular: n });
+  }
+
+  /** Como no Firestore: continua após o documento informado, na ordem da consulta. */
+  startAfter(snapshot: FakeDocSnapshot): FakeQuery {
+    return this.com({ aposId: snapshot.id });
+  }
+
+  /** Agregação de contagem (ignora limit/offset/cursor, como a consulta base). */
+  count(): { get(): Promise<{ data(): { count: number } }> } {
+    return {
+      get: async () => {
+        const total = this.filtradasOrdenadas().length;
+        return { data: () => ({ count: total }) };
+      },
+    };
+  }
+
+  private filtradasOrdenadas(): Array<[string, Dados]> {
     let entradas = this.store
       .listar(this.collectionName)
       .filter(([, d]) => this.filtros.every((f) => atende(d, f)));
 
-    if (this.ordem) {
-      const { campo, direcao } = this.ordem;
-      entradas = entradas.sort(([, a], [, b]) => {
+    const { ordem } = this.opcoes;
+    if (ordem) {
+      const { campo, direcao } = ordem;
+      entradas = entradas.sort(([idA, a], [idB, b]) => {
         const va = a[campo] as string | number;
         const vb = b[campo] as string | number;
-        const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+        // Desempate pelo ID do documento, como o Firestore faz.
+        const cmp = va < vb ? -1 : va > vb ? 1 : idA < idB ? -1 : idA > idB ? 1 : 0;
         return direcao === 'asc' ? cmp : -cmp;
       });
     }
-    if (typeof this.limite === 'number') {
-      entradas = entradas.slice(0, this.limite);
+    return entradas;
+  }
+
+  async get(): Promise<FakeQuerySnapshot> {
+    let entradas = this.filtradasOrdenadas();
+    const { aposId, pular, limite } = this.opcoes;
+
+    if (aposId !== undefined) {
+      const pos = entradas.findIndex(([id]) => id === aposId);
+      entradas = pos >= 0 ? entradas.slice(pos + 1) : entradas;
+    }
+    if (typeof pular === 'number') {
+      entradas = entradas.slice(pular);
+    }
+    if (typeof limite === 'number') {
+      entradas = entradas.slice(0, limite);
     }
 
     return new FakeQuerySnapshot(
