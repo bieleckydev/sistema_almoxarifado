@@ -73,7 +73,7 @@ export function AuditoriaView() {
       </div>
 
       {/* Métricas Rápidas */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex flex-col">
           <span className="text-[11px] text-outline font-medium">Eventos Auditados</span>
           <span className="text-lg font-bold text-on-surface font-data-tabular mt-0.5">
@@ -84,13 +84,6 @@ export function AuditoriaView() {
           <span className="text-[11px] text-outline font-medium">Tipos de Ação</span>
           <span className="text-lg font-bold text-primary font-data-tabular mt-0.5">
             {acoesUnicas.length}
-          </span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex flex-col col-span-2 sm:col-span-1">
-          <span className="text-[11px] text-outline font-medium">Status do Ledger</span>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Integridade Criptográfica Ativa
           </span>
         </div>
       </div>
