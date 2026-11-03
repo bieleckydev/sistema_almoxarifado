@@ -14,6 +14,7 @@ import {
   semUndefined,
   toErrorResponse,
 } from '../api-helpers';
+import { clienteFromFirestore } from './cliente-firestore';
 
 /**
  * Converte query params de URL em filtros estruturados e validados pelo Zod.
@@ -45,21 +46,9 @@ export async function GET(request: Request) {
     const filtros = parseClienteFiltros(request);
 
     const snapshot = await getServerDb().collection('clients').get();
-    let clientes: Cliente[] = snapshot.docs.map((snapDoc) => {
-      const data = snapDoc.data();
-      return {
-        id: snapDoc.id,
-        nome: String(data.nome || ''),
-        tipo: data.tipo || 'CLIENTE',
-        documento: data.documento || undefined,
-        contato: data.contato || undefined,
-        telefone: data.telefone || undefined,
-        cidade: data.cidade || undefined,
-        ativo: data.ativo ?? true,
-        createdAt: data.createdAt || undefined,
-        updatedAt: data.updatedAt || undefined,
-      };
-    });
+    let clientes: Cliente[] = snapshot.docs.map((snapDoc) =>
+      clienteFromFirestore(snapDoc.id, snapDoc.data())
+    );
 
     // Filtros em memória
     if (filtros.tipo && filtros.tipo !== 'TODOS') {

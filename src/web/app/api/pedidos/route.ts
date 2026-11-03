@@ -204,6 +204,12 @@ export async function POST(request: Request) {
         tx.get(contadorRef),
         tx.get(clienteRef),
       ]);
+      if (clienteSnap.exists && clienteSnap.data()?.ativo === false) {
+        throw new ApiError(
+          'Este cliente está inativo. Reative o cadastro antes de lançar novos pedidos.',
+          409
+        );
+      }
       const clienteNome = clienteSnap.exists
         ? String(clienteSnap.data()?.nome || clienteSnap.data()?.razaoSocial || '')
         : undefined;
