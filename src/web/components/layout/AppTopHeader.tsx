@@ -117,7 +117,7 @@ export function AppTopHeader({
           <Calendar className="w-4 h-4 text-secondary" />
           <span className="font-medium text-outline">Data:</span>
           <span className="font-data-tabular font-semibold text-on-surface">
-            {periodo === 'Hoje' ? 'Hoje' : textoIntervalo || '14/10/2026'}
+            {periodo === 'Hoje' ? 'Hoje' : textoIntervalo}
           </span>
         </div>
 
