@@ -95,7 +95,7 @@ export function ClientCreateDrawer({
   const [tipo, setTipo] = useState<TipoParceiro>(tipoInicial || 'CLIENTE');
   const [tipoPessoa, setTipoPessoa] = useState<TipoPessoa>('PJ');
 
-  // 2. Identificação & SEFAZ
+  // 2. Identificação fiscal
   const [documento, setDocumento] = useState('');
   const [razaoSocial, setRazaoSocial] = useState('');
   const [nomeFantasia, setNomeFantasia] = useState('');
@@ -314,13 +314,13 @@ export function ClientCreateDrawer({
             </div>
           )}
 
-          {/* SEÇÃO 1: Identificação & SEFAZ */}
+          {/* SEÇÃO 1: Identificação fiscal */}
           <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between pb-1 border-b border-outline-variant/15">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-4 rounded-full bg-primary" />
                 <h3 className="text-sm font-bold text-on-surface">
-                  1. Identificação &amp; SEFAZ
+                  1. Identificação fiscal
                 </h3>
               </div>
               {/* Alternador PJ / PF */}
@@ -359,12 +359,8 @@ export function ClientCreateDrawer({
             <div className="grid grid-cols-12 gap-3">
               {/* Campo Documento CNPJ/CPF + Botão Consulta */}
               <div className="col-span-12 flex flex-col gap-1">
-                <label className="text-xs font-semibold text-on-surface-variant flex items-center justify-between">
-                  <span>{tipoPessoa === 'PJ' ? 'CNPJ Matriz / Filial' : 'CPF do Titular'}</span>
-                  <span className="text-tertiary flex items-center gap-1 font-normal text-[11px]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse" />
-                    SEFAZ Online
-                  </span>
+                <label className="text-xs font-semibold text-on-surface-variant">
+                  {tipoPessoa === 'PJ' ? 'CNPJ Matriz / Filial' : 'CPF do Titular'}
                 </label>
                 <div className="relative">
                   <FileText className="w-4 h-4 text-outline absolute left-3 top-2.5" />
