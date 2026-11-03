@@ -170,7 +170,7 @@ export function EtiquetaItemModal({
         {/* Rodapé com Ações */}
         <div className="px-6 py-4 border-t border-outline-variant/20 flex items-center justify-between bg-surface-container-low">
           <span className="text-xs text-secondary">
-            Compatível com impressoras térmicas (Zebra, Elgin, Argox)
+            Imprime só a etiqueta, com 80 mm de largura
           </span>
 
           <div className="flex items-center gap-2">
