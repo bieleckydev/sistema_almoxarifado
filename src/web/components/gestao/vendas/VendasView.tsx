@@ -203,7 +203,6 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
           </div>
           <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
             <span>{contagens.pendentes} pendentes</span>
-            <span>Fluxo ativo</span>
           </div>
         </div>
 
@@ -276,10 +275,6 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
             <span className="text-xs text-secondary">
               expedições
             </span>
-          </div>
-          <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
-            <span className="text-tertiary font-medium">Baixa almoxarifado OK</span>
-            <span>100% integradas</span>
           </div>
         </div>
       </section>
