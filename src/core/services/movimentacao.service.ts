@@ -208,10 +208,6 @@ export class MovimentacaoService {
       return this.repository.registrarMovimentacao(movimentacao);
     }
 
-    if (typeof this.repository.registrarMovimentacaoComSaldo === 'function') {
-      return this.repository.registrarMovimentacaoComSaldo(item.id, saldoResultante, movimentacao);
-    }
-
     await this.repository.atualizarSaldoItem(item.id, saldoResultante);
     return this.repository.registrarMovimentacao(movimentacao);
   }
