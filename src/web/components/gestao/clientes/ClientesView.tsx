@@ -247,12 +247,11 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
               <span className="font-kpi-value text-2xl font-extrabold tracking-tight text-tertiary">
                 {contagemPorTipo.FORNECEDOR}
               </span>
-              <span className="text-xs text-tertiary font-medium">homologados</span>
+              <span className="text-xs text-tertiary font-medium">cadastrados</span>
             </div>
           </div>
           <div className="mt-3 pt-2 border-t border-outline-variant/10 flex items-center justify-between text-xs text-on-surface-variant">
             <span>Matéria-prima &amp; Insumos</span>
-            <span className="text-tertiary font-semibold">Suprimentos OK</span>
           </div>
         </div>
 
@@ -268,12 +267,11 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
               <span className="font-kpi-value text-2xl font-extrabold tracking-tight text-on-surface">
                 {contagemPorTipo.TRANSPORTADORA}
               </span>
-              <span className="text-xs text-on-surface-variant font-medium">credenciadas</span>
+              <span className="text-xs text-on-surface-variant font-medium">cadastradas</span>
             </div>
           </div>
           <div className="mt-3 pt-2 border-t border-outline-variant/10 flex items-center justify-between text-xs text-on-surface-variant">
             <span>Expedição &amp; Logística</span>
-            <span className="font-semibold text-on-surface">Frete habilitado</span>
           </div>
         </div>
       </section>
