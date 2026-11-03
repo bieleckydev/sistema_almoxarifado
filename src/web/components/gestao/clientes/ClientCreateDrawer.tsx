@@ -14,7 +14,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  RefreshCw,
   FileText,
   AlertCircle,
   Loader2,
@@ -117,7 +116,6 @@ export function ClientCreateDrawer({
   const [uf, setUf] = useState('SP');
   const [obsEntrega, setObsEntrega] = useState('');
 
-  const [isConsultandoReceita, setIsConsultandoReceita] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -174,26 +172,6 @@ export function ClientCreateDrawer({
     }
   };
 
-  // Simulação amigável de consulta na Receita Federal
-  const handleConsultarReceita = () => {
-    const digitos = documento.replace(/\D/g, '');
-    if (digitos.length !== 14 && digitos.length !== 11) {
-      toast('Informe um CNPJ completo (14 dígitos) para consulta.', { type: 'error' });
-      return;
-    }
-
-    setIsConsultandoReceita(true);
-    setTimeout(() => {
-      setIsConsultandoReceita(false);
-      toast('Dados do CNPJ verificados junto à Receita Federal!', { type: 'success' });
-      if (!razaoSocial) {
-        setRazaoSocial(nomeFantasia ? `${nomeFantasia} Ltda` : 'Distribuidora Homologada Ltda');
-      }
-      if (!inscricaoEstadual && tipoPessoa === 'PJ') {
-        setInscricaoEstadual('109.876.543.210');
-      }
-    }, 700);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,28 +366,15 @@ export function ClientCreateDrawer({
                     SEFAZ Online
                   </span>
                 </label>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <FileText className="w-4 h-4 text-outline absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      value={documento}
-                      onChange={handleDocumentoChange}
-                      placeholder={tipoPessoa === 'PJ' ? '00.000.000/0001-00' : '000.000.000-00'}
-                      className="w-full pl-9 pr-3 py-2 bg-surface-container-low text-on-surface font-mono text-xs rounded-xl border border-outline-variant/30 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    />
-                  </div>
-                  {tipoPessoa === 'PJ' && (
-                    <button
-                      type="button"
-                      onClick={handleConsultarReceita}
-                      disabled={isConsultandoReceita}
-                      className="bg-surface-container hover:bg-surface-container-high text-primary px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 border border-outline-variant/20 cursor-pointer disabled:opacity-50"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isConsultandoReceita ? 'animate-spin' : ''}`} />
-                      <span>Consultar Receita</span>
-                    </button>
-                  )}
+                <div className="relative">
+                  <FileText className="w-4 h-4 text-outline absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={documento}
+                    onChange={handleDocumentoChange}
+                    placeholder={tipoPessoa === 'PJ' ? '00.000.000/0001-00' : '000.000.000-00'}
+                    className="w-full pl-9 pr-3 py-2 bg-surface-container-low text-on-surface font-mono text-xs rounded-xl border border-outline-variant/30 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
                 </div>
               </div>
 
