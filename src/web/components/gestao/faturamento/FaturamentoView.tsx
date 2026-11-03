@@ -208,7 +208,6 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
           </div>
           <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
             <span>Vendas &amp; Retornos</span>
-            <span className="font-mono text-primary font-medium">100% integradas</span>
           </div>
         </div>
 
