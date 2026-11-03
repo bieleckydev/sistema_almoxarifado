@@ -210,25 +210,50 @@ export function toErrorResponse(error: unknown): NextResponse {
     return NextResponse.json({ error: (error as Error).message }, { status: 403 });
   }
 
-  // Erro com statusCode explícito (ex: 401 de autenticação, 409 de conflito)
+  // Erro com statusCode explícito (ex: 401 de autenticação, 409 de conflito).
+  // Essas mensagens são escritas para o usuário; erros 5xx também vão para o log.
   if (error instanceof Error && 'statusCode' in error) {
     const statusCode = (error as any).statusCode;
     if (typeof statusCode === 'number' && statusCode >= 400 && statusCode < 600) {
+      const erroId = statusCode >= 500 ? registrarErroInterno(error) : undefined;
       return NextResponse.json(
-        { error: error.message, message: error.message },
+        { error: error.message, message: error.message, ...(erroId ? { erroId } : {}) },
         { status: statusCode }
       );
     }
   }
 
-  // Erro interno não tratado (500 Internal Server Error)
-  console.error('Erro interno na API:', error);
-  const mensagemErro = error instanceof Error ? error.message : 'Erro interno ao processar a solicitação.';
+  // Erro interno não tratado (500 Internal Server Error).
+  // A mensagem original pode expor detalhes do Firestore ou do servidor, então
+  // fica só no log; o cliente recebe um código para localizar o registro.
+  const erroId = registrarErroInterno(error);
+  const mensagemErro = `Erro interno ao processar a solicitação. Código: ${erroId}`;
 
   return NextResponse.json(
-    { error: mensagemErro, message: mensagemErro },
+    { error: mensagemErro, message: mensagemErro, erroId },
     { status: 500 }
   );
+}
+
+/**
+ * Registra um erro inesperado como uma linha JSON (formato lido pelos logs da Vercel)
+ * e devolve um identificador curto para correlacionar com o relato do usuário.
+ */
+export function registrarErroInterno(error: unknown): string {
+  const erroId = crypto.randomUUID().slice(0, 8);
+  const err = error instanceof Error ? error : undefined;
+  console.error(
+    JSON.stringify({
+      nivel: 'erro',
+      erroId,
+      quando: new Date().toISOString(),
+      tipo: err?.name ?? typeof error,
+      mensagem: err?.message ?? String(error),
+      stack: err?.stack,
+      causa: err?.cause instanceof Error ? err.cause.message : undefined,
+    })
+  );
+  return erroId;
 }
 
 // ==========================================

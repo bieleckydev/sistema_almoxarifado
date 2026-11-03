@@ -168,3 +168,25 @@ describe('Fase 1 — Utilitários e Helpers da API (api-helpers)', () => {
   });
 });
 
+
+describe('toErrorResponse — erros internos', () => {
+  it('não expõe a mensagem interna e devolve um código de rastreio', async () => {
+    const { toErrorResponse } = await import('../api-helpers');
+    const original = console.error;
+    const logs: string[] = [];
+    console.error = (...args: unknown[]) => logs.push(args.map(String).join(' '));
+    try {
+      const res = toErrorResponse(new Error('9 FAILED_PRECONDITION: índice ausente projects/x/indexes'));
+      assert.equal(res.status, 500);
+      const body = await res.json();
+      assert.ok(body.erroId);
+      assert.ok(!body.error.includes('FAILED_PRECONDITION'));
+      assert.ok(body.error.includes(body.erroId));
+      const log = JSON.parse(logs[0]);
+      assert.equal(log.erroId, body.erroId);
+      assert.ok(log.mensagem.includes('FAILED_PRECONDITION'));
+    } finally {
+      console.error = original;
+    }
+  });
+});
