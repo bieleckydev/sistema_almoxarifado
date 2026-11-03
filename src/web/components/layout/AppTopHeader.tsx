@@ -145,17 +145,11 @@ export function AppTopHeader({
 
         <div className="hidden sm:block h-5 w-px bg-outline-variant/30" />
 
-        {/* Perfil do Usuário com Indicador de Presença e Papel (3.0) */}
+        {/* Perfil do Usuário e Papel (3.0) */}
         {user ? (
           <div className="flex items-center gap-2.5 pl-1">
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs shadow-sm">
-                {userInitials}
-              </div>
-              <span
-                className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-tertiary ring-2 ring-surface-container-lowest"
-                title="Online"
-              />
+            <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs shadow-sm">
+              {userInitials}
             </div>
             <div className="hidden md:flex flex-col text-left leading-tight">
               <span className="font-headline-sm text-xs font-bold text-on-surface truncate max-w-[130px]">
