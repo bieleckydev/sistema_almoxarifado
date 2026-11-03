@@ -164,20 +164,18 @@ export function StockMetricsCards({
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-error">
-            Ruptura imediata
+            Críticos
           </span>
-          {totalCriticos > 0 && (
-            <span className="text-[11px] font-semibold text-error">
-              {totalCriticos === 1 ? '1 zerado' : `${totalCriticos} zerados`}
-            </span>
-          )}
+          <span className="text-[11px] text-secondary">
+            saldo até 50% do mínimo
+          </span>
         </div>
         <div className="my-2.5 flex items-baseline gap-2">
           <span className="font-kpi-value text-2xl sm:text-3xl font-bold text-error tabular-nums tracking-tight">
             {totalCriticos.toLocaleString('pt-BR')}
           </span>
           <span className="text-xs text-error/80">
-            {totalCriticos === 1 ? 'item zerado' : 'itens zerados'}
+            {totalCriticos === 1 ? 'item crítico' : 'itens críticos'}
           </span>
         </div>
         <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
