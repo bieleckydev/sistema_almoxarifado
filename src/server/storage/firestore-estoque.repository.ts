@@ -42,41 +42,33 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
   // ==========================================
 
   async buscarItemPorId(id: string): Promise<Item | null> {
-    try {
-      if (!this.db || typeof this.db.collection !== 'function') {
-        throw new Error('Firestore db não inicializado');
-      }
-      const docSnap = await this.db.collection('items').doc(id).get();
-      if (!docSnap.exists) {
-        return null;
-      }
-      return itemFromFirestore(docSnap.id, docSnap.data() || {});
-    } catch {
+    if (!this.db || typeof this.db.collection !== 'function') {
+      throw new Error('Firestore db não inicializado');
+    }
+    const docSnap = await this.db.collection('items').doc(id).get();
+    if (!docSnap.exists) {
       return null;
     }
+    return itemFromFirestore(docSnap.id, docSnap.data() || {});
   }
 
   async buscarPorCodigo(codigo: string): Promise<Item | null> {
     const upperCode = codigo.trim().toUpperCase();
-    try {
-      if (!this.db || typeof this.db.collection !== 'function') {
-        throw new Error('Firestore db não inicializado');
-      }
-      const snap = await this.db
-        .collection('items')
-        .where('codigo', '==', upperCode)
-        .limit(1)
-        .get();
+    if (!this.db || typeof this.db.collection !== 'function') {
+      throw new Error('Firestore db não inicializado');
+    }
+    const snap = await this.db
+      .collection('items')
+      .where('codigo', '==', upperCode)
+      .limit(1)
+      .get();
 
-      if (snap.empty) {
-        return null;
-      }
-
-      const doc = snap.docs[0];
-      return itemFromFirestore(doc.id, doc.data());
-    } catch {
+    if (snap.empty) {
       return null;
     }
+
+    const doc = snap.docs[0];
+    return itemFromFirestore(doc.id, doc.data());
   }
 
   async listarComFiltros(filtros?: ItemFiltros, authToken?: string): Promise<{ itens: Item[]; total: number }> {
@@ -102,17 +94,14 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
 
       const snap = await query.get();
       lista = snap.docs.map((d) => itemFromFirestore(d.id, d.data()));
-    } catch {
-      // Tenta recuperar itens REAIS do Firestore via API REST usando o Bearer Token do usuário
-      if (authToken) {
-        try {
-          const itensReais = await fetchFirestoreCollectionRest<Item>('items', authToken);
-          if (Array.isArray(itensReais) && itensReais.length > 0) {
-            lista = itensReais;
-          }
-        } catch {
-          // Sem conexão remota
-        }
+    } catch (erroAdmin) {
+      // Tenta recuperar itens REAIS do Firestore via API REST usando o Bearer Token do usuário.
+      // Se não houver alternativa, propaga o erro em vez de devolver uma lista vazia.
+      if (!authToken) throw erroAdmin;
+      try {
+        lista = await fetchFirestoreCollectionRest<Item>('items', authToken);
+      } catch {
+        throw erroAdmin;
       }
 
       if (filtros?.apenasAtivos !== false) {
@@ -176,62 +165,54 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
   // ==========================================
 
   async buscarColaboradorPorId(idOrMatricula: string): Promise<Colaborador | null> {
-    try {
-      if (!this.db || typeof this.db.collection !== 'function') {
-        return null;
-      }
-      // 1. Tenta buscar diretamente pelo ID do documento
-      const docSnap = await this.db.collection('collaborators').doc(idOrMatricula).get();
-      if (docSnap.exists) {
-        return colaboradorFromFirestore(docSnap.id, docSnap.data() || {});
-      }
-
-      // 2. Se não encontrou pelo ID, busca pela matrícula normalizada
-      const matriculaNorm = normalizarMatricula(idOrMatricula);
-      if (matriculaNorm) {
-        const querySnap = await this.db
-          .collection('collaborators')
-          .where('matricula', '==', matriculaNorm)
-          .limit(1)
-          .get();
-
-        if (!querySnap.empty) {
-          const doc = querySnap.docs[0];
-          return colaboradorFromFirestore(doc.id, doc.data());
-        }
-      }
-
-      return null;
-    } catch {
+    if (!this.db || typeof this.db.collection !== 'function') {
       return null;
     }
+    // 1. Tenta buscar diretamente pelo ID do documento
+    const docSnap = await this.db.collection('collaborators').doc(idOrMatricula).get();
+    if (docSnap.exists) {
+      return colaboradorFromFirestore(docSnap.id, docSnap.data() || {});
+    }
+
+    // 2. Se não encontrou pelo ID, busca pela matrícula normalizada
+    const matriculaNorm = normalizarMatricula(idOrMatricula);
+    if (matriculaNorm) {
+      const querySnap = await this.db
+        .collection('collaborators')
+        .where('matricula', '==', matriculaNorm)
+        .limit(1)
+        .get();
+
+      if (!querySnap.empty) {
+        const doc = querySnap.docs[0];
+        return colaboradorFromFirestore(doc.id, doc.data());
+      }
+    }
+
+    return null;
   }
 
   async listarColaboradores(
     filtros?: ColaboradorFiltros
   ): Promise<{ colaboradores: Colaborador[]; total: number }> {
     let lista: Colaborador[] = [];
-    try {
-      if (!this.db || typeof this.db.collection !== 'function') {
-        return { colaboradores: [], total: 0 };
-      }
-      let query: Query<DocumentData> = this.db.collection('collaborators');
-
-      if (filtros?.apenasInativos) {
-        query = query.where('ativo', '==', false);
-      } else if (filtros?.apenasAtivos !== false) {
-        query = query.where('ativo', '==', true);
-      }
-
-      if (filtros?.setor) {
-        query = query.where('setor', '==', filtros.setor);
-      }
-
-      const snap = await query.get();
-      lista = snap.docs.map((d) => colaboradorFromFirestore(d.id, d.data()));
-    } catch {
+    if (!this.db || typeof this.db.collection !== 'function') {
       return { colaboradores: [], total: 0 };
     }
+    let query: Query<DocumentData> = this.db.collection('collaborators');
+
+    if (filtros?.apenasInativos) {
+      query = query.where('ativo', '==', false);
+    } else if (filtros?.apenasAtivos !== false) {
+      query = query.where('ativo', '==', true);
+    }
+
+    if (filtros?.setor) {
+      query = query.where('setor', '==', filtros.setor);
+    }
+
+    const snap = await query.get();
+    lista = snap.docs.map((d) => colaboradorFromFirestore(d.id, d.data()));
 
     if (filtros?.busca) {
       const q = filtros.busca.toLowerCase();
@@ -271,113 +252,101 @@ export class FirestoreEstoqueRepository implements IEstoqueRepository {
   }
 
   async buscarMovimentacaoPorId(id: string): Promise<Movimentacao | null> {
-    try {
-      if (!this.db || typeof this.db.collection !== 'function') return null;
-      const docSnap = await this.db.collection('movements').doc(id).get();
-      const data = docSnap.data();
-      if (!docSnap.exists || !data) return null;
-      return movimentacaoFromFirestore(docSnap.id, data);
-    } catch {
-      return null;
-    }
+    if (!this.db || typeof this.db.collection !== 'function') return null;
+    const docSnap = await this.db.collection('movements').doc(id).get();
+    const data = docSnap.data();
+    if (!docSnap.exists || !data) return null;
+    return movimentacaoFromFirestore(docSnap.id, data);
   }
 
   async consultarExtratoItem(
     itemId: string,
     filtros?: MovimentacaoFiltros
   ): Promise<Movimentacao[]> {
-    try {
-      if (!this.db || typeof this.db.collection !== 'function') {
-        return [];
-      }
-      let query: Query<DocumentData> = this.db
-        .collection('movements')
-        .where('itemId', '==', itemId);
-
-      if (filtros?.tipo) {
-        query = query.where('tipo', '==', filtros.tipo);
-      }
-
-      if (typeof (query as any).orderBy === 'function') {
-        query = query.orderBy('dataMovimentacao', 'desc');
-      }
-
-      const snap = await query.get();
-      let lista: Movimentacao[] = snap.docs.map((d) =>
-        movimentacaoFromFirestore(d.id, d.data())
-      );
-
-      // Filtros por data
-      if (filtros?.dataInicio) {
-        lista = lista.filter((m) => m.dataMovimentacao >= filtros.dataInicio!);
-      }
-      if (filtros?.dataFim) {
-        lista = lista.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
-      }
-
-      // Ordenação decrescente (mais recente primeiro)
-      lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
-
-      if (filtros?.pagina && filtros?.limite) {
-        const inicio = (filtros.pagina - 1) * filtros.limite;
-        return lista.slice(inicio, inicio + filtros.limite);
-      }
-
-      return lista;
-    } catch {
+    if (!this.db || typeof this.db.collection !== 'function') {
       return [];
     }
+    let query: Query<DocumentData> = this.db
+      .collection('movements')
+      .where('itemId', '==', itemId);
+
+    if (filtros?.tipo) {
+      query = query.where('tipo', '==', filtros.tipo);
+    }
+
+    if (typeof (query as any).orderBy === 'function') {
+      query = query.orderBy('dataMovimentacao', 'desc');
+    }
+
+    const snap = await query.get();
+    let lista: Movimentacao[] = snap.docs.map((d) =>
+      movimentacaoFromFirestore(d.id, d.data())
+    );
+
+    // Filtros por data
+    if (filtros?.dataInicio) {
+      lista = lista.filter((m) => m.dataMovimentacao >= filtros.dataInicio!);
+    }
+    if (filtros?.dataFim) {
+      lista = lista.filter((m) => m.dataMovimentacao <= filtros.dataFim!);
+    }
+
+    // Ordenação decrescente (mais recente primeiro)
+    lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
+
+    if (filtros?.pagina && filtros?.limite) {
+      const inicio = (filtros.pagina - 1) * filtros.limite;
+      return lista.slice(inicio, inicio + filtros.limite);
+    }
+
+    return lista;
   }
 
   async listarMovimentacoes(
     filtros?: MovimentacaoFiltros
   ): Promise<{ movimentacoes: Movimentacao[]; total: number }> {
-    try {
-      if (!this.db || typeof this.db.collection !== 'function') {
-        return { movimentacoes: [], total: 0 };
-      }
-      let query: Query<DocumentData> = this.db.collection('movements');
-
-      if (filtros?.itemId) {
-        query = query.where('itemId', '==', filtros.itemId);
-      }
-      if (filtros?.colaboradorId) {
-        query = query.where('colaboradorId', '==', filtros.colaboradorId);
-      }
-      if (filtros?.tipo) {
-        query = query.where('tipo', '==', filtros.tipo);
-      }
-      if (filtros?.dataInicio) {
-        query = query.where('dataMovimentacao', '>=', filtros.dataInicio);
-      }
-      if (filtros?.dataFim) {
-        query = query.where('dataMovimentacao', '<=', filtros.dataFim);
-      }
-      if (filtros?.numeroNF) {
-        query = query.where('numeroNF', '==', filtros.numeroNF);
-      }
-
-      if (typeof (query as any).orderBy === 'function') {
-        query = query.orderBy('dataMovimentacao', 'desc');
-      }
-
-      const snap = await query.get();
-      let lista: Movimentacao[] = snap.docs.map((d) =>
-        movimentacaoFromFirestore(d.id, d.data())
-      );
-
-      lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
-
-      const total = lista.length;
-      const pagina = filtros?.pagina || 1;
-      const limite = filtros?.limite || 20;
-      const inicio = (pagina - 1) * limite;
-      const paginados = lista.slice(inicio, inicio + limite);
-
-      return { movimentacoes: paginados, total };
-    } catch {
+    if (!this.db || typeof this.db.collection !== 'function') {
       return { movimentacoes: [], total: 0 };
     }
+    let query: Query<DocumentData> = this.db.collection('movements');
+
+    if (filtros?.itemId) {
+      query = query.where('itemId', '==', filtros.itemId);
+    }
+    if (filtros?.colaboradorId) {
+      query = query.where('colaboradorId', '==', filtros.colaboradorId);
+    }
+    if (filtros?.tipo) {
+      query = query.where('tipo', '==', filtros.tipo);
+    }
+    if (filtros?.dataInicio) {
+      query = query.where('dataMovimentacao', '>=', filtros.dataInicio);
+    }
+    if (filtros?.dataFim) {
+      query = query.where('dataMovimentacao', '<=', filtros.dataFim);
+    }
+    if (filtros?.numeroNF) {
+      query = query.where('numeroNF', '==', filtros.numeroNF);
+    }
+
+    if (typeof (query as any).orderBy === 'function') {
+      query = query.orderBy('dataMovimentacao', 'desc');
+    }
+
+    const snap = await query.get();
+    let lista: Movimentacao[] = snap.docs.map((d) =>
+      movimentacaoFromFirestore(d.id, d.data())
+    );
+
+    lista.sort((a, b) => b.dataMovimentacao.localeCompare(a.dataMovimentacao));
+
+    const total = lista.length;
+    const pagina = filtros?.pagina || 1;
+    const limite = filtros?.limite || 20;
+    const inicio = (pagina - 1) * limite;
+    const paginados = lista.slice(inicio, inicio + limite);
+
+    return { movimentacoes: paginados, total };
   }
 
   // ==========================================

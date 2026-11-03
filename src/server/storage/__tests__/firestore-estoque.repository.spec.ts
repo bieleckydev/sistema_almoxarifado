@@ -1,133 +1,10 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { FirestoreEstoqueRepository } from '../firestore-estoque.repository';
+import { FakeFirestore } from '@/server/testing/fake-firestore';
 import { Item } from '@/core/domain/item.schema';
 import { Colaborador } from '@/core/domain/colaborador.schema';
 import { Movimentacao } from '@/core/domain/movimentacao.schema';
-
-/**
- * Utilitário de mock em memória que simula a interface do Firebase Admin Firestore.
- */
-function createMockFirestore() {
-  const store = new Map<string, Map<string, any>>();
-
-  function getCollection(name: string) {
-    if (!store.has(name)) {
-      store.set(name, new Map());
-    }
-    return store.get(name)!;
-  }
-
-  const mockDb = {
-    collection(colName: string) {
-      const col = getCollection(colName);
-
-      return {
-        doc(docId: string) {
-          return {
-            async get() {
-              const data = col.get(docId);
-              return {
-                id: docId,
-                exists: Boolean(data),
-                data: () => data ? JSON.parse(JSON.stringify(data)) : undefined,
-              };
-            },
-            async set(data: any, options?: { merge?: boolean }) {
-              if (options?.merge && col.has(docId)) {
-                const existing = col.get(docId);
-                col.set(docId, { ...existing, ...JSON.parse(JSON.stringify(data)) });
-              } else {
-                col.set(docId, JSON.parse(JSON.stringify(data)));
-              }
-            },
-            async update(data: any) {
-              const existing = col.get(docId) || {};
-              col.set(docId, { ...existing, ...JSON.parse(JSON.stringify(data)) });
-            },
-          };
-        },
-
-        where(field: string, op: string, val: any) {
-          const filters: Array<{ field: string; op: string; val: any }> = [{ field, op, val }];
-          let limitCount: number | undefined;
-
-          const queryObj = {
-            where(nextField: string, nextOp: string, nextVal: any) {
-              filters.push({ field: nextField, op: nextOp, val: nextVal });
-              return queryObj;
-            },
-            limit(n: number) {
-              limitCount = n;
-              return queryObj;
-            },
-            async get() {
-              let docs = Array.from(col.entries()).map(([id, d]) => ({
-                id,
-                data: () => JSON.parse(JSON.stringify(d)),
-              }));
-
-              for (const f of filters) {
-                if (f.op === '==') {
-                  docs = docs.filter((d) => d.data()[f.field] === f.val);
-                }
-              }
-
-              if (typeof limitCount === 'number') {
-                docs = docs.slice(0, limitCount);
-              }
-
-              return {
-                empty: docs.length === 0,
-                docs,
-              };
-            },
-          };
-
-          return queryObj;
-        },
-
-        async get() {
-          const docs = Array.from(col.entries()).map(([id, d]) => ({
-            id,
-            data: () => JSON.parse(JSON.stringify(d)),
-          }));
-          return {
-            empty: docs.length === 0,
-            docs,
-          };
-        },
-      };
-    },
-
-    async runTransaction(updateFunction: (transaction: any) => Promise<any>) {
-      const pendingUpdates: Array<() => void> = [];
-      const pendingSets: Array<() => void> = [];
-
-      const transaction = {
-        async get(docRef: any) {
-          return docRef.get();
-        },
-        update(docRef: any, data: any) {
-          pendingUpdates.push(() => docRef.update(data));
-        },
-        set(docRef: any, data: any, options?: any) {
-          pendingSets.push(() => docRef.set(data, options));
-        },
-      };
-
-      const result = await updateFunction(transaction);
-
-      // Aplica todas as escritas atomicamente ao final da transação
-      for (const fn of pendingUpdates) fn();
-      for (const fn of pendingSets) fn();
-
-      return result;
-    },
-  };
-
-  return mockDb as any;
-}
 
 describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueRepository)', () => {
   let mockDb: any;
@@ -167,7 +44,7 @@ describe('Fase 2 — Consultas e Catálogo no Firestore (FirestoreEstoqueReposit
   };
 
   beforeEach(async () => {
-    mockDb = createMockFirestore();
+    mockDb = new FakeFirestore() as any;
     repo = new FirestoreEstoqueRepository(mockDb);
 
     await repo.salvarItem(itemFlap);

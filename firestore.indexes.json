@@ -69,6 +69,14 @@
       "collectionGroup": "movements",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "numeroNF", "order": "ASCENDING" },
+        { "fieldPath": "dataMovimentacao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "movements",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "itemId", "order": "ASCENDING" },
         { "fieldPath": "tipo", "order": "ASCENDING" },
         { "fieldPath": "dataMovimentacao", "order": "DESCENDING" }
