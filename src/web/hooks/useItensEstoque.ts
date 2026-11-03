@@ -129,7 +129,7 @@ async function fetchItensPorAba(aba: AbaEstoque): Promise<{ itens: DashboardItem
           id: d.id,
           ...d.data(),
         })) as Item[];
-        const convertidos = itensBanco.map(itemToDashboardItem);
+        const convertidos = itensBanco.filter((i) => i.ativo !== false).map(itemToDashboardItem);
         return {
           itens: convertidos,
           isFallback: false,

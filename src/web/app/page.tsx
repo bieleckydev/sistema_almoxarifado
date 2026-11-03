@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { calcularValorTotalItem } from '@/core/services/custo-medio';
-import { RefreshCw, Plus, Layers, Package, Wrench } from 'lucide-react';
+import { RefreshCw, Plus, Layers, Package, Wrench, Archive } from 'lucide-react';
 import {
   type AbaEstoque,
   type TelaOuAba,
@@ -28,6 +28,7 @@ import { StockTable } from '@/web/components/dashboard/StockTable';
 import { ItemDetailsDrawer } from '@/web/components/dashboard/ItemDetailsDrawer';
 import { ItemCreateDrawer } from '@/web/components/dashboard/drawers/ItemCreateDrawer';
 import { ItemEditDrawer } from '@/web/components/dashboard/drawers/ItemEditDrawer';
+import { InactiveItemsDrawer } from '@/web/components/dashboard/drawers/InactiveItemsDrawer';
 import { EtiquetaItemModal } from '@/web/components/dashboard/modals/EtiquetaItemModal';
 import { MovementFormDrawer } from '@/web/components/dashboard/drawers/MovementFormDrawer';
 import { QuickItemPickerDrawer } from '@/web/components/dashboard/drawers/QuickItemPickerDrawer';
@@ -71,6 +72,7 @@ export default function AlmoxarifadoDashboardPage() {
 
   // Estados dos Drawers e Modais Operacionais
   const [isItemCreateOpen, setIsItemCreateOpen] = useState(false);
+  const [isInactiveItemsOpen, setIsInactiveItemsOpen] = useState(false);
   const [isUserCreateOpen, setIsUserCreateOpen] = useState(false);
   const [itemParaEditar, setItemParaEditar] = useState<DashboardItem | null>(null);
   const [itemParaEtiqueta, setItemParaEtiqueta] = useState<DashboardItem | null>(null);
@@ -479,6 +481,16 @@ export default function AlmoxarifadoDashboardPage() {
 
                     <button
                       type="button"
+                      onClick={() => setIsInactiveItemsOpen(true)}
+                      className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium text-secondary hover:text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 transition-colors cursor-pointer"
+                      title="Ver e reativar itens inativos desta categoria"
+                    >
+                      <Archive className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Inativos</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => refetch()}
                       disabled={isLoading || isFetching}
                       className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium text-secondary hover:text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 transition-colors cursor-pointer disabled:opacity-50"
@@ -640,8 +652,16 @@ export default function AlmoxarifadoDashboardPage() {
           onClose={() => setItemParaEditar(null)}
           onItemUpdated={(itemAtualizado) => {
             refetch();
-            setItemSelecionado(itemAtualizado);
+            setItemSelecionado(itemAtualizado.ativo === false ? null : itemAtualizado);
           }}
+        />
+
+        {/* Gaveta de Itens Inativos (reativação) */}
+        <InactiveItemsDrawer
+          isOpen={isInactiveItemsOpen}
+          aba={abaEstoqueAtiva}
+          onClose={() => setIsInactiveItemsOpen(false)}
+          onItemReativado={() => refetch()}
         />
 
         {/* Modal de Impressão de Etiqueta Térmica (3.0) */}

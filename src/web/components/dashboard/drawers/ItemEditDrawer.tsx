@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Edit3, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Save, Edit3, AlertCircle, Loader2, Ban } from 'lucide-react';
 import {
   type DashboardItem,
   UNIDADE_LABELS,
@@ -35,6 +35,7 @@ export function ItemEditDrawer({
   const [capacidadeMaxima, setCapacidadeMaxima] = useState<number>(100);
   const [especificacoes, setEspecificacoes] = useState<Record<string, string>>({});
   const [erro, setErro] = useState<string | null>(null);
+  const [confirmandoInativacao, setConfirmandoInativacao] = useState(false);
 
   useEffect(() => {
     if (isOpen && item) {
@@ -55,6 +56,7 @@ export function ItemEditDrawer({
       }
       setEspecificacoes(specsIniciais);
       setErro(null);
+      setConfirmandoInativacao(false);
 
       setTimeout(() => closeButtonRef.current?.focus(), 50);
     }
@@ -141,6 +143,25 @@ export function ItemEditDrawer({
         const msg = err instanceof Error ? err.message : 'Falha ao atualizar cadastro do material.';
         setErro(msg);
         toast(msg, { type: 'error' });
+      }
+    });
+  };
+
+  const handleInativar = async () => {
+    if (!item) return;
+    await runWithLock(async () => {
+      try {
+        setErro(null);
+        const response = await api.patch<Partial<DashboardItem>>(`/itens/${item.id}`, {
+          ativo: false,
+        });
+        toast(`Item ${item.codigo} inativado.`, { type: 'success' });
+        onItemUpdated({ ...item, ...response.data, ativo: false });
+        onClose();
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Falha ao inativar o item.';
+        setErro(msg);
+        setConfirmandoInativacao(false);
       }
     });
   };
@@ -351,6 +372,54 @@ export function ItemEditDrawer({
               </div>
             </div>
           </div>
+
+          {/* Inativação do cadastro */}
+          <section className="mt-6 p-3 rounded-xl border border-outline-variant/30 bg-surface-container-low flex flex-col gap-2">
+            {item.estoqueAtual > 0 ? (
+              <p className="text-xs text-on-surface-variant">
+                Para inativar este item, zere o saldo atual ({item.estoqueAtual}{' '}
+                {UNIDADE_LABELS[item.unidade] || item.unidade}) com uma saída ou ajuste de inventário.
+              </p>
+            ) : confirmandoInativacao ? (
+              <>
+                <p className="text-xs text-on-surface">
+                  Inativar <strong className="font-mono">{item.codigo}</strong>? O item sai das listas de
+                  estoque e não aceita novas movimentações. O histórico é mantido e você pode reativar em
+                  &quot;Itens inativos&quot;.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleInativar}
+                    disabled={isSubmitting}
+                    className="h-8 px-3 rounded-lg text-xs font-semibold text-on-error bg-error hover:bg-error/90 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Confirmar inativação
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmandoInativacao(false)}
+                    disabled={isSubmitting}
+                    className="h-8 px-3 rounded-lg text-xs font-semibold text-secondary hover:bg-surface-container border border-outline-variant/30 cursor-pointer"
+                  >
+                    Voltar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-on-surface-variant">Item sem saldo em estoque</span>
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoInativacao(true)}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-error hover:bg-error-container/40 border border-error/30 transition-colors cursor-pointer"
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  Inativar item
+                </button>
+              </div>
+            )}
+          </section>
 
           {/* Botões do Rodapé */}
           <div className="pt-6 border-t border-outline-variant/20 flex items-center justify-end gap-3 mt-6">
