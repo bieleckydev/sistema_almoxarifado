@@ -102,10 +102,6 @@ export function StockMetricsCards({
             SKUs ativos
           </span>
         </div>
-        <div className="pt-2 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-secondary">
-          <span className="text-tertiary font-medium">100% catalogado</span>
-          <span>Base sincronizada</span>
-        </div>
       </button>
 
       {/* Card 2: Abaixo do Mínimo */}
