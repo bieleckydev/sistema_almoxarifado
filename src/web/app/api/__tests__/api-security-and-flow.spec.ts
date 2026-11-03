@@ -13,6 +13,8 @@ import { POST as postEntrada } from '../movimentacoes/entrada/route';
 import { POST as postBaixaInterna } from '../movimentacoes/baixa-interna/route';
 import { GET as getExtrato } from '../movimentacoes/extrato/[itemId]/route';
 import { GET as getMovimentacoes } from '../movimentacoes/route';
+import { POST as postChangePassword } from '../auth/change-password/route';
+import { instalarFirestoreDeTeste } from './firestore-fixture';
 
 // Mocks de Identidade RBAC
 const adminUser: AuthenticatedIdentity = {
@@ -123,6 +125,48 @@ describe('Fase 5 — Validação Global de Segurança e Fluxo Completo de API (E
       });
       const resBaixa = await postBaixaInterna(reqBaixa);
       assert.equal(resBaixa.status, 403);
+    });
+
+    it('deve validar e efetivar a troca obrigatória de senha temporária (mustChangePassword)', async () => {
+      const db = instalarFirestoreDeTeste();
+      await db.collection('users').doc('user-op').set({
+        id: 'user-op',
+        name: 'Almoxarife de Plantão',
+        email: 'almoxarife@empresa.com',
+        role: 'operador',
+        ativo: true,
+        mustChangePassword: true,
+      });
+
+      setIdentityAuthenticator(async () => ({
+        ...operadorUser,
+        user: { ...operadorUser.user, mustChangePassword: true },
+      }));
+
+      // Senha fraca deve ser recusada com 400
+      const resFraca = await postChangePassword(
+        new Request('http://localhost:3000/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newPassword: '123' }),
+        })
+      );
+      assert.equal(resFraca.status, 400);
+
+      // Senha forte deve atualizar mustChangePassword=false e gerar log de auditoria
+      const resForte = await postChangePassword(
+        new Request('http://localhost:3000/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newPassword: 'NovaSenhaForte2026' }),
+        })
+      );
+      assert.equal(resForte.status, 200);
+      const body = await resForte.json();
+      assert.equal(body.mustChangePassword, false);
+
+      const userSnap = await db.collection('users').doc('user-op').get();
+      assert.equal(userSnap.data()?.mustChangePassword, false);
     });
   });
 

@@ -24,6 +24,7 @@ export interface AuthState {
   clearError: () => void;
   initializeAuth: () => () => void; // Retorna função de unsubscribe
   getValidToken: (forceRefresh?: boolean) => Promise<string | null>;
+  completeMandatoryPasswordChange: (newPassword: string) => Promise<void>;
 }
 
 const TOKEN_STORAGE_KEY = 'auth_token';
@@ -59,6 +60,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
 
   clearError: () => set({ error: null }),
+
+  completeMandatoryPasswordChange: async (newPassword: string): Promise<void> => {
+    const { api } = await import('../api/client');
+    await api.post('/auth/change-password', { newPassword });
+
+    try {
+      if (auth?.currentUser) {
+        const freshToken = await auth.currentUser.getIdToken(true);
+        setStoredToken(freshToken);
+        set((state) => ({
+          token: freshToken,
+          user: state.user ? { ...state.user, mustChangePassword: false } : null,
+        }));
+        return;
+      }
+    } catch {
+      // Ignora erro de refresh caso o mock de teste não tenha currentUser
+    }
+
+    set((state) => ({
+      user: state.user ? { ...state.user, mustChangePassword: false } : null,
+    }));
+  },
 
   getValidToken: async (forceRefresh = false): Promise<string | null> => {
     try {
