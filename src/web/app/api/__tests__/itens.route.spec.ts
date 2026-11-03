@@ -288,6 +288,72 @@ describe('Fase 2 — Rotas de API do Catálogo de Itens (/api/itens)', () => {
 
       assert.equal(response.status, 403);
     });
+
+    const patchItem = (id: string, body: unknown) =>
+      patchItemById(
+        new Request(`http://localhost:3000/api/itens/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+        { params: Promise.resolve({ id }) }
+      );
+
+    it('não deve sobrescrever campos ausentes no corpo com valores padrão', async () => {
+      await memoryRepo.salvarItem({
+        ...(await memoryRepo.buscarItemPorId('item-1'))!,
+        embalagem: { possuiEmbalagem: true, fatorConversao: 12, unidadeEmbalagem: 'CAIXA' } as any,
+      });
+
+      const response = await patchItem('item-1', { descricao: 'Disco Flap Editado' });
+      assert.equal(response.status, 200);
+      const atualizado = await response.json();
+      assert.equal(atualizado.estoqueSeguranca, 10);
+      assert.equal(atualizado.embalagem.possuiEmbalagem, true);
+      assert.equal(atualizado.embalagem.fatorConversao, 12);
+    });
+
+    it('não deve reativar um item inativo ao editar outro campo', async () => {
+      await memoryRepo.salvarItem({
+        ...(await memoryRepo.buscarItemPorId('item-1'))!,
+        estoqueAtual: 0,
+        ativo: false,
+      });
+      const response = await patchItem('item-1', { localizacaoFisica: 'A1' });
+      assert.equal(response.status, 200);
+      assert.equal((await response.json()).ativo, false);
+    });
+
+    it('deve rejeitar corpo sem campos', async () => {
+      const response = await patchItem('item-1', {});
+      assert.equal(response.status, 400);
+    });
+
+    it('deve bloquear inativação de item com saldo em estoque (409)', async () => {
+      const response = await patchItem('item-1', { ativo: false });
+      assert.equal(response.status, 409);
+      const data = await response.json();
+      assert.ok(data.error.includes('Zere o saldo'));
+      assert.equal((await memoryRepo.buscarItemPorId('item-1'))?.ativo, true);
+    });
+
+    it('deve inativar item sem saldo e reativá-lo depois', async () => {
+      await memoryRepo.salvarItem({
+        ...(await memoryRepo.buscarItemPorId('item-1'))!,
+        estoqueAtual: 0,
+      });
+
+      const inativar = await patchItem('item-1', { ativo: false });
+      assert.equal(inativar.status, 200);
+      assert.equal((await inativar.json()).ativo, false);
+
+      const lista = await (await getItens(new Request('http://localhost:3000/api/itens'))).json();
+      assert.ok(!lista.itens.some((i: any) => i.id === 'item-1'));
+
+      const reativar = await patchItem('item-1', { ativo: true });
+      assert.equal(reativar.status, 200);
+      assert.equal((await reativar.json()).ativo, true);
+    });
   });
 
   describe('GET /api/itens/codigo/[codigo]', () => {

@@ -60,7 +60,29 @@ export async function PATCH(request: Request, context: ItemRouteContext) {
     }
 
     const body = await readJson(request);
-    const dadosAtualizacao = UpdateItemSchema.parse(body);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new ApiError('Corpo da requisição inválido.', 400);
+    }
+    const parsed = UpdateItemSchema.parse(body);
+
+    // O schema parcial ainda injeta defaults (ativo, estoqueSeguranca, embalagem).
+    // Mantém só as chaves enviadas para não sobrescrever dados que não vieram no corpo.
+    const enviados = body as Record<string, unknown>;
+    const dadosAtualizacao = Object.fromEntries(
+      Object.entries(parsed).filter(([chave]) => chave in enviados)
+    ) as typeof parsed;
+
+    if (Object.keys(dadosAtualizacao).length === 0) {
+      throw new ApiError('Nenhum campo informado para atualização.', 400);
+    }
+
+    if (dadosAtualizacao.ativo === false && itemExistente.ativo !== false && itemExistente.estoqueAtual > 0) {
+      throw new ApiError(
+        `O item "${itemExistente.codigo}" ainda tem ${itemExistente.estoqueAtual} em estoque. ` +
+          'Zere o saldo com uma saída ou ajuste de inventário antes de inativar.',
+        409
+      );
+    }
 
     // Se o código for modificado, garantir unicidade
     if (dadosAtualizacao.codigo && dadosAtualizacao.codigo.toUpperCase() !== itemExistente.codigo) {
@@ -87,6 +109,10 @@ export async function PATCH(request: Request, context: ItemRouteContext) {
 
     const itemSalvo = await repo.salvarItem(itemAtualizado);
 
+    const mudouStatus = (itemExistente.ativo !== false) !== (itemSalvo.ativo !== false);
+    const acao = mudouStatus ? (itemSalvo.ativo ? 'REATIVAR_ITEM' : 'INATIVAR_ITEM') : 'EDITAR_ITEM';
+    const verbo = mudouStatus ? (itemSalvo.ativo ? 'reativado' : 'inativado') : 'atualizado';
+
     // Registro na Auditoria Operacional (3.0)
     try {
       await getAuditoriaService().registrar({
@@ -94,8 +120,8 @@ export async function PATCH(request: Request, context: ItemRouteContext) {
         usuarioId: identity.user.id,
         usuarioNome: identity.user.name || 'Almoxarife',
         papel: identity.user.role || 'operador',
-        acao: 'EDITAR_ITEM',
-        detalhe: `Item "${itemSalvo.codigo} - ${itemSalvo.descricao}" atualizado no catálogo`,
+        acao,
+        detalhe: `Item "${itemSalvo.codigo} - ${itemSalvo.descricao}" ${verbo} no catálogo`,
         entidade: 'Item',
         entidadeId: itemSalvo.id,
       });
