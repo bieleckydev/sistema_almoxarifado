@@ -68,15 +68,6 @@ export function InicioDashboardView({
       {/* 1. Barra de Informação Operacional Superior */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-5 rounded-lg border border-outline-variant/40 mb-6 shadow-2xs">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-on-surface-variant">
-            <span>Almoxarifado Matriz</span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Terminal RF Online
-            </span>
-          </div>
-
           <h1 className="font-headline-lg text-xl sm:text-2xl text-on-surface font-semibold tracking-tight">
             Almoxarifado & Visão Geral
           </h1>
