@@ -61,3 +61,24 @@ export function useCriarCliente() {
     },
   });
 }
+
+export type AtualizarClienteInput = Partial<Omit<CreateClienteInput, 'id'>>;
+
+/**
+ * Atualiza dados de um parceiro. Também inativa (`{ ativo: false }`) ou reativa (`{ ativo: true }`).
+ */
+export function useAtualizarCliente() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, dados }: { id: string; dados: AtualizarClienteInput }) => {
+      const res = await api.patch<Cliente>(`/clientes/${id}`, dados);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes-lista'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-resumo-geral'] });
+      queryClient.invalidateQueries({ queryKey: ['global-search-index'] });
+    },
+  });
+}

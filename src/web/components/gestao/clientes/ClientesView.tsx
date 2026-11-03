@@ -15,13 +15,18 @@ import {
   Briefcase,
   FileText,
   UserCheck,
+  Pencil,
 } from 'lucide-react';
 import { useClientes } from '@/web/hooks/useClientes';
 import {
+  type Cliente,
   type TipoParceiro,
   TIPO_PARCEIRO_LABELS,
 } from '@/core/domain/cliente.schema';
+import { hasUserPermission } from '@/core/domain/user-authorization';
+import { useAuthStore } from '@/core/store/useAuthStore';
 import { FilterPill } from '@/web/components/ui/FilterPill';
+import { ClientEditDrawer } from './ClientEditDrawer';
 
 export interface ClientesViewProps {
   onNovoCadastro: (tipo?: TipoParceiro) => void;
@@ -41,6 +46,10 @@ const CHIPS_TIPO: Array<{ chave: FiltroTipo; rotulo: string; icon: React.ReactNo
 export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: ClientesViewProps) {
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>(filtroInicial);
   const [busca, setBusca] = useState('');
+  const [mostrarInativos, setMostrarInativos] = useState(false);
+  const [clienteEmEdicao, setClienteEmEdicao] = useState<Cliente | null>(null);
+  const user = useAuthStore((s) => s.user);
+  const podeEditar = user ? hasUserPermission(user, 'catalog:manage') : false;
 
   // Sincroniza quando o filtroInicial mudar via navegação externa
   useEffect(() => {
@@ -56,17 +65,34 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
     }
   }, []);
 
-  const { clientes, isLoading, isFetching, refetch } = useClientes({
+  const {
+    clientes: resultadoBusca,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useClientes({
     tipo: filtroTipo,
     busca,
-    apenasAtivos: true,
+    apenasAtivos: false,
   });
+  const clientes = useMemo(
+    () => resultadoBusca.filter((c) => (mostrarInativos ? !c.ativo : c.ativo)),
+    [resultadoBusca, mostrarInativos]
+  );
 
-  // Consulta todos os clientes para calcular contadores em tempo real para os chips e cards de métricas
-  const { clientes: todosClientes } = useClientes({
+  // Consulta todos os cadastros (ativos e inativos) para os contadores dos chips e cards
+  const { clientes: todosCadastros } = useClientes({
     tipo: 'TODOS',
-    apenasAtivos: true,
+    apenasAtivos: false,
   });
+  const todosClientes = useMemo(
+    () => todosCadastros.filter((c) => (mostrarInativos ? !c.ativo : c.ativo)),
+    [todosCadastros, mostrarInativos]
+  );
+  const totalInativos = useMemo(
+    () => todosCadastros.filter((c) => !c.ativo).length,
+    [todosCadastros]
+  );
 
   const contagemPorTipo = useMemo(() => {
     const mapa: Record<FiltroTipo, number> = {
@@ -181,9 +207,9 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
             </div>
           </div>
           <div className="mt-3 pt-2 border-t border-outline-variant/10 flex items-center justify-between text-xs text-on-surface-variant">
-            <span>Base sincronizada</span>
+            <span>{mostrarInativos ? 'Cadastros inativos' : 'Cadastros ativos'}</span>
             <span className="text-primary font-semibold flex items-center gap-1">
-              <UserCheck className="w-3.5 h-3.5" /> 100% ativos
+              <UserCheck className="w-3.5 h-3.5" /> {totalInativos} inativo{totalInativos === 1 ? '' : 's'}
             </span>
           </div>
         </div>
@@ -276,6 +302,24 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
           })}
         </div>
 
+        <div
+          className="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-xl border border-outline-variant/20"
+          role="group"
+          aria-label="Filtro de situação do cadastro"
+        >
+          <FilterPill
+            label="Ativos"
+            isActive={!mostrarInativos}
+            onClick={() => setMostrarInativos(false)}
+          />
+          <FilterPill
+            label="Inativos"
+            isActive={mostrarInativos}
+            onClick={() => setMostrarInativos(true)}
+            count={totalInativos}
+          />
+        </div>
+
         {/* Campo de Busca Rápida com atalho ESC */}
         <div className="relative flex-1 min-w-[280px] max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none" />
@@ -316,21 +360,26 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
                 <th className="py-3 px-3">Contato Comercial</th>
                 <th className="py-3 px-3 whitespace-nowrap font-mono">Telefone</th>
                 <th className="py-3 px-4">Cidade / UF</th>
+                <th className="py-3 px-4 text-right">
+                  <span className="sr-only">Ações</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-on-surface-variant">
+                  <td colSpan={7} className="py-16 text-center text-on-surface-variant">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
                     <span className="font-medium text-xs">Carregando cadastros homologados...</span>
                   </td>
                 </tr>
               ) : clientes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-on-surface-variant">
+                  <td colSpan={7} className="py-16 text-center text-on-surface-variant">
                     <Users className="w-8 h-8 mx-auto mb-2 text-outline/50" />
-                    <p className="font-medium text-sm text-on-surface">Nenhum parceiro encontrado</p>
+                    <p className="font-medium text-sm text-on-surface">
+                      {mostrarInativos ? 'Nenhum cadastro inativo' : 'Nenhum parceiro encontrado'}
+                    </p>
                     <p className="text-xs text-outline mt-1">
                       {busca
                         ? `Nenhum resultado para o termo "${busca}". Pressione ESC para limpar.`
@@ -415,6 +464,21 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
                           <span className="text-outline">—</span>
                         )}
                       </td>
+
+                      {/* Ações da linha */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        {podeEditar && (
+                          <button
+                            type="button"
+                            onClick={() => setClienteEmEdicao(c)}
+                            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-xs font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container border border-outline-variant/30 transition-colors cursor-pointer"
+                            title={`Editar ${c.nome}`}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            <span>Editar</span>
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })
@@ -423,6 +487,8 @@ export function ClientesView({ onNovoCadastro, filtroInicial = 'TODOS' }: Client
           </table>
         </div>
       </div>
+
+      <ClientEditDrawer cliente={clienteEmEdicao} onClose={() => setClienteEmEdicao(null)} />
     </div>
   );
 }
