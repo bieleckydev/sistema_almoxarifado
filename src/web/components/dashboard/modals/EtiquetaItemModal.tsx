@@ -4,6 +4,7 @@ import React, { useRef, useEffect } from 'react';
 import { X, Printer, QrCode, Tag, Warehouse, Calendar, Check } from 'lucide-react';
 import { type DashboardItem, UNIDADE_LABELS } from '@/web/data/mock-almoxarifado';
 import { useAuthStore } from '@/core/store/useAuthStore';
+import { modulosCode128, podeCodificarCode128 } from '@/web/utils/code128';
 
 export interface EtiquetaItemModalProps {
   item: DashboardItem | null;
@@ -45,8 +46,19 @@ export function EtiquetaItemModal({
     window.print();
   };
 
-  // Simulação de padrão de código de barras 128 com larguras estilizadas
-  const barras = [2, 1, 3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 1, 2, 3, 1, 2, 4, 1, 2, 1, 3, 2, 4, 1, 2, 3, 1, 4, 1, 2];
+  // Code 128 real do SKU, com zona de silêncio de 10 módulos de cada lado
+  const ZONA_SILENCIO = 10;
+  const codigoBarras = podeCodificarCode128(item.codigo) ? modulosCode128(item.codigo) : null;
+  const barras: Array<{ x: number; largura: number }> = [];
+  let totalModulos = ZONA_SILENCIO * 2;
+  if (codigoBarras) {
+    let x = ZONA_SILENCIO;
+    codigoBarras.forEach((largura, i) => {
+      if (i % 2 === 0) barras.push({ x, largura });
+      x += largura;
+    });
+    totalModulos = x + ZONA_SILENCIO;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -122,19 +134,28 @@ export function EtiquetaItemModal({
               </div>
             </div>
 
-            {/* Código de Barras Vetorial */}
-            <div className="flex flex-col items-center justify-center bg-gray-50 p-2 rounded border border-gray-200 mb-2">
-              <div className="flex items-center gap-[2px] h-10 w-full justify-center">
-                {barras.map((b, i) => (
-                  <div
-                    key={i}
-                    style={{ width: `${b * 2}px` }}
-                    className="h-full bg-black shrink-0"
-                  />
-                ))}
-              </div>
-              <span className="font-mono text-[10px] font-bold tracking-widest text-black mt-1">
-                *{item.codigo}*
+            {/* Código de Barras Code 128 */}
+            <div className="flex flex-col items-center justify-center bg-white p-2 mb-2">
+              {codigoBarras ? (
+                <svg
+                  role="img"
+                  aria-label={`Código de barras Code 128 de ${item.codigo}`}
+                  viewBox={`0 0 ${totalModulos} 40`}
+                  preserveAspectRatio="none"
+                  shapeRendering="crispEdges"
+                  className="w-full h-12"
+                >
+                  {barras.map((b) => (
+                    <rect key={b.x} x={b.x} y={0} width={b.largura} height={40} fill="#000" />
+                  ))}
+                </svg>
+              ) : (
+                <span className="text-[11px] text-gray-700 text-center py-2">
+                  Código com caracteres sem suporte no Code 128 (ex.: acentos)
+                </span>
+              )}
+              <span className="font-mono text-[11px] font-bold tracking-widest text-black mt-1">
+                {item.codigo}
               </span>
             </div>
 
