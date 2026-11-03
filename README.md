@@ -325,8 +325,11 @@ FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE K
 # Alternativa: Caminho absoluto para o arquivo JSON da conta de serviço
 # GOOGLE_APPLICATION_CREDENTIALS=/caminho/para/service-account.json
 
-# URL de redirecionamento para definição de senhas de convite
-FIREBASE_AUTH_CONTINUE_URL=http://localhost:3000/definir-senha
+# Para onde o usuário volta após definir a senha na página de ação do Firebase (convites e redefinições)
+FIREBASE_AUTH_CONTINUE_URL=http://localhost:3000/login
+
+# Opcional: webhook que envia os e-mails de convite/redefinição (sem ele, o link aparece na tela de usuários)
+# USER_EMAIL_DELIVERY_URL=https://seu-servico-de-email.example.com/hooks/almoxarifado
 ```
 
 ---
