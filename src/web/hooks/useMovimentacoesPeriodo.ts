@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/core/api/client';
 import type { Movimentacao } from '@/core/domain/movimentacao.schema';
+import type { SetorFabril } from '@/core/domain/colaborador.schema';
 import { isMovimentacaoEntrada } from '@/core/services/estoque-calculator';
 import { useItensEstoque } from './useItensEstoque';
 import type { DashboardItem } from '../data/mock-almoxarifado';
@@ -31,6 +32,7 @@ export interface MovimentacaoEnriquecida {
   data: string; // YYYY-MM-DD
   hora: string; // HH:mm
   quem: string;
+  setor?: SetorFabril;
   obs?: string;
   info?: Record<string, string>;
   item?: DashboardItem;
@@ -204,6 +206,7 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
           data: dataYMD,
           hora,
           quem,
+          setor: m.setor,
           obs: m.observacao,
           info: Object.keys(info).length > 0 ? info : undefined,
           item,
