@@ -13,6 +13,7 @@ import {
   HardHat,
   ShieldCheck,
   UserCog,
+  TrendingDown,
   type LucideIcon,
 } from 'lucide-react';
 import type { AbaEstoque } from './mock-almoxarifado';
@@ -112,6 +113,11 @@ export const MENU_ESTRUTURA_3_0: GrupoMenuDef[] = [
         nome: 'Material de terceiros',
         icon: PackageCheck,
         permissao: 'terceiros',
+      },
+      {
+        chave: 'levantamento',
+        nome: 'Levantamento e queima',
+        icon: TrendingDown,
       },
     ],
   },
