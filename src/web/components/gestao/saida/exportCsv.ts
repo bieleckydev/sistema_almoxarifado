@@ -65,8 +65,28 @@ export function gerarMovimentacoesCSV(
     ]),
   ];
 
+  return serializarCsv(linhas);
+}
+
+/**
+ * Dispara download do arquivo CSV no navegador.
+ */
+export function exportarMovimentacoesCSV(
+  movimentacoes: MovimentacaoParaExportacao[],
+  nomeArquivo = 'relatorio-movimentacoes.csv'
+): void {
+  baixarCsv(gerarMovimentacoesCSV(movimentacoes), nomeArquivo);
+}
+
+export type ValorCsv = string | number | null | undefined;
+
+/**
+ * Serializa linhas em CSV compatível com Excel pt-BR:
+ * BOM UTF-8 (﻿), separador ';', todas as células entre aspas e quebra CRLF.
+ */
+export function serializarCsv(linhas: ValorCsv[][]): string {
   return (
-    '\ufeff' +
+    '﻿' +
     linhas
       .map((row) =>
         row
@@ -78,13 +98,9 @@ export function gerarMovimentacoesCSV(
 }
 
 /**
- * Dispara download do arquivo CSV no navegador.
+ * Dispara o download de um conteúdo CSV no navegador (no-op fora do browser).
  */
-export function exportarMovimentacoesCSV(
-  movimentacoes: MovimentacaoParaExportacao[],
-  nomeArquivo = 'relatorio-movimentacoes.csv'
-): void {
-  const csv = gerarMovimentacoesCSV(movimentacoes);
+export function baixarCsv(csv: string, nomeArquivo: string): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
