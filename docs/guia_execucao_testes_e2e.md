@@ -6,6 +6,16 @@
 
 ---
 
+## ▶️ 0. Como os testes rodam
+
+- `npx playwright test` sobe sozinho os emuladores do Firebase (Auth + Firestore, exige Java 21) e o Next na porta **3100**.
+- O projeto usado é `demo-almoxarifado`. Projetos com prefixo `demo-` só existem no emulador: os testes **nunca** alcançam o banco de produção, mesmo com o `.env.local` preenchido.
+- Cada execução começa com os emuladores vazios e cria dois usuários (`mestre@e2e.test` e `requisitante@e2e.test`), em [`e2e/global-setup.ts`](../e2e/global-setup.ts).
+- Fora do CI, emuladores ou servidor já rodando nas portas 8080/9099/3100 são reaproveitados.
+- Testes atuais: [`autenticacao`](../e2e/autenticacao.spec.ts), [`permissoes`](../e2e/permissoes.spec.ts) e [`estoque`](../e2e/estoque.spec.ts). No CI rodam no job "Testes E2E" com o Chromium do Playwright.
+
+---
+
 ## 📌 1. Diagnóstico do Problema (BUG-12)
 
 Em ambientes Windows corporativos e redes restritas com firewall/proxy, a tentativa de download automático dos binários do Chromium pelo Playwright pode resultar em:
