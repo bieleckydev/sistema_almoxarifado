@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, Plus, Trash2, ClipboardList, AlertCircle } from 'lucide-react';
 import { useCriarRequisicao } from '@/web/hooks/useRequisicoes';
 import { useItensEstoque } from '@/web/hooks/useItensEstoque';
 import { useToast } from '@/web/hooks/useToast';
 import { useSubmitLock } from '@/web/hooks/useSubmitLock';
 import type { ItemRequisicao } from '@/core/domain/requisicao.schema';
+import type { DashboardItem } from '@/web/data/mock-almoxarifado';
+import { SeletorMaterialRequisicao } from './SeletorMaterialRequisicao';
 
 export interface NovaRequisicaoModalProps {
   isOpen: boolean;
@@ -22,20 +24,19 @@ export function NovaRequisicaoModal({ isOpen, onClose }: NovaRequisicaoModalProp
   const [prioridade, setPrioridade] = useState<'BAIXA' | 'NORMAL' | 'URGENTE'>('NORMAL');
   const [observacao, setObservacao] = useState('');
   const [itens, setItens] = useState<ItemRequisicao[]>([]);
-  const [itemSelecionadoId, setItemSelecionadoId] = useState('');
+  const [itemSelecionado, setItemSelecionado] = useState<DashboardItem | null>(null);
   const [quantidadeInput, setQuantidadeInput] = useState<number>(1);
   const [erro, setErro] = useState<string | null>(null);
 
   // Carrega itens de matéria-prima e improdutivos
   const { itens: catalogoMp } = useItensEstoque({ aba: 'mp' });
   const { itens: catalogoImp } = useItensEstoque({ aba: 'imp' });
-  const catalogoDisponivel = [...catalogoMp, ...catalogoImp];
+  const catalogoDisponivel = useMemo(() => [...catalogoMp, ...catalogoImp], [catalogoMp, catalogoImp]);
 
   if (!isOpen) return null;
 
   const handleAddItem = () => {
-    if (!itemSelecionadoId) return;
-    const itemCatalogo = catalogoDisponivel.find((i) => i.id === itemSelecionadoId);
+    const itemCatalogo = itemSelecionado;
     if (!itemCatalogo) return;
 
     if (quantidadeInput <= 0) {
@@ -54,7 +55,7 @@ export function NovaRequisicaoModal({ isOpen, onClose }: NovaRequisicaoModalProp
       },
     ]);
 
-    setItemSelecionadoId('');
+    setItemSelecionado(null);
     setQuantidadeInput(1);
     setErro(null);
   };
@@ -155,19 +156,14 @@ export function NovaRequisicaoModal({ isOpen, onClose }: NovaRequisicaoModalProp
               Adicionar Material ao Pedido
             </span>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <select
-                value={itemSelecionadoId}
-                onChange={(e) => setItemSelecionadoId(e.target.value)}
-                className="flex-1 text-xs h-8 px-2 rounded-lg bg-surface-container border border-outline-variant/30 text-on-surface"
-              >
-                <option value="">Selecione um material do estoque...</option>
-                {catalogoDisponivel.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    [{i.codigo}] {i.descricao} (Disp: {i.estoqueAtual} {i.unidade})
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <SeletorMaterialRequisicao
+                  catalogo={catalogoDisponivel}
+                  selecionado={itemSelecionado}
+                  onSelecionar={setItemSelecionado}
+                />
+              </div>
 
               <div className="flex items-center gap-1.5">
                 <input
@@ -182,7 +178,7 @@ export function NovaRequisicaoModal({ isOpen, onClose }: NovaRequisicaoModalProp
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  disabled={!itemSelecionadoId}
+                  disabled={!itemSelecionado}
                   className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-semibold bg-primary text-on-primary hover:bg-primary/90 disabled:opacity-40 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
