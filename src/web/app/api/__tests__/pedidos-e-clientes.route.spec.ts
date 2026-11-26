@@ -141,6 +141,35 @@ describe('Fase 7 — Rotas BFF e Integração (/api/pedidos e /api/clientes)', (
       assert.ok(Array.isArray(erro.details));
     });
 
+    it('deve gravar o setor de destino normalizado e assumir Expedição quando omitido', async () => {
+      const criar = (extra: Record<string, unknown>) =>
+        postPedidos(
+          new Request('http://localhost:3000/api/pedidos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clienteId: 'cli-1',
+              prazoEntrega: '2026-12-10',
+              itens: [{ itemId: 'item-1', quantidade: 2 }],
+              ...extra,
+            }),
+          })
+        );
+
+      const comSetor = await criar({ setorDestino: 'Terceiros / Cliente Externo' });
+      assert.equal(comSetor.status, 201);
+      assert.equal((await comSetor.json()).setorDestino, 'CLIENTE_EXTERNO');
+
+      const semSetor = await criar({});
+      assert.equal(semSetor.status, 201);
+      const pedido = await semSetor.json();
+      assert.equal(pedido.setorDestino, 'EXPEDICAO');
+
+      const lista = await (await getPedidos(new Request('http://localhost:3000/api/pedidos'))).json();
+      const listado = lista.dados.find((p: any) => p.id === pedido.id);
+      assert.equal(listado.setorDestino, 'EXPEDICAO');
+    });
+
     it('deve rejeitar criação de pedido por usuário sem permissão operacional', async () => {
       setIdentityAuthenticator(async () => mockRequisitanteIdentity);
 

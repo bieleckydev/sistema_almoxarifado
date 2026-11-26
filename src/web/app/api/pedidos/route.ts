@@ -287,6 +287,7 @@ export async function POST(request: Request) {
         clienteId: input.clienteId,
         prazoEntrega: input.prazoEntrega,
         status: input.status,
+        setorDestino: input.setorDestino,
         itens: input.itens,
         valorTotal,
         observacoes: input.observacoes || undefined,

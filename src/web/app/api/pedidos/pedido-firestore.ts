@@ -1,4 +1,9 @@
-import { calcularTotalPedido, type Pedido, type StatusPedido } from '@/core/domain/pedido.schema';
+import {
+  calcularTotalPedido,
+  normalizarSetorDestino,
+  type Pedido,
+  type StatusPedido,
+} from '@/core/domain/pedido.schema';
 
 /**
  * Converte um documento da coleção `orders` em Pedido, tolerando dados legados.
@@ -19,6 +24,10 @@ export function pedidoFromDoc(id: string, data: Record<string, any>): Pedido {
     clienteId: String(data.clienteId || ''),
     prazoEntrega: String(data.prazoEntrega || ''),
     status: (data.status as StatusPedido) || 'PENDENTE',
+    setorDestino:
+      typeof data.setorDestino === 'string' && data.setorDestino.trim()
+        ? normalizarSetorDestino(data.setorDestino)
+        : undefined,
     itens,
     valorTotal: Number(data.valorTotal) || calcularTotalPedido(itens),
     faturamento: data.faturamento || undefined,
