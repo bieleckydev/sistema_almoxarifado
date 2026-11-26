@@ -552,7 +552,7 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
                           <div className="flex flex-col gap-0.5">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
                               <span className="w-1.5 h-1.5 rounded-full bg-error" />
-                              Falta Matéria-prima
+                              Falta de estoque
                             </span>
                             <span className="text-[10px] text-secondary">
                               Requer compra / reposição
