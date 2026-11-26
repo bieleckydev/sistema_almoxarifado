@@ -259,6 +259,10 @@ export const MODULOS_CONFIG: Record<'estoque' | 'compras' | 'vendas', ModuloConf
               { action: 'novopedido', label: 'Novo pedido', icon: 'novo' },
             ],
           },
+          {
+            title: 'E-commerce',
+            buttons: [{ action: 'v:ecom', label: 'Painel e-commerce (motos)', icon: 'motos' }],
+          },
         ],
       },
       {
