@@ -223,3 +223,261 @@ export function calcularNecessidadeReposicao(
     status,
   };
 }
+
+/**
+ * Recomendação operacional do balanceamento entre demanda comercial e produção.
+ * - 'vender': excedente parado — priorizar anúncio/queima no canal online
+ * - 'produzir': saldo no mínimo ou demanda do período consome a margem — abrir OF
+ * - 'equilibrado': nenhuma ação imediata
+ */
+export type RecomendacaoComercial = 'vender' | 'produzir' | 'equilibrado';
+
+/** Saldo a partir do qual o item é excedente, em múltiplos do estoque mínimo. */
+export const FATOR_EXCESSO_SOBRE_MINIMO = 3;
+
+/** Saldo a partir do qual baixa rotatividade já caracteriza excedente, em múltiplos do mínimo. */
+export const FATOR_BAIXO_GIRO_SOBRE_MINIMO = 2;
+
+/** Giro (saídas do período / saldo) abaixo do qual o item é considerado parado. */
+export const LIMITE_GIRO_BAIXO = 0.1;
+
+export interface BalanceamentoComercial {
+  recomendacao: RecomendacaoComercial;
+  /** Saldo-alvo: mínimo de segurança + uma repetição da demanda do período. */
+  saldoAlvo: number;
+  /** Quantidade sugerida para a ordem de fabricação (0 se não for 'produzir'). */
+  quantidadeProduzir: number;
+  /** Quantidade acima do saldo-alvo disponível para venda (0 se não for 'vender'). */
+  quantidadeExcedente: number;
+  /** Saídas do período / saldo atual (0 quando o saldo é zero ou negativo). */
+  giro: number;
+}
+
+/**
+ * Classifica um item de venda online pelo balanceamento estoque vs. produção.
+ *
+ * Produzir (prioridade): saldo dentro da faixa de criticidade (até o mínimo) ou
+ * alta procura — repetindo a demanda do período, o saldo cairia ao mínimo ou abaixo.
+ *
+ * Vender: com mínimo definido, saldo >= 3x o mínimo, ou saldo >= 2x o mínimo com
+ * giro abaixo de 10% no período. Sem mínimo cadastrado não há referência de excesso.
+ *
+ * @param saidasPeriodo Saídas de demanda (expedição/consumo) no período analisado
+ */
+export function classificarBalanceamentoComercial(
+  estoqueAtual: number,
+  estoqueSeguranca: number,
+  saidasPeriodo: number
+): BalanceamentoComercial {
+  const minimo = Math.max(0, estoqueSeguranca);
+  const demanda = Math.max(0, saidasPeriodo);
+  const saldoAlvo = arredondarPrecisao(minimo + demanda);
+  const giro = estoqueAtual > 0 ? arredondarPrecisao(demanda / estoqueAtual) : 0;
+
+  const abaixoDoMinimo = calcularStatusCriticidade(estoqueAtual, minimo) !== 'ok';
+  const altaProcura = demanda > 0 && estoqueAtual - demanda <= minimo;
+
+  if (abaixoDoMinimo || altaProcura) {
+    return {
+      recomendacao: 'produzir',
+      saldoAlvo,
+      quantidadeProduzir: arredondarPrecisao(Math.max(0, saldoAlvo - estoqueAtual)),
+      quantidadeExcedente: 0,
+      giro,
+    };
+  }
+
+  const excesso =
+    minimo > 0 &&
+    (estoqueAtual >= minimo * FATOR_EXCESSO_SOBRE_MINIMO ||
+      (estoqueAtual >= minimo * FATOR_BAIXO_GIRO_SOBRE_MINIMO && giro < LIMITE_GIRO_BAIXO));
+
+  if (excesso) {
+    return {
+      recomendacao: 'vender',
+      saldoAlvo,
+      quantidadeProduzir: 0,
+      quantidadeExcedente: arredondarPrecisao(Math.max(0, estoqueAtual - saldoAlvo)),
+      giro,
+    };
+  }
+
+  return {
+    recomendacao: 'equilibrado',
+    saldoAlvo,
+    quantidadeProduzir: 0,
+    quantidadeExcedente: 0,
+    giro,
+  };
+}
+
+// ==========================================
+// LEVANTAMENTO / QUEIMA DE ESTOQUE (ANÁLISE DE GIRO)
+// ==========================================
+
+/**
+ * Recorte mínimo de uma movimentação necessário para medir o volume de saídas.
+ */
+export interface MovimentacaoParaGiro {
+  itemId: string;
+  tipo: TipoMovimentacao;
+  quantidade: number;
+  dataMovimentacao?: string;
+  /** Movimentação original que foi estornada (não conta como saída real). */
+  estornado?: boolean;
+  /** Movimentação de estorno que anula outra (também não conta). */
+  estornoDe?: string;
+}
+
+/**
+ * Volume de saídas de um item dentro da janela analisada.
+ * - totalVendido: expedições (SAIDA_EXPEDICAO), ou seja, vendas faturadas/expedidas
+ * - totalConsumido: baixas internas (SAIDA_CONSUMO_INTERNO)
+ * - totalSaidas: soma das duas (ajuste negativo de inventário não é giro)
+ */
+export interface MetricasSaidaItem {
+  totalVendido: number;
+  totalConsumido: number;
+  totalSaidas: number;
+  quantidadeMovimentos: number;
+  ultimaSaida?: string;
+}
+
+/**
+ * Indica se a movimentação representa giro real de estoque (venda ou consumo),
+ * desconsiderando ajustes de inventário e pares estornados.
+ */
+export function isSaidaDeGiro(mov: MovimentacaoParaGiro): boolean {
+  if (mov.estornado || mov.estornoDe) return false;
+  return mov.tipo === 'SAIDA_EXPEDICAO' || mov.tipo === 'SAIDA_CONSUMO_INTERNO';
+}
+
+/**
+ * Agrega as saídas de giro por item. Itens sem saída simplesmente não aparecem no mapa.
+ */
+export function agregarSaidasPorItem(
+  movimentacoes: MovimentacaoParaGiro[]
+): Map<string, MetricasSaidaItem> {
+  const mapa = new Map<string, MetricasSaidaItem>();
+
+  for (const mov of movimentacoes) {
+    if (!isSaidaDeGiro(mov)) continue;
+
+    const atual = mapa.get(mov.itemId) || {
+      totalVendido: 0,
+      totalConsumido: 0,
+      totalSaidas: 0,
+      quantidadeMovimentos: 0,
+    };
+
+    if (mov.tipo === 'SAIDA_EXPEDICAO') {
+      atual.totalVendido = arredondarPrecisao(atual.totalVendido + mov.quantidade);
+    } else {
+      atual.totalConsumido = arredondarPrecisao(atual.totalConsumido + mov.quantidade);
+    }
+    atual.totalSaidas = arredondarPrecisao(atual.totalSaidas + mov.quantidade);
+    atual.quantidadeMovimentos += 1;
+
+    if (mov.dataMovimentacao && (!atual.ultimaSaida || mov.dataMovimentacao > atual.ultimaSaida)) {
+      atual.ultimaSaida = mov.dataMovimentacao;
+    }
+
+    mapa.set(mov.itemId, atual);
+  }
+
+  return mapa;
+}
+
+/**
+ * Dias de cobertura: por quantos dias o saldo atual dura no ritmo de saída observado.
+ * Retorna Infinity quando não houve saída na janela (estoque parado).
+ */
+export function calcularCoberturaDias(
+  saldoAtual: number,
+  totalSaidas: number,
+  janelaDias: number
+): number {
+  if (saldoAtual <= 0) return 0;
+  if (totalSaidas <= 0 || janelaDias <= 0) return Number.POSITIVE_INFINITY;
+  const consumoDiario = totalSaidas / janelaDias;
+  return Math.round(saldoAtual / consumoDiario);
+}
+
+/**
+ * Classificação de giro usada para decidir liquidação/queima:
+ * - 'parado': nenhuma saída na janela
+ * - 'lento': cobertura acima de LIMITE_GIRO_LENTO_DIAS (excedente)
+ * - 'regular': cobertura entre os dois limites
+ * - 'alto': cobertura até LIMITE_GIRO_ALTO_DIAS (risco de ruptura)
+ */
+export type ClassificacaoGiro = 'parado' | 'lento' | 'regular' | 'alto';
+
+export const LIMITE_GIRO_ALTO_DIAS = 30;
+export const LIMITE_GIRO_LENTO_DIAS = 180;
+
+export function classificarGiro(
+  saldoAtual: number,
+  totalSaidas: number,
+  janelaDias: number
+): ClassificacaoGiro {
+  if (totalSaidas <= 0) return 'parado';
+  const cobertura = calcularCoberturaDias(saldoAtual, totalSaidas, janelaDias);
+  if (cobertura > LIMITE_GIRO_LENTO_DIAS) return 'lento';
+  if (cobertura > LIMITE_GIRO_ALTO_DIAS) return 'regular';
+  return 'alto';
+}
+
+/**
+ * Critérios de ordenação da tela de levantamento.
+ * - saldo_desc: maior saldo primeiro (excedente para liquidação)
+ * - saldo_asc: menor saldo primeiro (pontos de ruptura)
+ * - saidas_desc: mais vendidos/consumidos primeiro
+ * - saidas_asc: giro baixo/estagnados primeiro
+ * - cobertura_desc: maior cobertura em dias primeiro (parados no topo)
+ */
+export type CriterioOrdenacaoLevantamento =
+  | 'saldo_desc'
+  | 'saldo_asc'
+  | 'saidas_desc'
+  | 'saidas_asc'
+  | 'cobertura_desc';
+
+export interface LinhaOrdenavelLevantamento {
+  descricao: string;
+  estoqueAtual: number;
+  totalSaidas: number;
+  coberturaDias: number;
+}
+
+function compararCobertura(a: number, b: number): number {
+  if (a === b) return 0;
+  if (a === Number.POSITIVE_INFINITY) return 1;
+  if (b === Number.POSITIVE_INFINITY) return -1;
+  return a - b;
+}
+
+/**
+ * Ordena (sem mutar) as linhas do levantamento. Empates são resolvidos
+ * pelo critério secundário de negócio e, por fim, pela descrição.
+ */
+export function ordenarLevantamento<T extends LinhaOrdenavelLevantamento>(
+  linhas: T[],
+  criterio: CriterioOrdenacaoLevantamento
+): T[] {
+  const porDescricao = (a: T, b: T) => a.descricao.localeCompare(b.descricao, 'pt-BR');
+
+  const comparadores: Record<CriterioOrdenacaoLevantamento, (a: T, b: T) => number> = {
+    saldo_desc: (a, b) => b.estoqueAtual - a.estoqueAtual || porDescricao(a, b),
+    saldo_asc: (a, b) => a.estoqueAtual - b.estoqueAtual || porDescricao(a, b),
+    saidas_desc: (a, b) => b.totalSaidas - a.totalSaidas || porDescricao(a, b),
+    // Entre itens com o mesmo giro, o maior saldo parado vem primeiro (mais urgente para queima)
+    saidas_asc: (a, b) =>
+      a.totalSaidas - b.totalSaidas || b.estoqueAtual - a.estoqueAtual || porDescricao(a, b),
+    cobertura_desc: (a, b) =>
+      compararCobertura(b.coberturaDias, a.coberturaDias) ||
+      b.estoqueAtual - a.estoqueAtual ||
+      porDescricao(a, b),
+  };
+
+  return [...linhas].sort(comparadores[criterio]);
+}
