@@ -101,6 +101,11 @@ describe('Permissões Operacionais do Protótipo 3.0 (permissions.ts)', () => {
     assert.equal(podeAcessarTela('requisitante', 'vendas'), false);
     assert.equal(podeAcessarTela('requisitante', 'clientes'), false);
 
+    // Painel e-commerce (quem vende: mestre, admin, operador)
+    assert.equal(podeAcessarTela('operador', 'ecom'), true);
+    assert.equal(podeAcessarTela('admin', 'ecom'), true);
+    assert.equal(podeAcessarTela('requisitante', 'ecom'), false);
+
     // Requisições (mestre, admin, operador e requisitante podem acessar)
     assert.equal(podeAcessarTela('requisitante', 'req'), true);
     assert.equal(podeAcessarTela('operador', 'req'), true);
