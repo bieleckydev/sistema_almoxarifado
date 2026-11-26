@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   calcularIntervaloPeriodo,
+  calcularIntervaloIsoPeriodo,
   obterProximoPeriodo,
   isNoPeriodo,
   usePeriodoStore,
@@ -103,6 +104,35 @@ describe('Fase 2: Hook e Store de Período Global (V5)', () => {
       usePeriodoStore.getState().proximoPeriodo();
       const state = usePeriodoStore.getState();
       assert.equal(state.periodo, 'Hoje');
+    });
+  });
+
+  describe('calcularIntervaloIsoPeriodo', () => {
+    const inicioLocal = (ano: number, mes: number, dia: number) =>
+      new Date(ano, mes - 1, dia, 0, 0, 0, 0).toISOString();
+
+    it('Hoje começa à meia-noite local e vai até agora (1 dia)', () => {
+      const r = calcularIntervaloIsoPeriodo('Hoje', dataBaseTeste);
+      assert.equal(r.dataInicio, inicioLocal(2026, 10, 14));
+      assert.equal(r.dataFim, undefined);
+      assert.equal(r.janelaDias, 1);
+    });
+
+    it('Ontem é um intervalo fechado que termina antes da meia-noite de hoje', () => {
+      const r = calcularIntervaloIsoPeriodo('Ontem', dataBaseTeste);
+      assert.equal(r.dataInicio, inicioLocal(2026, 10, 13));
+      assert.equal(r.dataFim, new Date(new Date(inicioLocal(2026, 10, 14)).getTime() - 1).toISOString());
+      assert.equal(r.janelaDias, 1);
+    });
+
+    it('7 dias inclui hoje e os 6 dias anteriores', () => {
+      const r = calcularIntervaloIsoPeriodo('7 dias', dataBaseTeste);
+      assert.equal(r.dataInicio, inicioLocal(2026, 10, 8));
+      assert.equal(r.janelaDias, 7);
+    });
+
+    it('Tudo não restringe datas e deixa a janela a cargo do histórico', () => {
+      assert.deepEqual(calcularIntervaloIsoPeriodo('Tudo', dataBaseTeste), { janelaDias: null });
     });
   });
 });
