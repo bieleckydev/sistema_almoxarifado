@@ -260,7 +260,7 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
     const rawUserData = {
       id: 'user-2',
       name: 'Lucas Santana',
-      email: 'lucassantanasouzaprofissional@gmail.com',
+      email: 'usuario.teste@example.com',
       role: 'admin' as const,
       ativo: true,
       mustChangePassword: true,
@@ -274,7 +274,7 @@ describe('1.1 — Enums e Schemas de Tipos Globais', () => {
 
     assert.equal(publicProfile.id, 'user-2');
     assert.equal(publicProfile.name, 'Lucas Santana');
-    assert.equal(publicProfile.email, 'lucassantanasouzaprofissional@gmail.com');
+    assert.equal(publicProfile.email, 'usuario.teste@example.com');
     assert.equal(publicProfile.role, 'admin');
     assert.equal(publicProfile.ativo, true);
     assert.equal(publicProfile.mustChangePassword, true);
