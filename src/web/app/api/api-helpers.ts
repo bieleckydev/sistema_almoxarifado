@@ -25,6 +25,7 @@ import type { IEstoqueRepository } from '@/core/storage/estoque.repository.inter
 import { adminDb } from '@/server/firebase-admin';
 import { FirestoreEstoqueRepository } from '@/server/storage/firestore-estoque.repository';
 import { FirestoreAuditoriaRepository } from '@/server/storage/firestore-auditoria.repository';
+import { notificarErroInterno } from './alerta-erro';
 
 // ==========================================
 // ERROS & EXCEÇÕES DA API
@@ -242,17 +243,21 @@ export function toErrorResponse(error: unknown): NextResponse {
 export function registrarErroInterno(error: unknown): string {
   const erroId = crypto.randomUUID().slice(0, 8);
   const err = error instanceof Error ? error : undefined;
+  const quando = new Date().toISOString();
+  const tipo = err?.name ?? typeof error;
+  const mensagem = err?.message ?? String(error);
   console.error(
     JSON.stringify({
       nivel: 'erro',
       erroId,
-      quando: new Date().toISOString(),
-      tipo: err?.name ?? typeof error,
-      mensagem: err?.message ?? String(error),
+      quando,
+      tipo,
+      mensagem,
       stack: err?.stack,
       causa: err?.cause instanceof Error ? err.cause.message : undefined,
     })
   );
+  notificarErroInterno({ erroId, quando, tipo, mensagem });
   return erroId;
 }
 

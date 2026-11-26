@@ -52,6 +52,33 @@ describe('Fase 2 — API: Precificação de Pedidos e Módulo de Faturamento', (
     assert.equal(typeof body.kpis.valorTotalFaturado, 'number');
   });
 
+  it('GET /api/faturamento limita notas e total faturado ao período pedido', async () => {
+    const db = instalarFirestoreDeTeste();
+    const hoje = new Date().toISOString().slice(0, 10);
+    db.seed('invoices', [
+      { id: 'nf-recente', numeroNF: '9001', serie: '1', dataEmissao: hoje, tipo: 'VENDA', clienteId: 'cli-1', valorTotal: 100, referencia: 'Recente', status: 'EMITIDA' },
+      { id: 'nf-antiga', numeroNF: '9002', serie: '1', dataEmissao: '2000-01-15', tipo: 'VENDA', clienteId: 'cli-1', valorTotal: 900, referencia: 'Antiga', status: 'EMITIDA' },
+    ]);
+
+    const buscar = async (periodo?: string) => {
+      const url = `http://localhost:3000/api/faturamento${periodo ? `?periodo=${periodo}` : ''}`;
+      const res = await getFaturamento(new Request(url, { method: 'GET' }));
+      assert.equal(res.status, 200);
+      return res.json();
+    };
+
+    const padrao = await buscar();
+    assert.equal(padrao.periodo.chave, '12m');
+    const idsPadrao = padrao.notasEmitidas.map((n: { id: string }) => n.id);
+    assert.ok(idsPadrao.includes('nf-recente'));
+    assert.ok(!idsPadrao.includes('nf-antiga'));
+
+    const todos = await buscar('todos');
+    assert.equal(todos.periodo.desde, null);
+    assert.ok(todos.notasEmitidas.some((n: { id: string }) => n.id === 'nf-antiga'));
+    assert.equal(todos.kpis.valorTotalFaturado - padrao.kpis.valorTotalFaturado >= 900, true);
+  });
+
   it('POST /api/pedidos deve criar pedido com itens precificados e calcular valorTotal', async () => {
     const req = new Request('http://localhost:3000/api/pedidos', {
       method: 'POST',

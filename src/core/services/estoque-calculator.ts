@@ -146,11 +146,16 @@ export const LIMITE_CRITICO_SOBRE_MINIMO = 0.5;
 /**
  * Regra única de criticidade usada por badges, barras, cards e resumos.
  * Saldo zerado é um caso particular de crítico (quando há mínimo definido).
+ * Sem mínimo cadastrado não há referência de criticidade: o item é 'ok' mesmo
+ * zerado (ex.: materiais descontinuados, que ficam sem estoque por regra).
  */
 export function calcularStatusCriticidade(
   estoqueAtual: number,
   estoqueSeguranca: number
 ): StatusCriticidade {
+  if (!(estoqueSeguranca > 0)) {
+    return 'ok';
+  }
   if (estoqueAtual <= estoqueSeguranca * LIMITE_CRITICO_SOBRE_MINIMO) {
     return 'crit';
   }

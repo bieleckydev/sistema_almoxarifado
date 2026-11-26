@@ -280,7 +280,7 @@ sistema_almoxarifado/
 
 1. **Clonar o Repositório**:
    ```bash
-   git clone https://github.com/edubielecky/sistema_almoxarifado.git
+   git clone https://github.com/bieleckydev/sistema_almoxarifado.git
    cd sistema_almoxarifado
    ```
 

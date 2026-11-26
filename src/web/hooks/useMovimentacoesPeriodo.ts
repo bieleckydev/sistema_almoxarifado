@@ -113,8 +113,9 @@ export function useMovimentacoesPeriodo(periodoCustom?: PeriodoFiltro) {
   const setPeriodo = setPeriodoGlobal;
   const [busca, setBusca] = useState('');
 
-  // 1. Catálogo geral de itens para relacionamento e enriquecimento
-  const { itens, isLoading: isLoadingItens } = useItensEstoque();
+  // 1. Catálogo geral de itens (as três categorias) para o formulário e o enriquecimento.
+  // `itens` de useItensEstoque traz só a aba ativa (padrão: matéria-prima).
+  const { todosItens: itens, isLoadingTodos: isLoadingItens } = useItensEstoque();
 
   const itensMap = useMemo(() => {
     const map = new Map<string, DashboardItem>();

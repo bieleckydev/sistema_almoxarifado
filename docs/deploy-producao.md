@@ -51,11 +51,16 @@ gcloud firestore backups list --location=<regiao>
 gcloud firestore databases restore --source-backup=<nome-do-backup> --destination-database=restore-teste
 ```
 
-## 5. Monitoramento de erros
+## 5. Monitoramento
 
+**Erros da API**
 - Erros inesperados da API respondem com um código curto (`erroId`), mostrado ao usuário na mensagem de erro.
 - O detalhe completo é registrado como uma linha JSON (`{"nivel":"erro","erroId":...}`) nos logs da Vercel. Para investigar um relato, filtre os logs pelo código.
-- Recomendado: criar um alerta de logs na Vercel (ou ligar uma integração como Sentry) para `"nivel":"erro"`.
+- Para receber um aviso a cada erro, configure `ERROR_ALERT_WEBHOOK_URL` com um *incoming webhook* do Slack, Discord ou Google Chat. O aviso leva o código, o tipo e a mensagem (sem stack) e é enviado depois da resposta, sem atrasar o usuário.
+
+**Disponibilidade**
+- `GET /api/health` é pública e responde `200 {"status":"ok","versao":"<commit>"}` quando a função e o Firestore estão acessíveis, ou `503` com um `erroId` quando não estão.
+- Cadastre essa URL em um monitor externo (UptimeRobot, Better Stack) com checagem a cada 5 minutos. Cada checagem faz uma leitura no Firestore (cerca de 8,6 mil leituras/mês), dentro da cota gratuita.
 
 ## 6. Verificação final
 
@@ -63,10 +68,11 @@ gcloud firestore databases restore --source-backup=<nome-do-backup> --destinatio
 - [ ] Job "Regras do Firestore (emulador)" passando no CI.
 - [ ] Login, convite de usuário e redefinição de senha testados no domínio de produção.
 - [ ] Cadastro, edição e inativação testados em itens, clientes e colaboradores.
+- [ ] Job "Testes E2E" passando no CI.
+- [ ] `curl https://<seu-dominio>/api/health` responde `"status":"ok"`.
 - [ ] Cabeçalhos de segurança presentes (`curl -I https://<seu-dominio>/login`).
 - [ ] Backup diário listado em `gcloud firestore backups schedules list`.
 
 ## Pendências conhecidas
 
-- **Testes E2E**: `playwright.config.ts` e o script `test:e2e` existem, mas não há pasta `e2e/` nem a dependência `@playwright/test`. Os fluxos de tela não têm teste automatizado.
-- **Notas fiscais**: `GET /api/faturamento` ainda lê todas as notas emitidas, porque os indicadores somam o faturamento total. Com muitos anos de histórico, vale limitar por período.
+- **Testes E2E**: cobrem login, permissões por perfil e cadastro com entrada de estoque. Fluxos de pedido, faturamento e requisição ainda não têm teste de tela. Veja [guia_execucao_testes_e2e.md](guia_execucao_testes_e2e.md).

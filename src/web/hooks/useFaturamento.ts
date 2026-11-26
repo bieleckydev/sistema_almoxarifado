@@ -7,7 +7,11 @@ import type {
   PedidoAFaturarItem,
   NotaFiscalEmitidaEnriquecida,
 } from '../app/api/faturamento/route';
-import type { FaturarPedidoInput } from '@/core/domain/nota-fiscal-emitida.schema';
+import {
+  PERIODO_FATURAMENTO_PADRAO,
+  type FaturarPedidoInput,
+  type PeriodoFaturamento,
+} from '@/core/domain/nota-fiscal-emitida.schema';
 
 export interface UseFaturamentoResult {
   pedidosAFaturar: PedidoAFaturarItem[];
@@ -30,13 +34,22 @@ export interface UseFaturamentoResult {
   isFaturando: boolean;
 }
 
-export function useFaturamento(): UseFaturamentoResult {
+/**
+ * @param periodo Janela das notas emitidas e do total faturado. Os pedidos a faturar
+ * não dependem do período.
+ */
+export function useFaturamento(
+  periodo: PeriodoFaturamento = PERIODO_FATURAMENTO_PADRAO
+): UseFaturamentoResult {
   const queryClient = useQueryClient();
 
   const { data, isLoading, isFetching, error, refetch } = useQuery<FaturamentoDashboardResponse>({
-    queryKey: ['faturamento-dashboard'],
+    // O prefixo 'faturamento-dashboard' mantém as invalidações existentes valendo para todos os períodos.
+    queryKey: ['faturamento-dashboard', periodo],
     queryFn: async () => {
-      const res = await api.get<FaturamentoDashboardResponse>('/faturamento');
+      const res = await api.get<FaturamentoDashboardResponse>('/faturamento', {
+        params: { periodo },
+      });
       return res.data;
     },
     staleTime: 30 * 1000,

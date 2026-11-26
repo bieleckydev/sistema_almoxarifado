@@ -140,3 +140,44 @@ export function calcularTotalPorTipo(
 export function formatarNumeroSerieNF(numeroNF: string, serie: string = '1'): string {
   return `NF ${numeroNF} / ${serie}`;
 }
+
+/**
+ * Janela de consulta do histórico de notas emitidas. Limitar o período evita ler
+ * todos os anos de notas a cada abertura da tela de faturamento.
+ */
+export const PeriodoFaturamentoSchema = z.enum(['30d', '90d', '12m', 'todos']);
+
+export type PeriodoFaturamento = z.infer<typeof PeriodoFaturamentoSchema>;
+
+export const PERIODO_FATURAMENTO_PADRAO: PeriodoFaturamento = '12m';
+
+export const PERIODO_FATURAMENTO_LABELS: Record<PeriodoFaturamento, string> = {
+  '30d': 'Últimos 30 dias',
+  '90d': 'Últimos 90 dias',
+  '12m': 'Últimos 12 meses',
+  todos: 'Todo o histórico',
+};
+
+/** Converte um valor de query string em período válido, usando o padrão quando ausente ou inválido. */
+export function normalizarPeriodoFaturamento(valor: unknown): PeriodoFaturamento {
+  const resultado = PeriodoFaturamentoSchema.safeParse(valor);
+  return resultado.success ? resultado.data : PERIODO_FATURAMENTO_PADRAO;
+}
+
+/**
+ * Data inicial (AAAA-MM-DD, inclusiva) do período, contada a partir de `hoje`.
+ * Retorna `null` para "todos", que não aplica filtro.
+ */
+export function calcularInicioPeriodoFaturamento(
+  periodo: PeriodoFaturamento,
+  hoje: Date = new Date()
+): string | null {
+  if (periodo === 'todos') return null;
+  const inicio = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth(), hoje.getUTCDate()));
+  if (periodo === '12m') {
+    inicio.setUTCFullYear(inicio.getUTCFullYear() - 1);
+  } else {
+    inicio.setUTCDate(inicio.getUTCDate() - (periodo === '30d' ? 30 : 90));
+  }
+  return inicio.toISOString().slice(0, 10);
+}
