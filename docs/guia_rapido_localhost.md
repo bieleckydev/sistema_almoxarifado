@@ -18,7 +18,7 @@ Este guia prático foi feito para o desenvolvedor que precisa colocar o **Sistem
 No terminal, acesse o diretório do projeto e instale as dependências:
 
 ```bash
-git clone https://github.com/edubielecky/sistema_almoxarifado.git
+git clone https://github.com/bieleckydev/sistema_almoxarifado.git
 cd sistema_almoxarifado
 npm install
 ```
