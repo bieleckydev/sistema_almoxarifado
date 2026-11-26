@@ -54,6 +54,108 @@ export const StatusPedidoFlexivelSchema = z.preprocess(
  */
 export const DATA_ISO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
+/* =========================================================================
+   Setor de destino do pedido
+   ========================================================================= */
+
+export interface SetorDestinoOpcao {
+  codigo: string;
+  rotulo: string;
+}
+
+/**
+ * Catálogo padrão de setores de destino de um pedido de venda.
+ * Novos destinos podem ser somados com montarCatalogoSetoresDestino; o schema aceita
+ * qualquer código normalizado, então um destino novo não exige mudança de schema.
+ */
+export const SETORES_DESTINO_PADRAO: readonly SetorDestinoOpcao[] = [
+  { codigo: 'PRODUCAO', rotulo: 'Produção' },
+  { codigo: 'EXPEDICAO', rotulo: 'Expedição' },
+  { codigo: 'OFICINA', rotulo: 'Oficina' },
+  { codigo: 'MONTAGEM', rotulo: 'Montagem' },
+  { codigo: 'CLIENTE_EXTERNO', rotulo: 'Terceiros / Cliente Externo' },
+];
+
+/** Destino assumido quando o pedido não informa setor (fluxo padrão de venda). */
+export const SETOR_DESTINO_PADRAO = 'EXPEDICAO';
+
+/**
+ * Grafias antigas ou redundantes que apontam para um destino do catálogo padrão.
+ */
+const ALIASES_SETOR_DESTINO: Record<string, string> = {
+  LOGISTICA: 'EXPEDICAO',
+  EXPEDICAO_LOGISTICA: 'EXPEDICAO',
+  FABRICA: 'PRODUCAO',
+  FABRICACAO: 'PRODUCAO',
+  LINHA_DE_MONTAGEM: 'MONTAGEM',
+  LINHA_MONTAGEM: 'MONTAGEM',
+  TERCEIROS: 'CLIENTE_EXTERNO',
+  TERCEIRO: 'CLIENTE_EXTERNO',
+  CLIENTE: 'CLIENTE_EXTERNO',
+  EXTERNO: 'CLIENTE_EXTERNO',
+  TERCEIROS_CLIENTE_EXTERNO: 'CLIENTE_EXTERNO',
+};
+
+/**
+ * Normaliza um setor de destino para o código canônico:
+ * sem acentos, maiúsculo, separado por "_" e com aliases legados resolvidos.
+ * Ex.: "Expedição" -> "EXPEDICAO", "Terceiros / Cliente Externo" -> "CLIENTE_EXTERNO".
+ */
+export function normalizarSetorDestino(valor: string): string {
+  const codigo = valor
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return ALIASES_SETOR_DESTINO[codigo] ?? codigo;
+}
+
+export const SetorDestinoSchema = z
+  .string()
+  .trim()
+  .min(2, 'Informe o setor de destino')
+  .max(40, 'O setor de destino deve ter no máximo 40 caracteres')
+  .transform(normalizarSetorDestino)
+  .refine((codigo) => codigo.length >= 2, 'Setor de destino inválido');
+
+/**
+ * Soma destinos extras ao catálogo padrão, sem duplicar códigos já existentes.
+ */
+export function montarCatalogoSetoresDestino(
+  extras: ReadonlyArray<{ codigo?: string; rotulo: string }> = []
+): SetorDestinoOpcao[] {
+  const catalogo: SetorDestinoOpcao[] = [...SETORES_DESTINO_PADRAO];
+  const codigos = new Set(catalogo.map((s) => s.codigo));
+  for (const extra of extras) {
+    const rotulo = extra.rotulo.trim();
+    const codigo = normalizarSetorDestino(extra.codigo || rotulo);
+    if (codigo.length < 2 || codigos.has(codigo)) continue;
+    codigos.add(codigo);
+    catalogo.push({ codigo, rotulo });
+  }
+  return catalogo;
+}
+
+/**
+ * Rótulo de exibição de um setor de destino. Códigos fora do catálogo
+ * (destinos livres) são exibidos em formato legível.
+ */
+export function rotuloSetorDestino(
+  codigo: string | undefined,
+  catalogo: readonly SetorDestinoOpcao[] = SETORES_DESTINO_PADRAO
+): string {
+  if (!codigo) return '';
+  const normalizado = normalizarSetorDestino(codigo);
+  const conhecido = catalogo.find((s) => s.codigo === normalizado);
+  if (conhecido) return conhecido.rotulo;
+  return normalizado
+    .split('_')
+    .filter(Boolean)
+    .map((p) => p.charAt(0) + p.slice(1).toLowerCase())
+    .join(' ');
+}
+
 export const ItemPedidoSchema = z.object({
   itemId: z.string().min(1, 'ID do item é obrigatório'),
   quantidade: z
@@ -99,6 +201,8 @@ export const PedidoSchema = z.object({
     .string()
     .regex(DATA_ISO_REGEX, 'Prazo de entrega deve estar no formato AAAA-MM-DD'),
   status: StatusPedidoFlexivelSchema.default('PENDENTE'),
+  /** Opcional apenas para pedidos legados, criados antes do campo existir. */
+  setorDestino: SetorDestinoSchema.optional(),
   itens: z
     .array(ItemPedidoSchema)
     .min(1, 'O pedido deve conter pelo menos um item'),
@@ -127,6 +231,7 @@ export const CreatePedidoSchema = z.object({
     .string()
     .regex(DATA_ISO_REGEX, 'Informe uma data de entrega válida (AAAA-MM-DD)'),
   status: StatusPedidoFlexivelSchema.optional().default('PENDENTE'),
+  setorDestino: SetorDestinoSchema.optional().default(SETOR_DESTINO_PADRAO),
   itens: z
     .array(ItemPedidoSchema)
     .min(1, 'Adicione pelo menos um item ao pedido'),
