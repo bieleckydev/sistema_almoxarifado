@@ -18,6 +18,11 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useFaturamento } from '@/web/hooks/useFaturamento';
+import {
+  PERIODO_FATURAMENTO_LABELS,
+  PERIODO_FATURAMENTO_PADRAO,
+  type PeriodoFaturamento,
+} from '@/core/domain/nota-fiscal-emitida.schema';
 import { FaturarPedidoDrawer } from './FaturarPedidoDrawer';
 import type { PedidoAFaturarItem, NotaFiscalEmitidaEnriquecida } from '@/web/app/api/faturamento/route';
 import { api } from '@/core/api/client';
@@ -29,6 +34,7 @@ export interface FaturamentoViewProps {
 
 export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
   const { toast } = useToast();
+  const [periodo, setPeriodo] = useState<PeriodoFaturamento>(PERIODO_FATURAMENTO_PADRAO);
   const {
     pedidosAFaturar,
     notasEmitidas,
@@ -37,7 +43,7 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
     isFetching,
     refetch,
     faturarPedido,
-  } = useFaturamento();
+  } = useFaturamento(periodo);
 
   const [pedidoSelecionadoParaFaturar, setPedidoSelecionadoParaFaturar] =
     useState<PedidoAFaturarItem | null>(null);
@@ -207,7 +213,7 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
             </div>
           </div>
           <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
-            <span>Vendas &amp; Retornos</span>
+            <span>{PERIODO_FATURAMENTO_LABELS[periodo]}</span>
           </div>
         </div>
 
@@ -230,7 +236,7 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
             </div>
           </div>
           <div className="mt-3 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs text-secondary">
-            <span>Receita mercantil</span>
+            <span>{PERIODO_FATURAMENTO_LABELS[periodo]}</span>
             <span className="font-medium text-tertiary">Realizada</span>
           </div>
         </div>
@@ -338,15 +344,32 @@ export function FaturamentoView({ onNavegarPedidos }: FaturamentoViewProps) {
             </span>
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
-            <input
-              type="search"
-              placeholder="Buscar por NF, cliente ou pedido..."
-              value={buscaNota}
-              onChange={(e) => setBuscaNota(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-1.5 focus:ring-primary transition-all"
-            />
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <label className="sr-only" htmlFor="periodo-faturamento">
+              Período das notas emitidas
+            </label>
+            <select
+              id="periodo-faturamento"
+              value={periodo}
+              onChange={(e) => setPeriodo(e.target.value as PeriodoFaturamento)}
+              className="py-1.5 px-2.5 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-1.5 focus:ring-primary transition-all cursor-pointer"
+            >
+              {(Object.keys(PERIODO_FATURAMENTO_LABELS) as PeriodoFaturamento[]).map((chave) => (
+                <option key={chave} value={chave}>
+                  {PERIODO_FATURAMENTO_LABELS[chave]}
+                </option>
+              ))}
+            </select>
+            <div className="relative w-full sm:w-72">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
+              <input
+                type="search"
+                placeholder="Buscar por NF, cliente ou pedido..."
+                value={buscaNota}
+                onChange={(e) => setBuscaNota(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-1.5 focus:ring-primary transition-all"
+              />
+            </div>
           </div>
         </div>
 
