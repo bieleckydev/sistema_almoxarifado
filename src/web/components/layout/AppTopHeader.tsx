@@ -26,8 +26,9 @@ export interface AppTopHeaderProps {
   className?: string;
 }
 
-const GESTAO_TITULOS: Record<'vendas' | 'clientes' | 'saida' | 'usuarios', string> = {
+const GESTAO_TITULOS: Record<'vendas' | 'clientes' | 'saida' | 'usuarios' | 'ecom', string> = {
   vendas: 'Pedidos & Vendas',
+  ecom: 'E-commerce (motos)',
   clientes: 'Clientes & Parceiros',
   saida: 'Movimentações & Saídas',
   usuarios: 'Gestão de Usuários',
@@ -52,7 +53,8 @@ export function AppTopHeader({
     telaAtiva === 'vendas' ||
     telaAtiva === 'clientes' ||
     telaAtiva === 'saida' ||
-    telaAtiva === 'usuarios';
+    telaAtiva === 'usuarios' ||
+    telaAtiva === 'ecom';
 
   // Iniciais do usuário logado
   const userInitials = user?.name
