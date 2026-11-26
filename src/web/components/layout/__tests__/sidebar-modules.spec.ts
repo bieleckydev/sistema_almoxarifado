@@ -64,6 +64,11 @@ describe('Fase 4: Sidebar Retrátil e Módulos Corporativos (AppSidebar)', () =>
       assert.equal(obterModuloDeTela('levantamento', 'vendas'), 'estoque');
     });
 
+    it('deve identificar módulo vendas para o painel e-commerce', () => {
+      assert.equal(obterModuloDeTela('ecom'), 'vendas');
+      assert.equal(obterModuloDeTela('ecom', 'estoque'), 'vendas');
+    });
+
     it('deve identificar módulo vendas para telas vendas e fat (faturamento)', () => {
       assert.equal(obterModuloDeTela('vendas'), 'vendas');
       assert.equal(obterModuloDeTela('fat'), 'vendas');
