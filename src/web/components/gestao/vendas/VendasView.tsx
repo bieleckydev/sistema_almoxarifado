@@ -19,7 +19,9 @@ import {
   Receipt,
   Ban,
 } from 'lucide-react';
-import { JANELA_PEDIDOS_ENCERRADOS_DIAS } from '@/core/domain/pedido.schema';
+import { JANELA_PEDIDOS_ENCERRADOS_DIAS, rotuloSetorDestino } from '@/core/domain/pedido.schema';
+import { CATEGORIA_ESTOQUE_LABELS } from '@/core/domain/categoria-estoque';
+import { CATALOGO_SETORES_DESTINO } from '@/web/data/setores-destino';
 import { useDebounce } from '@/web/hooks/useDebounce';
 import { usePedidos, useAtualizarStatusPedido } from '@/web/hooks/usePedidos';
 import { OrderStatusBadge } from './OrderStatusBadge';
@@ -492,6 +494,11 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
                           <span className="font-headline-sm font-semibold text-xs text-on-surface group-hover:text-primary transition-colors truncate">
                             {pedido.clienteNome}
                           </span>
+                          {pedido.setorDestino && (
+                            <span className="text-[11px] text-on-surface-variant truncate">
+                              Destino: {rotuloSetorDestino(pedido.setorDestino, CATALOGO_SETORES_DESTINO)}
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -521,7 +528,12 @@ export function VendasView({ onNovoPedido, onFaturarPedido }: VendasViewProps) {
                                     {it.quantidade.toLocaleString('pt-BR')} {unidadeFmt}
                                   </span>
                                   <span className="text-outline">·</span>
-                                  <span className="truncate">{it.nome}</span>
+                                  <span
+                                    className="truncate"
+                                    title={it.categoria ? CATEGORIA_ESTOQUE_LABELS[it.categoria] : undefined}
+                                  >
+                                    {it.nome}
+                                  </span>
                                   {semSaldoItem && !isEntregue && (
                                     <span className="text-[10px] text-error font-bold font-mono bg-error-container text-on-error-container px-1 rounded shrink-0">
                                       Falta: {(it.quantidade - it.estoqueAtual).toLocaleString('pt-BR')}
