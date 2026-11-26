@@ -51,6 +51,7 @@ import { useFaturamento } from '@/web/hooks/useFaturamento';
 import { useMaterialTerceiros } from '@/web/hooks/useMaterialTerceiros';
 import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
+import { LevantamentoEstoqueView } from '@/web/components/dashboard/levantamento/LevantamentoEstoqueView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
 import { useToast } from '@/web/hooks/useToast';
@@ -541,6 +542,9 @@ export default function AlmoxarifadoDashboardPage() {
                   onClearFilters={handleClearFilters}
                 />
               </div>
+            ) : telaAtiva === 'levantamento' ? (
+              /* Levantamento e queima de estoque (giro, excedente e exportação CSV) */
+              <LevantamentoEstoqueView onSelectItem={handleSelectItem} />
             ) : telaAtiva === 'vendas' ? (
               /* 3. Módulo de Vendas e Pedidos */
               <VendasView
