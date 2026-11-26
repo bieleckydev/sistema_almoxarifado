@@ -19,6 +19,11 @@ describe('Hub Inicial — Lógica de Alertas e Atenção Prioritária', () => {
     assert.strictEqual(calcularStatusCriticidade(100, 20), 'ok');
   });
 
+  it('não deve marcar como crítico item zerado sem estoque mínimo cadastrado', () => {
+    assert.strictEqual(calcularStatusCriticidade(0, 0), 'ok');
+    assert.strictEqual(calcularStatusCriticidade(5, 0), 'ok');
+  });
+
   it('deve ordenar o ranking de atenção pela menor proporção atual / mínimo', () => {
     const itens = [
       { id: '1', nome: 'Item A', atual: 14, min: 20 }, // 14/20 = 0.70
