@@ -3,7 +3,10 @@ import {
   FaturarPedidoInputSchema,
   RegistrarNotaFiscalEmitidaSchema,
   type NotaFiscalEmitida,
+  type PeriodoFaturamento,
+  calcularInicioPeriodoFaturamento,
   calcularTotalNotasEmitidas,
+  normalizarPeriodoFaturamento,
 } from '@/core/domain/nota-fiscal-emitida.schema';
 import {
   type FaturamentoPedido,
@@ -43,6 +46,8 @@ export interface NotaFiscalEmitidaEnriquecida extends NotaFiscalEmitida {
 export interface FaturamentoDashboardResponse {
   pedidosAFaturar: PedidoAFaturarItem[];
   notasEmitidas: NotaFiscalEmitidaEnriquecida[];
+  /** Período aplicado às notas emitidas e aos KPIs de faturado. `desde` é null em "todos". */
+  periodo: { chave: PeriodoFaturamento; desde: string | null };
   kpis: {
     totalPedidosAFaturar: number;
     valorPedidosAFaturar: number;
@@ -54,15 +59,24 @@ export interface FaturamentoDashboardResponse {
 /**
  * GET /api/faturamento
  * Retorna os pedidos separados/entregues aguardando emissão de NF-e e o histórico de notas fiscais emitidas.
+ *
+ * Query `periodo` (30d | 90d | 12m | todos, padrão 12m): limita as notas lidas pela data de
+ * emissão. Os pedidos a faturar não são afetados, porque dependem só do status.
  */
 export async function GET(request: Request) {
   try {
     await requireIdentity(request);
     const db = getServerDb();
 
+    const periodo = normalizarPeriodoFaturamento(new URL(request.url).searchParams.get('periodo'));
+    const desde = calcularInicioPeriodoFaturamento(periodo);
+    const invoicesQuery = desde
+      ? db.collection('invoices').where('dataEmissao', '>=', desde)
+      : db.collection('invoices');
+
     // Só pedidos SEPARADO/ENTREGUE podem ser faturados; os demais nem são lidos.
     const [invoicesSnap, ordersSnap] = await Promise.all([
-      db.collection('invoices').get(),
+      invoicesQuery.get(),
       db.collection('orders').where('status', 'in', ['SEPARADO', 'ENTREGUE']).get(),
     ]);
 
@@ -150,6 +164,7 @@ export async function GET(request: Request) {
     const response: FaturamentoDashboardResponse = {
       pedidosAFaturar,
       notasEmitidas,
+      periodo: { chave: periodo, desde },
       kpis: {
         totalPedidosAFaturar: pedidosAFaturar.length,
         valorPedidosAFaturar,
