@@ -52,6 +52,7 @@ import { useMaterialTerceiros } from '@/web/hooks/useMaterialTerceiros';
 import type { PedidoAFaturarItem } from '@/web/app/api/faturamento/route';
 import { InicioDashboardView } from '@/web/components/dashboard/inicio/InicioDashboardView';
 import { LevantamentoEstoqueView } from '@/web/components/dashboard/levantamento/LevantamentoEstoqueView';
+import { PainelEcommerceView } from '@/web/components/gestao/ecommerce/PainelEcommerceView';
 import { ToastContainer } from '@/web/components/feedback/ToastContainer';
 import { AuthGuard } from '@/web/components/auth/AuthGuard';
 import { useToast } from '@/web/hooks/useToast';
@@ -573,6 +574,13 @@ export default function AlmoxarifadoDashboardPage() {
             ) : telaAtiva === 'fat' ? (
               /* 4. Módulo de Faturamento e Notas Fiscais */
               <FaturamentoView onNavegarPedidos={() => handleSelectTela('vendas')} />
+            ) : telaAtiva === 'ecom' ? (
+              /* Painel e-commerce de peças de motos (vender x produzir) */
+              <PainelEcommerceView
+                onSelectItem={handleSelectItem}
+                onRegistrarEntrada={(item) => handleOpenMovement(item, 'Entrada')}
+                onNovoPedido={() => setIsOrderCreateOpen(true)}
+              />
             ) : telaAtiva === 'terc' ? (
               /* 5. Módulo de Material de Terceiros (Industrialização por Encomenda) */
               <TerceirosView onNavegarFaturamento={() => handleSelectTela('fat')} />
