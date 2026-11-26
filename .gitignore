@@ -50,3 +50,13 @@ next-env.d.ts
 .agents/mcp_config.json
 **/mcp_config.json
 
+
+# Dados operacionais e credenciais (repositório público)
+*.xlsx
+*.xls
+*.csv
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+backup-*/
+firestore-export/
