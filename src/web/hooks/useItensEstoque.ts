@@ -27,6 +27,10 @@ export interface UseItensEstoqueResult {
   totalAbaixoMinimo: number;
   totalCriticos: number;
   contagemCriticosPorAba: Record<AbaEstoque, number>;
+  /** Catálogo completo das três categorias, sem filtros (visões analíticas). */
+  todosItens: DashboardItem[];
+  /** true enquanto alguma das três categorias ainda carrega pela primeira vez. */
+  isLoadingTodos: boolean;
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
@@ -218,7 +222,16 @@ export function useItensEstoque({
     return resultado;
   }, [todosItensAba, filtroSituacao, busca]);
 
-  // 3. CONTAGEM SIMULTÂNEA DE CRÍTICOS PARA TODAS AS ABAS NA SIDEBAR
+  // 3. CATÁLOGO CONSOLIDADO DAS TRÊS CATEGORIAS (LEVANTAMENTO / RELATÓRIOS)
+  // Depende dos dados de cada query (estáveis entre renders), não do array de queries.
+  const [dadosMp, dadosImp, dadosMotos] = queries.map((q) => q.data);
+  const todosItens = useMemo(
+    () => [dadosMp, dadosImp, dadosMotos].flatMap((d) => d?.itens || []),
+    [dadosMp, dadosImp, dadosMotos]
+  );
+  const isLoadingTodos = queries.some((q) => q.isLoading);
+
+  // 4. CONTAGEM SIMULTÂNEA DE CRÍTICOS PARA TODAS AS ABAS NA SIDEBAR
   const contagemCriticosPorAba: Record<AbaEstoque, number> = useMemo(() => {
     const calcularCriticosAba = (indice: number) => {
       const itensAba = queries[indice]?.data?.itens || [];
@@ -241,6 +254,8 @@ export function useItensEstoque({
     totalAbaixoMinimo,
     totalCriticos,
     contagemCriticosPorAba,
+    todosItens,
+    isLoadingTodos,
     isLoading: queryAtiva.isLoading,
     isFetching: queryAtiva.isFetching,
     isError: queryAtiva.isError,
