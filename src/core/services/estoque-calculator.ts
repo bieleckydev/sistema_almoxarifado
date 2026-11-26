@@ -224,93 +224,6 @@ export function calcularNecessidadeReposicao(
   };
 }
 
-/**
- * Recomendação operacional do balanceamento entre demanda comercial e produção.
- * - 'vender': excedente parado — priorizar anúncio/queima no canal online
- * - 'produzir': saldo no mínimo ou demanda do período consome a margem — abrir OF
- * - 'equilibrado': nenhuma ação imediata
- */
-export type RecomendacaoComercial = 'vender' | 'produzir' | 'equilibrado';
-
-/** Saldo a partir do qual o item é excedente, em múltiplos do estoque mínimo. */
-export const FATOR_EXCESSO_SOBRE_MINIMO = 3;
-
-/** Saldo a partir do qual baixa rotatividade já caracteriza excedente, em múltiplos do mínimo. */
-export const FATOR_BAIXO_GIRO_SOBRE_MINIMO = 2;
-
-/** Giro (saídas do período / saldo) abaixo do qual o item é considerado parado. */
-export const LIMITE_GIRO_BAIXO = 0.1;
-
-export interface BalanceamentoComercial {
-  recomendacao: RecomendacaoComercial;
-  /** Saldo-alvo: mínimo de segurança + uma repetição da demanda do período. */
-  saldoAlvo: number;
-  /** Quantidade sugerida para a ordem de fabricação (0 se não for 'produzir'). */
-  quantidadeProduzir: number;
-  /** Quantidade acima do saldo-alvo disponível para venda (0 se não for 'vender'). */
-  quantidadeExcedente: number;
-  /** Saídas do período / saldo atual (0 quando o saldo é zero ou negativo). */
-  giro: number;
-}
-
-/**
- * Classifica um item de venda online pelo balanceamento estoque vs. produção.
- *
- * Produzir (prioridade): saldo dentro da faixa de criticidade (até o mínimo) ou
- * alta procura — repetindo a demanda do período, o saldo cairia ao mínimo ou abaixo.
- *
- * Vender: com mínimo definido, saldo >= 3x o mínimo, ou saldo >= 2x o mínimo com
- * giro abaixo de 10% no período. Sem mínimo cadastrado não há referência de excesso.
- *
- * @param saidasPeriodo Saídas de demanda (expedição/consumo) no período analisado
- */
-export function classificarBalanceamentoComercial(
-  estoqueAtual: number,
-  estoqueSeguranca: number,
-  saidasPeriodo: number
-): BalanceamentoComercial {
-  const minimo = Math.max(0, estoqueSeguranca);
-  const demanda = Math.max(0, saidasPeriodo);
-  const saldoAlvo = arredondarPrecisao(minimo + demanda);
-  const giro = estoqueAtual > 0 ? arredondarPrecisao(demanda / estoqueAtual) : 0;
-
-  const abaixoDoMinimo = calcularStatusCriticidade(estoqueAtual, minimo) !== 'ok';
-  const altaProcura = demanda > 0 && estoqueAtual - demanda <= minimo;
-
-  if (abaixoDoMinimo || altaProcura) {
-    return {
-      recomendacao: 'produzir',
-      saldoAlvo,
-      quantidadeProduzir: arredondarPrecisao(Math.max(0, saldoAlvo - estoqueAtual)),
-      quantidadeExcedente: 0,
-      giro,
-    };
-  }
-
-  const excesso =
-    minimo > 0 &&
-    (estoqueAtual >= minimo * FATOR_EXCESSO_SOBRE_MINIMO ||
-      (estoqueAtual >= minimo * FATOR_BAIXO_GIRO_SOBRE_MINIMO && giro < LIMITE_GIRO_BAIXO));
-
-  if (excesso) {
-    return {
-      recomendacao: 'vender',
-      saldoAlvo,
-      quantidadeProduzir: 0,
-      quantidadeExcedente: arredondarPrecisao(Math.max(0, estoqueAtual - saldoAlvo)),
-      giro,
-    };
-  }
-
-  return {
-    recomendacao: 'equilibrado',
-    saldoAlvo,
-    quantidadeProduzir: 0,
-    quantidadeExcedente: 0,
-    giro,
-  };
-}
-
 // ==========================================
 // LEVANTAMENTO / QUEIMA DE ESTOQUE (ANÁLISE DE GIRO)
 // ==========================================
@@ -480,4 +393,90 @@ export function ordenarLevantamento<T extends LinhaOrdenavelLevantamento>(
   };
 
   return [...linhas].sort(comparadores[criterio]);
+}
+
+// ==========================================
+// BALANCEAMENTO COMERCIAL (VENDER X PRODUZIR)
+// ==========================================
+
+/**
+ * Recomendação operacional do balanceamento entre demanda comercial e produção.
+ * - 'vender': excedente parado — priorizar anúncio/queima no canal online
+ * - 'produzir': saldo no mínimo ou alta procura — abrir ordem de fabricação
+ * - 'equilibrado': nenhuma ação imediata
+ */
+export type RecomendacaoComercial = 'vender' | 'produzir' | 'equilibrado';
+
+/** Saldo a partir do qual o item é excedente, em múltiplos do estoque mínimo. */
+export const FATOR_EXCESSO_SOBRE_MINIMO = 3;
+
+/** Saldo a partir do qual giro parado/lento já caracteriza excedente, em múltiplos do mínimo. */
+export const FATOR_BAIXO_GIRO_SOBRE_MINIMO = 2;
+
+export interface BalanceamentoComercial {
+  recomendacao: RecomendacaoComercial;
+  /** Saldo-alvo: mínimo de segurança + demanda projetada para LIMITE_GIRO_ALTO_DIAS. */
+  saldoAlvo: number;
+  /** Quantidade sugerida para a ordem de fabricação (0 se não for 'produzir'). */
+  quantidadeProduzir: number;
+  /** Quantidade acima do saldo-alvo disponível para venda (0 se não for 'vender'). */
+  quantidadeExcedente: number;
+  coberturaDias: number;
+  giro: ClassificacaoGiro;
+}
+
+/**
+ * Classifica um item de venda online pelo balanceamento estoque vs. produção,
+ * usando o ritmo diário de saídas da janela (mesma régua do levantamento de giro).
+ *
+ * Produzir (prioridade): saldo na faixa de criticidade (até o mínimo) ou giro
+ * alto — cobertura de até LIMITE_GIRO_ALTO_DIAS no ritmo observado.
+ *
+ * Vender: com mínimo definido, saldo >= 3x o mínimo, ou saldo >= 2x o mínimo com
+ * giro parado ou lento. Sem mínimo cadastrado não há referência de excesso.
+ *
+ * @param saidasJanela Saídas de giro (venda/consumo) dentro da janela
+ * @param janelaDias Duração da janela em dias (>= 1)
+ */
+export function classificarBalanceamentoComercial(
+  estoqueAtual: number,
+  estoqueSeguranca: number,
+  saidasJanela: number,
+  janelaDias: number
+): BalanceamentoComercial {
+  const minimo = Math.max(0, estoqueSeguranca);
+  const saidas = Math.max(0, saidasJanela);
+  const dias = Math.max(1, janelaDias);
+  const demandaHorizonte = (saidas / dias) * LIMITE_GIRO_ALTO_DIAS;
+  const saldoAlvo = arredondarPrecisao(minimo + demandaHorizonte);
+  const coberturaDias = calcularCoberturaDias(estoqueAtual, saidas, dias);
+  const giro = classificarGiro(estoqueAtual, saidas, dias);
+
+  const base = { saldoAlvo, coberturaDias, giro };
+
+  if (calcularStatusCriticidade(estoqueAtual, minimo) !== 'ok' || giro === 'alto') {
+    return {
+      ...base,
+      recomendacao: 'produzir',
+      quantidadeProduzir: arredondarPrecisao(Math.max(0, saldoAlvo - estoqueAtual)),
+      quantidadeExcedente: 0,
+    };
+  }
+
+  const giroBaixo = giro === 'parado' || giro === 'lento';
+  const excesso =
+    minimo > 0 &&
+    (estoqueAtual >= minimo * FATOR_EXCESSO_SOBRE_MINIMO ||
+      (estoqueAtual >= minimo * FATOR_BAIXO_GIRO_SOBRE_MINIMO && giroBaixo));
+
+  if (excesso) {
+    return {
+      ...base,
+      recomendacao: 'vender',
+      quantidadeProduzir: 0,
+      quantidadeExcedente: arredondarPrecisao(Math.max(0, estoqueAtual - saldoAlvo)),
+    };
+  }
+
+  return { ...base, recomendacao: 'equilibrado', quantidadeProduzir: 0, quantidadeExcedente: 0 };
 }
