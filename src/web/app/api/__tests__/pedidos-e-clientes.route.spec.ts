@@ -112,6 +112,34 @@ describe('Fase 7 — Rotas BFF e Integração (/api/pedidos e /api/clientes)', (
       assert.notEqual(comItem.clienteNome, 'Cliente não identificado');
     });
 
+    it('deve informar a categoria de estoque de cada item do pedido', async () => {
+      const db = instalarFirestoreDeTeste();
+      db.seed('items', [
+        { id: 'item-imp', codigo: '90-0001', descricao: 'Disco flap', tipo: 'IMPRODUTIVO_CONSUMIVEL', unidade: 'UNIDADE', estoqueAtual: 5, ativo: true },
+        { id: 'item-moto', codigo: '100-0001', descricao: 'Suporte de placa', tipo: 'ACABADO', unidade: 'PECA', estoqueAtual: 5, ativo: true },
+      ]);
+      db.seed('orders', [
+        {
+          id: 'ped-categorias',
+          numeroSequencial: 900,
+          clienteId: 'cli-1',
+          prazoEntrega: '2099-01-01',
+          status: 'PENDENTE',
+          itens: [
+            { itemId: 'item-imp', quantidade: 1 },
+            { itemId: 'item-moto', quantidade: 1 },
+          ],
+        },
+      ]);
+
+      const data = await (await getPedidos(new Request('http://localhost:3000/api/pedidos'))).json();
+      const pedido = data.dados.find((p: any) => p.id === 'ped-categorias');
+      assert.deepEqual(
+        pedido.itensDetalhes.map((i: any) => i.categoria),
+        ['imp', 'motos']
+      );
+    });
+
     it('deve filtrar pedidos por busca textual', async () => {
       const request = new Request('http://localhost:3000/api/pedidos?busca=Metalurgica');
       const response = await getPedidos(request);

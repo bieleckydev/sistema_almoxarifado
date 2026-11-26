@@ -8,6 +8,7 @@ import {
   calcularTotalPedido,
   JANELA_PEDIDOS_ENCERRADOS_DIAS,
 } from '@/core/domain/pedido.schema';
+import { categoriaEstoqueDoTipo, type CategoriaEstoque } from '@/core/domain/categoria-estoque';
 import {
   ApiError,
   getServerDb,
@@ -33,6 +34,7 @@ export interface PedidoEnriquecidoItem {
   codigo: string;
   unidade: string;
   estoqueAtual: number;
+  categoria: CategoriaEstoque;
 }
 
 export interface PedidoEnriquecido extends Pedido {
@@ -137,7 +139,7 @@ export async function GET(request: Request) {
 
     const itensMap = new Map<
       string,
-      { nome: string; codigo: string; unidade: string; estoqueAtual: number }
+      { nome: string; codigo: string; unidade: string; estoqueAtual: number; categoria: CategoriaEstoque }
     >();
     const estoqueDisponivelMap = new Map<string, number>();
     itensDocs.forEach((data, id) => {
@@ -147,6 +149,7 @@ export async function GET(request: Request) {
         codigo: String(data.codigo || ''),
         unidade: String(data.unidade || 'UNIDADE'),
         estoqueAtual,
+        categoria: categoriaEstoqueDoTipo(data.tipo),
       });
       estoqueDisponivelMap.set(id, estoqueAtual);
     });
@@ -165,6 +168,7 @@ export async function GET(request: Request) {
           codigo: itemInfo?.codigo || '',
           unidade: itemInfo?.unidade || 'un',
           estoqueAtual: itemInfo?.estoqueAtual ?? 0,
+          categoria: itemInfo?.categoria ?? 'mp',
         };
       });
 
