@@ -200,6 +200,9 @@ export default function AlmoxarifadoDashboardPage() {
       } else if (param === 'fat') {
         setModuloAtivo('vendas');
         handleSelectTela('fat');
+      } else if (param === 'ecom') {
+        setModuloAtivo('vendas');
+        handleSelectTela('ecom');
       } else if (param === 'terc') {
         setModuloAtivo('estoque');
         handleSelectTela('terc');
