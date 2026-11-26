@@ -55,6 +55,26 @@ describe('CRUD de clientes/parceiros (/api/clientes/[id])', () => {
     assert.equal(data.nome, 'Metalúrgica Horizonte');
   });
 
+  it('GET por ID exige permissão de leitura de cadastros', async () => {
+    setIdentityAuthenticator(async () => identidade('requisitante'));
+    const res = await getCliente(new Request('http://localhost:3000/api/clientes/cli-1'), {
+      params: Promise.resolve({ id: 'cli-1' }),
+    });
+    assert.equal(res.status, 403);
+  });
+
+  it('GET da lista exige permissão de leitura de cadastros', async () => {
+    setIdentityAuthenticator(async () => identidade('requisitante'));
+    const res = await getClientes(new Request('http://localhost:3000/api/clientes'));
+    assert.equal(res.status, 403);
+  });
+
+  it('GET da lista permite leitura por operador com permissão de cadastros', async () => {
+    setIdentityAuthenticator(async () => identidade('operador'));
+    const res = await getClientes(new Request('http://localhost:3000/api/clientes'));
+    assert.equal(res.status, 200);
+  });
+
   it('GET retorna 404 para parceiro inexistente', async () => {
     const res = await getCliente(new Request('http://localhost:3000/api/clientes/nao-existe'), {
       params: Promise.resolve({ id: 'nao-existe' }),

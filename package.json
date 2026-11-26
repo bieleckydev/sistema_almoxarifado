@@ -52,11 +52,11 @@
     "react-dom": "^19.3.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
-    "xlsx": "^0.18.5",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
   "overrides": {
+    "@grpc/grpc-js": "1.14.5",
     "jwks-rsa": {
       "jose": "4.15.9"
     }
@@ -71,6 +71,7 @@
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "xlsx": "npm:@e965/xlsx@^0.20.3"
   }
 }

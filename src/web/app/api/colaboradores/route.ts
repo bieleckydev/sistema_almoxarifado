@@ -12,6 +12,7 @@ import {
   parseQueryParams,
   readJson,
   requireIdentity,
+  requireAcaoPermissao,
   requirePermission,
   toErrorResponse,
 } from '../api-helpers';
@@ -53,7 +54,8 @@ function parseColaboradorFiltros(request: Request) {
  */
 export async function GET(request: Request) {
   try {
-    await requireIdentity(request);
+    const identity = await requireIdentity(request);
+    requireAcaoPermissao(identity, 'cadastros');
     const filtros = parseColaboradorFiltros(request);
     const repo = getEstoqueRepository();
     const resultado = await repo.listarColaboradores(filtros);

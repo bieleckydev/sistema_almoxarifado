@@ -61,6 +61,10 @@ service cloud.firestore {
       return isMestre() || hasRole('admin');
     }
 
+    function canReadCatalog() {
+      return canManageCatalog() || hasRole('operador');
+    }
+
     function canOperateStock() {
       return canManageCatalog() || hasRole('operador');
     }
@@ -256,7 +260,7 @@ service cloud.firestore {
     }
 
     match /collaborators/{collaboratorId} {
-      allow read: if isActiveUser();
+      allow read: if canReadCatalog();
       allow create: if canManageCatalog()
         && request.resource.data.id == collaboratorId
         && validCollaboratorPayload();
@@ -311,7 +315,7 @@ service cloud.firestore {
     }
 
     match /clients/{clientId} {
-      allow read: if isActiveUser();
+      allow read: if canReadCatalog();
       allow create: if canManageCatalog()
         && request.resource.data.id == clientId
         && validClientPayload();

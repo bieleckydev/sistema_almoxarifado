@@ -354,7 +354,7 @@ FIREBASE_AUTH_CONTINUE_URL=http://localhost:3000/login
 
 | Comando | Descrição |
 | :--- | :--- |
-| `npm run migration:discover` | Analisa e mapeia as estruturas de todas as abas das planilhas em `docs/excel/`. |
+| `npm run migration:discover` | Analisa e mapeia estruturas de planilhas fornecidas localmente em `docs/excel/`. |
 | `npm run migration:extract-source` | Extrai os registros brutos das planilhas para inspeção de layout. |
 | `npm run migration:validate-improdutivos-items` | Valida o catálogo de materiais improdutivos contra os schemas do Core. |
 | `npm run migration:validate-improdutivos-collaborators` | Valida a lista de colaboradores e matrículas contra o Core. |
@@ -366,10 +366,10 @@ FIREBASE_AUTH_CONTINUE_URL=http://localhost:3000/login
 
 ## 📊 Pipeline de Migração de Planilhas Excel
 
-O sistema inclui uma pipeline de engenharia de dados em TypeScript criada para importar com segurança os registros históricos armazenados nas planilhas:
-- `Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx` (Materiais Improdutivos).
-- `CONTROLE_PEÇAS 2026_ALMOXARIFADO_ATUALIZADA.xlsx` (Peças de Motos e Clientes).
-- `ESTOQUE 2026.xlsx` (Matéria-Prima Industrial).
+O sistema inclui uma pipeline de engenharia de dados em TypeScript para importar
+planilhas operacionais fornecidas localmente. Os arquivos de origem nao fazem
+parte do repositorio; consulte [`docs/excel/README.md`](docs/excel/README.md)
+antes de executar os scripts de migracao.
 
 ### Fases do Processo:
 1. **Descoberta & Mapeamento**: Localização dinâmica de tabelas com cabeçalhos deslocados ou células mescladas.

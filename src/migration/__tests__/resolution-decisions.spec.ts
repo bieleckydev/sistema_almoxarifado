@@ -6,11 +6,12 @@ import {
   validateDecisionsAgainstReport,
   validateResolutionDecisions,
 } from '../resolution-decisions';
+import { createSyntheticImprodutivosWorkbook } from './synthetic-improdutivos-workbook';
 
-test('gera uma decisão pendente por registro bloqueante', () => {
-  const report = buildImprodutivosDryRunReport(
-    'docs/excel/Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx'
-  );
+test('gera uma decisão pendente por registro bloqueante', (t) => {
+  const workbook = createSyntheticImprodutivosWorkbook();
+  t.after(workbook.cleanup);
+  const report = buildImprodutivosDryRunReport(workbook.filePath);
   const decisions = buildResolutionDecisions(report);
 
   assert.ok(decisions.length > 0);

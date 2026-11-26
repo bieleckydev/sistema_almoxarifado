@@ -11,6 +11,7 @@ import {
   getServerDb,
   readJson,
   requireIdentity,
+  requireAcaoPermissao,
   requirePermission,
   toErrorResponse,
 } from '../../api-helpers';
@@ -40,7 +41,8 @@ async function carregarCliente(id: string): Promise<Cliente> {
  */
 export async function GET(request: Request, context: ClienteRouteContext) {
   try {
-    await requireIdentity(request);
+    const identity = await requireIdentity(request);
+    requireAcaoPermissao(identity, 'cadastros');
     const { id } = await context.params;
     return NextResponse.json(await carregarCliente(id), { status: 200 });
   } catch (error) {

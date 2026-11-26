@@ -3,6 +3,7 @@ import { normalizarMatricula } from '@/core/domain/colaborador.schema';
 import { ColaboradorNaoEncontradoError } from '@/core/services/movimentacao.service';
 import {
   getEstoqueRepository,
+  requireAcaoPermissao,
   requireIdentity,
   toErrorResponse,
 } from '../../../api-helpers';
@@ -18,7 +19,8 @@ interface MatriculaRouteContext {
  */
 export async function GET(request: Request, context: MatriculaRouteContext) {
   try {
-    await requireIdentity(request);
+    const identity = await requireIdentity(request);
+    requireAcaoPermissao(identity, 'cadastros');
     const { matricula } = await context.params;
     const matriculaDecodificada = decodeURIComponent(matricula).trim();
     const matriculaNorm = normalizarMatricula(matriculaDecodificada);

@@ -35,6 +35,11 @@ async function seed() {
       setDoc(doc(db, 'users/admin-1'), user('admin-1', 'admin', 'admin@example.com')),
       setDoc(doc(db, 'users/operador-1'), user('operador-1', 'operador', 'operador@example.com')),
       setDoc(doc(db, 'users/requisitante-1'), user('requisitante-1', 'requisitante', 'req@example.com')),
+      setDoc(doc(db, 'clients/client-1'), { id: 'client-1', nome: 'Cliente de teste' }),
+      setDoc(doc(db, 'collaborators/collaborator-1'), {
+        id: 'collaborator-1',
+        nome: 'Colaborador de teste',
+      }),
     ]);
   });
 }
@@ -44,8 +49,16 @@ await seed();
 try {
   const mestreDb = testEnv.authenticatedContext('mestre-1').firestore();
   const adminDb = testEnv.authenticatedContext('admin-1').firestore();
+  const operadorDb = testEnv.authenticatedContext('operador-1').firestore();
   const requisitanteDb = testEnv.authenticatedContext('requisitante-1').firestore();
   const anonymousDb = testEnv.unauthenticatedContext().firestore();
+
+  await assertSucceeds(getDoc(doc(adminDb, 'clients/client-1')));
+  await assertSucceeds(getDoc(doc(operadorDb, 'clients/client-1')));
+  await assertFails(getDoc(doc(requisitanteDb, 'clients/client-1')));
+  await assertSucceeds(getDoc(doc(adminDb, 'collaborators/collaborator-1')));
+  await assertSucceeds(getDoc(doc(operadorDb, 'collaborators/collaborator-1')));
+  await assertFails(getDoc(doc(requisitanteDb, 'collaborators/collaborator-1')));
 
   await assertSucceeds(getDoc(doc(mestreDb, 'users/admin-1')));
   await assertFails(getDoc(doc(adminDb, 'users/requisitante-1')));

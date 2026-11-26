@@ -10,6 +10,7 @@ import {
   parseQueryParams,
   readJson,
   requireIdentity,
+  requireAcaoPermissao,
   requirePermission,
   semUndefined,
   toErrorResponse,
@@ -42,7 +43,8 @@ function parseClienteFiltros(request: Request) {
  */
 export async function GET(request: Request) {
   try {
-    await requireIdentity(request);
+    const identity = await requireIdentity(request);
+    requireAcaoPermissao(identity, 'cadastros');
     const filtros = parseClienteFiltros(request);
 
     const snapshot = await getServerDb().collection('clients').get();

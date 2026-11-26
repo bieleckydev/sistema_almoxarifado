@@ -38,6 +38,18 @@ const mockRequisitanteIdentity: AuthenticatedIdentity = {
   },
 };
 
+const mockOperadorIdentity: AuthenticatedIdentity = {
+  token: { uid: 'user-operador', role: 'operador' } as any,
+  user: {
+    id: 'user-operador',
+    name: 'Operador Fábrica',
+    email: 'operador@empresa.com',
+    role: 'operador',
+    ativo: true,
+    mustChangePassword: false,
+  },
+};
+
 describe('Fase 3 — Rotas de API de Colaboradores (/api/colaboradores)', () => {
   let memoryRepo: MemoryEstoqueRepository;
 
@@ -82,6 +94,25 @@ describe('Fase 3 — Rotas de API de Colaboradores (/api/colaboradores)', () => 
       const data = await response.json();
       assert.equal(data.total, 2);
       assert.equal(data.colaboradores.length, 2);
+    });
+
+    it('deve negar leitura para usuário sem permissão de cadastros', async () => {
+      setIdentityAuthenticator(async () => mockRequisitanteIdentity);
+
+      const response = await getColaboradores(
+        new Request('http://localhost:3000/api/colaboradores')
+      );
+
+      assert.equal(response.status, 403);
+    });
+
+    it('deve permitir leitura para operador com permissão de cadastros', async () => {
+      setIdentityAuthenticator(async () => mockOperadorIdentity);
+      const response = await getColaboradores(
+        new Request('http://localhost:3000/api/colaboradores')
+      );
+
+      assert.equal(response.status, 200);
     });
 
     it('deve filtrar colaboradores por setor', async () => {
@@ -194,6 +225,16 @@ describe('Fase 3 — Rotas de API de Colaboradores (/api/colaboradores)', () => 
       const colab = await response.json();
       assert.equal(colab.id, 'colab-1');
       assert.equal(colab.nome, 'Carlos Silva');
+    });
+
+    it('deve negar leitura por ID sem permissão de cadastros', async () => {
+      setIdentityAuthenticator(async () => mockRequisitanteIdentity);
+      const response = await getColaboradorById(
+        new Request('http://localhost:3000/api/colaboradores/colab-1'),
+        { params: Promise.resolve({ id: 'colab-1' }) }
+      );
+
+      assert.equal(response.status, 403);
     });
 
     it('deve retornar 404 para ID inexistente', async () => {
@@ -322,6 +363,16 @@ describe('Fase 3 — Rotas de API de Colaboradores (/api/colaboradores)', () => 
       const colab = await response.json();
       assert.equal(colab.matricula, '042');
       assert.equal(colab.nome, 'Carlos Silva');
+    });
+
+    it('deve negar busca por matrícula sem permissão de cadastros', async () => {
+      setIdentityAuthenticator(async () => mockRequisitanteIdentity);
+      const response = await getColaboradorByMatricula(
+        new Request('http://localhost:3000/api/colaboradores/matricula/42'),
+        { params: Promise.resolve({ matricula: '42' }) }
+      );
+
+      assert.equal(response.status, 403);
     });
 
     it('deve retornar 404 para matrícula inexistente', async () => {

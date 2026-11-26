@@ -2,11 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildImprodutivosDryRunReport } from '../dry-run-report';
 import { buildDuplicateResolutionReport } from '../duplicate-resolution-report';
+import { createSyntheticImprodutivosWorkbook } from './synthetic-improdutivos-workbook';
 
-test('relaciona duplicidades à primeira ocorrência', () => {
-  const report = buildImprodutivosDryRunReport(
-    'docs/excel/Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx'
-  );
+test('relaciona duplicidades à primeira ocorrência', (t) => {
+  const workbook = createSyntheticImprodutivosWorkbook();
+  t.after(workbook.cleanup);
+  const report = buildImprodutivosDryRunReport(workbook.filePath);
   const duplicates = buildDuplicateResolutionReport(report);
 
   assert.equal(duplicates.length, 4);

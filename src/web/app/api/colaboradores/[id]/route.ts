@@ -12,6 +12,7 @@ import {
   getEstoqueRepository,
   readJson,
   requireIdentity,
+  requireAcaoPermissao,
   requirePermission,
   toErrorResponse,
 } from '../../api-helpers';
@@ -26,7 +27,8 @@ interface ColaboradorRouteContext {
  */
 export async function GET(request: Request, context: ColaboradorRouteContext) {
   try {
-    await requireIdentity(request);
+    const identity = await requireIdentity(request);
+    requireAcaoPermissao(identity, 'cadastros');
     const { id } = await context.params;
     const repo = getEstoqueRepository();
 

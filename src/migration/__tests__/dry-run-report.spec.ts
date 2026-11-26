@@ -1,15 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildImprodutivosDryRunReport } from '../dry-run-report';
+import { createSyntheticImprodutivosWorkbook } from './synthetic-improdutivos-workbook';
 
-test('consolida itens e colaboradores em relatório dry-run', () => {
-  const report = buildImprodutivosDryRunReport(
-    'docs/excel/Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx'
-  );
+test('consolida itens e colaboradores em relatório dry-run', (t) => {
+  const workbook = createSyntheticImprodutivosWorkbook();
+  t.after(workbook.cleanup);
+  const report = buildImprodutivosDryRunReport(workbook.filePath);
 
   assert.equal(report.mode, 'DRY_RUN');
   assert.match(report.sourceFingerprint.sha256, /^[a-f0-9]{64}$/);
-  assert.equal(report.sourceFingerprint.file, 'Cont. de Estoque Disco Flap, Mat. de Solda e Brocas.xlsx');
+  assert.equal(report.sourceFingerprint.file, 'synthetic-improdutivos.xlsx');
   assert.ok(report.sourceFingerprint.sizeBytes > 0);
   assert.ok(report.sourceFingerprint.sheets.includes('Tabela de ítens'));
   assert.equal(report.sources.length, 2);
