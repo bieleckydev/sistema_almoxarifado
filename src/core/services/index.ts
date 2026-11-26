@@ -1,4 +1,5 @@
 export * from './estoque-calculator';
+export * from './busca-itens-pedido';
 export * from './movimentacao.service';
 export * from './inventario.service';
 export * from './fechamento-mensal.service';
