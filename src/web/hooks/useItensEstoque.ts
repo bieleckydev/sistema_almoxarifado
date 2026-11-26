@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { api } from '@/core/api/client';
 import type { Item } from '@/core/domain/item.schema';
+import { CATEGORIAS_ESTOQUE, categoriaEstoqueDoTipo } from '@/core/domain/categoria-estoque';
 import {
   type DashboardItem,
   type AbaEstoque,
@@ -55,12 +56,7 @@ function sanitizarTimestamp(val: unknown): string | undefined {
 }
 
 function itemToDashboardItem(item: Item): DashboardItem {
-  let aba: AbaEstoque = 'mp';
-  if (item.tipo === 'IMPRODUTIVO_CONSUMIVEL') {
-    aba = 'imp';
-  } else if (item.tipo === 'ACABADO') {
-    aba = 'motos';
-  }
+  const aba: AbaEstoque = categoriaEstoqueDoTipo(item.tipo);
 
   const raw = item as Record<string, unknown>;
   const categoria =
@@ -144,7 +140,7 @@ async function fetchItensPorAba(aba: AbaEstoque): Promise<{ itens: DashboardItem
   }
 }
 
-const TODAS_AS_ABAS: AbaEstoque[] = ['mp', 'imp', 'motos'];
+const TODAS_AS_ABAS: readonly AbaEstoque[] = CATEGORIAS_ESTOQUE;
 
 /**
  * Hook com TanStack Query para carregar a lista de materiais do almoxarifado.

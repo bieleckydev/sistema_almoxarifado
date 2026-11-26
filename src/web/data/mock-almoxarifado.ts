@@ -9,8 +9,13 @@ export {
   type StatusCriticidade,
 } from '@/core/services/estoque-calculator';
 import type { StatusCriticidade } from '@/core/services/estoque-calculator';
+import {
+  TIPO_ITEM_POR_CATEGORIA,
+  type CategoriaEstoque,
+} from '@/core/domain/categoria-estoque';
 
-export type AbaEstoque = 'mp' | 'imp' | 'motos';
+/** Aba do estoque na UI: uma das três categorias oficiais do core. */
+export type AbaEstoque = CategoriaEstoque;
 
 export interface DashboardItem extends Omit<Item, 'embalagem' | 'especificacoes'> {
   aba: AbaEstoque;
@@ -41,17 +46,17 @@ export const METADADOS_ABAS: Record<
   mp: {
     titulo: 'Matéria-prima',
     subtitulo: 'Chapas, barras, tubos e insumos produtivos de fabricação.',
-    tipoDominio: 'PRODUTIVO_MATERIA_PRIMA',
+    tipoDominio: TIPO_ITEM_POR_CATEGORIA.mp,
   },
   imp: {
     titulo: 'Materiais improdutivos',
     subtitulo: 'Itens de consumo e manutenção: EPIs, abrasivos, lubrificantes e ferramentas.',
-    tipoDominio: 'IMPRODUTIVO_CONSUMIVEL',
+    tipoDominio: TIPO_ITEM_POR_CATEGORIA.imp,
   },
   motos: {
     titulo: 'Peças de motos',
     subtitulo: 'Peças automotivas acabadas para reposição e montagem.',
-    tipoDominio: 'ACABADO',
+    tipoDominio: TIPO_ITEM_POR_CATEGORIA.motos,
   },
 };
 
