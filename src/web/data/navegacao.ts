@@ -9,6 +9,7 @@ import {
   CheckSquare,
   ShoppingCart,
   Receipt,
+  Store,
   Users,
   HardHat,
   ShieldCheck,
@@ -166,6 +167,12 @@ export const MENU_ESTRUTURA_3_0: GrupoMenuDef[] = [
         nome: 'Faturamento',
         icon: Receipt,
         permissao: 'faturar',
+      },
+      {
+        chave: 'ecom',
+        nome: 'E-commerce (motos)',
+        icon: Store,
+        permissao: 'vender',
       },
       {
         chave: 'clientes',

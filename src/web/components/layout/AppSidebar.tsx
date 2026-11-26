@@ -13,6 +13,7 @@ import {
   CheckSquare,
   ShoppingCart,
   Receipt,
+  Store,
   Users,
   HardHat,
   ShieldCheck,
@@ -213,6 +214,12 @@ const GRUPOS_MENU: GrupoNavegacao[] = [
         getBadgeCount: ({ pedidosAFaturarCount }) => pedidosAFaturarCount,
         getBadgeTitle: (count) => `${count} pedido(s) a faturar`,
         badgeVariant: 'primary',
+      },
+      {
+        tela: 'ecom',
+        nome: 'E-commerce (motos)',
+        icon: Store,
+        moduloPai: 'vendas',
       },
       {
         tela: 'clientes',
