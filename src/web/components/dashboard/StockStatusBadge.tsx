@@ -53,7 +53,11 @@ export function StockStatusBadge({
       ? calcularStatusCriticidade(estoqueAtual, estoqueSeguranca)
       : 'ok');
 
-  const config = STATUS_CONFIG[resolvedStatus];
+  // Zerado sem mínimo não é alerta, mas "Normal" seria enganoso: mantém o visual neutro com rótulo próprio.
+  const semEstoque = resolvedStatus === 'ok' && estoqueAtual !== undefined && estoqueAtual <= 0;
+  const config = semEstoque
+    ? { ...STATUS_CONFIG.ok, rotulo: 'Sem estoque' }
+    : STATUS_CONFIG[resolvedStatus];
 
   if (!showText) {
     return (
