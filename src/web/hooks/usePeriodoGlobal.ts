@@ -81,6 +81,47 @@ export function isNoPeriodo(
   return true;
 }
 
+export interface IntervaloIsoPeriodo {
+  /** Início inclusivo (00:00 local) em ISO 8601; ausente em 'Tudo'. */
+  dataInicio?: string;
+  /** Fim inclusivo (23:59:59.999 local) em ISO 8601; ausente quando vai até agora. */
+  dataFim?: string;
+  /** Duração do período em dias; null em 'Tudo' (depende do histórico). */
+  janelaDias: number | null;
+}
+
+function inicioDoDiaLocal(diasAtras: number, dataBase: Date): Date {
+  const d = new Date(dataBase);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - diasAtras);
+  return d;
+}
+
+/**
+ * Converte o período de análise em um intervalo ISO para consultas na API,
+ * respeitando os limites do dia no fuso local (mesma regra de isNoPeriodo).
+ */
+export function calcularIntervaloIsoPeriodo(
+  periodo: PeriodoFiltro,
+  dataBase: Date = new Date()
+): IntervaloIsoPeriodo {
+  if (periodo === 'Hoje') {
+    return { dataInicio: inicioDoDiaLocal(0, dataBase).toISOString(), janelaDias: 1 };
+  }
+  if (periodo === 'Ontem') {
+    const fim = new Date(inicioDoDiaLocal(0, dataBase).getTime() - 1);
+    return {
+      dataInicio: inicioDoDiaLocal(1, dataBase).toISOString(),
+      dataFim: fim.toISOString(),
+      janelaDias: 1,
+    };
+  }
+  if (periodo === '7 dias') {
+    return { dataInicio: inicioDoDiaLocal(6, dataBase).toISOString(), janelaDias: 7 };
+  }
+  return { janelaDias: null };
+}
+
 export interface PeriodoGlobalState {
   periodo: PeriodoFiltro;
   textoIntervalo: string;
