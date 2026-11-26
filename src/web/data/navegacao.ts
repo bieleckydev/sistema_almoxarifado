@@ -35,6 +35,7 @@ import type { UserRole } from '@/core/domain/user.schema';
  * - aud: Auditoria e log operacional
  * - usuarios: Gestão administrativa de usuários e acessos
  * - colab: Cadastro de colaboradores fabris (baixas internas)
+ * - levantamento: Levantamento e queima de estoque (giro e excedente)
  */
 export type TelaOuAba3 =
   | 'inicio'
@@ -50,7 +51,8 @@ export type TelaOuAba3 =
   | 'clientes'
   | 'aud'
   | 'usuarios'
-  | 'colab';
+  | 'colab'
+  | 'levantamento';
 
 export interface ItemMenuDef {
   chave: TelaOuAba3;
