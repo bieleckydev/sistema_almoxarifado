@@ -56,6 +56,8 @@ export function useDashboardResumo() {
         const itemsSnap = await getDocs(collection(db, 'items'));
         itemsSnap.forEach((doc) => {
           const data = doc.data();
+          // Itens inativos (descontinuados) não entram nas contagens nem nos alertas.
+          if (data.ativo === false) return;
           const tipo = data.tipo;
           const atual = Number(data.estoqueAtual) || 0;
           const min = Number(data.estoqueSeguranca) || 0;
